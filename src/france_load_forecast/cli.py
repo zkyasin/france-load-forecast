@@ -10,7 +10,7 @@ import duckdb
 import httpx
 import pandas as pd
 
-from france_load_forecast import correction, forecast, model, odre, warehouse
+from france_load_forecast import backtest, correction, forecast, model, odre, warehouse
 
 
 def ingest(data_dir: Path) -> int:
@@ -104,6 +104,25 @@ def run_forecast(data_dir: Path, config: Path) -> int:
     return 0
 
 
+# Origins from 2023 come after the 2022 energy crisis.
+RECENT_ORIGINS = pd.Timestamp("2023-01-01")
+
+
+def run_backtest(data_dir: Path, config: Path, first: str) -> int:
+    """Forecast from each month since `first` with the data known then, and score the forecasts."""
+    spec = model.load_spec(config)
+    with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
+        history = model.daily_frame(con, spec.smoothing)
+    results = backtest.run(history, spec, backtest.monthly_origins(history, first))
+    results.to_csv(data_dir / "backtest.csv", index=False)
+
+    recent = results[results["origin"] >= RECENT_ORIGINS]
+    for label, part in (("all origins", results), ("origins since 2023", recent)):
+        print(f"mean absolute percentage error of monthly energy, {label}")
+        print(backtest.accuracy(part).to_string(float_format=lambda value: f"{value:.2f}"))
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--data-dir", type=Path, default=Path("data"))
@@ -126,6 +145,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     commands.add_parser(
         "forecast", parents=[model_options], help="forecast monthly energy over 12 months"
     )
+    backtest_parser = commands.add_parser(
+        "backtest", parents=[model_options], help="score forecasts made from past months"
+    )
+    backtest_parser.add_argument("--first", default="2016-01-01", help="first origin")
     args = parser.parse_args(argv)
 
     if args.command == "ingest":
@@ -136,4 +159,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         return correct(args.data_dir, args.config)
     if args.command == "forecast":
         return run_forecast(args.data_dir, args.config)
+    if args.command == "backtest":
+        return run_backtest(args.data_dir, args.config, args.first)
     parser.error(f"unknown command {args.command}")
