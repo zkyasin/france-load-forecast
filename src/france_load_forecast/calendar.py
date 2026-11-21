@@ -17,7 +17,7 @@ LOCKDOWNS = {
 
 
 def calendar_features(dates: pd.DatetimeIndex) -> pd.DataFrame:
-    """Day type, bridge days, holiday periods, lockdowns and annual harmonics, one row per date."""
+    """Day type, bridge days, holiday periods and lockdowns, one row per date."""
     # The following year is included to detect a bridge on 31 December.
     years = range(dates.year.min(), dates.year.max() + 2)
     public_holidays = pd.DatetimeIndex(sorted(holidays.country_holidays("FR", years=years)))
@@ -28,7 +28,6 @@ def calendar_features(dates: pd.DatetimeIndex) -> pd.DataFrame:
         ((weekday == 0) & (dates + pd.Timedelta(days=1)).isin(public_holidays))
         | ((weekday == 4) & (dates - pd.Timedelta(days=1)).isin(public_holidays))
     )
-    angle = 2 * np.pi * dates.day_of_year.to_numpy() / 365.25
 
     features = pd.DataFrame(
         {
@@ -39,10 +38,6 @@ def calendar_features(dates: pd.DatetimeIndex) -> pd.DataFrame:
             "bridge": bridge.astype(int),
             "christmas": ((dates.month == 12) & (dates.day >= 24)).astype(int),
             "august": (dates.month == 8).astype(int),
-            "sin1": np.sin(angle),
-            "cos1": np.cos(angle),
-            "sin2": np.sin(2 * angle),
-            "cos2": np.cos(2 * angle),
         },
         index=dates,
     )

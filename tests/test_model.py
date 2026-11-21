@@ -20,13 +20,13 @@ def test_fit_recovers_the_weekend_effect(synthetic_model: model.DailyModel) -> N
     np.testing.assert_allclose(weekend, -6.0, atol=0.3)
 
 
-def test_components_level_and_ar_add_up_to_the_load(
+def test_components_and_states_add_up_to_the_load(
     synthetic_model: model.DailyModel, synthetic_frame: pd.DataFrame
 ) -> None:
-    ar = synthetic_model.results.smoothed_state[1]
+    ar = synthetic_model.results.autoregressive["smoothed"]
 
     effects = model.contributions(synthetic_model, synthetic_frame).sum(axis=1)
-    rebuilt = effects + synthetic_model.level + ar
+    rebuilt = effects + synthetic_model.level + synthetic_model.seasonal + ar
 
     np.testing.assert_allclose(rebuilt, synthetic_frame["load_gw"], atol=1e-6)
 
