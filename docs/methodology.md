@@ -36,6 +36,16 @@ A Kalman filter estimates the coefficients, the level and the autoregressive ter
 `reference_smooth` is RTE's reference temperature, smoothed the same way. RTE's corrected series
 also leaves out 29 February, so annual corrected energies do the same.
 
+## Forecast
+
+The model is fitted on every consolidated day. Each forecast path replays the weather of one
+complete past year, 2012 to 2025 today: on each calendar day, the reference temperature plus the
+anomaly to the reference observed that day in the past year. The smoothed temperature continues
+from the last observed day, the level stays at its last filtered value and the autoregressive term
+fades out. Monthly energies are summed over the real length of each day.
+
+P10 and P90 across paths only reflect weather. Model and structural errors are not in them yet.
+
 ## Results on data up to August 2026
 
 - Winter thermosensitivity, December to February: 2.00 GW/°C.
