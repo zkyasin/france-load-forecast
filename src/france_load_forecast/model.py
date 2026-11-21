@@ -56,8 +56,9 @@ def daily_frame(con: duckdb.DuckDBPyConnection, smoothing: float) -> pd.DataFram
     # The daily frequency also asserts that no day is missing.
     frame.index = pd.DatetimeIndex(frame.index, freq="D")
     # The data checks only let isolated missing temperatures through.
-    temperatures = frame[["temperature_c", "reference_c"]].interpolate(limit=1)
-    smoothed = temperatures.ewm(alpha=smoothing, adjust=False).mean()
+    temperatures = ["temperature_c", "reference_c"]
+    frame[temperatures] = frame[temperatures].interpolate(limit=1)
+    smoothed = frame[temperatures].ewm(alpha=smoothing, adjust=False).mean()
     frame["temperature_smooth"] = smoothed["temperature_c"]
     frame["reference_smooth"] = smoothed["reference_c"]
     return frame.join(calendar_features(frame.index))
