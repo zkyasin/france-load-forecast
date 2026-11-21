@@ -108,6 +108,13 @@ def fit(frame: pd.DataFrame, spec: ModelSpec) -> DailyModel:
     return DailyModel(spec, designs, model.fit(disp=False))
 
 
+def exog(model: DailyModel, frame: pd.DataFrame) -> pd.DataFrame:
+    """Design columns of the fitted model, for new days."""
+    columns = pd.concat([design_matrix(design, frame) for design in model.designs.values()], axis=1)
+    fitted_columns: list[str] = model.results.model.exog_names
+    return columns[fitted_columns]
+
+
 def component_effect(model: DailyModel, component: str, frame: pd.DataFrame) -> pd.Series:
     """Effect of one component on the daily load, in GW."""
     matrix = design_matrix(model.designs[component], frame)
