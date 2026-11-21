@@ -1,4 +1,6 @@
 default_stages: [pre-commit]
+# Test fixtures are raw exports and must stay byte-identical.
+exclude: ^tests/fixtures/
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
