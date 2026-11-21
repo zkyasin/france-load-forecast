@@ -23,6 +23,14 @@ uv run flf ingest
 downloads the exports to `data/raw/<dataset>/<date>.csv`, loads them into `data/warehouse.duckdb`
 and runs the data checks. The command exits with status 1 if a check fails.
 
+```sh
+uv run flf fit
+uv run flf correct
+```
+
+fit the daily load model, then compare the climate-corrected consumption with RTE's.
+[docs/methodology.md](docs/methodology.md) describes the model and its results.
+
 ## Development
 
 Requires [uv](https://docs.astral.sh/uv/). It installs Python 3.12 and the locked dependencies.

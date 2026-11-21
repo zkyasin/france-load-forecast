@@ -10,7 +10,7 @@ import duckdb
 import httpx
 import pandas as pd
 
-from france_load_forecast import model, odre, warehouse
+from france_load_forecast import correction, model, odre, warehouse
 
 
 def ingest(data_dir: Path) -> int:
@@ -62,6 +62,23 @@ def fit(data_dir: Path, config: Path) -> int:
     return 0
 
 
+def correct(data_dir: Path, config: Path) -> int:
+    """Compare the climate-corrected consumption with RTE's corrected series."""
+    spec = model.load_spec(config)
+    with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
+        frame = model.daily_frame(con, spec.smoothing)
+        rte = correction.rte_monthly(con)
+    fitted = model.fit(frame, spec)
+    corrected = correction.corrected_load(fitted, frame)
+    annual = correction.annual_comparison(frame["load_gw"], corrected, rte)
+
+    print("annual energy in TWh, against RTE's monthly series")
+    print(annual.to_string(float_format=lambda value: f"{value:.2f}"))
+    gaps = annual["corrected_gap_pct"].abs()
+    print(f"corrected energy gap: {gaps.mean():.2f} % on average, {gaps.max():.2f} % at most")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--data-dir", type=Path, default=Path("data"))
@@ -73,12 +90,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     commands.add_parser(
         "ingest", parents=[common], help="download the ODRÉ exports and rebuild the warehouse"
     )
-    fit_parser = commands.add_parser("fit", parents=[common], help="fit the daily load model")
-    fit_parser.add_argument("--config", type=Path, default=Path("config/model.toml"))
+    model_options = argparse.ArgumentParser(add_help=False, parents=[common])
+    model_options.add_argument("--config", type=Path, default=Path("config/model.toml"))
+    commands.add_parser("fit", parents=[model_options], help="fit the daily load model")
+    commands.add_parser(
+        "correct",
+        parents=[model_options],
+        help="compare the climate-corrected consumption with RTE's corrected series",
+    )
     args = parser.parse_args(argv)
 
     if args.command == "ingest":
         return ingest(args.data_dir)
     if args.command == "fit":
         return fit(args.data_dir, args.config)
+    if args.command == "correct":
+        return correct(args.data_dir, args.config)
     parser.error(f"unknown command {args.command}")
