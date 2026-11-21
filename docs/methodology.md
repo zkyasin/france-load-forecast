@@ -46,6 +46,26 @@ fades out. Monthly energies are summed over the real length of each day.
 
 P10 and P90 across paths only reflect weather. Model and structural errors are not in them yet.
 
+## Backtest
+
+`flf backtest` forecasts from the first day of each month since January 2016, with only the data
+known then: the model is re-estimated at the first origin of each year, then filtered day by day.
+Weather paths come from complete years outside the forecast window. Each forecast is compared with
+two naive ones: the same month a year earlier, raw and climate-corrected.
+
+Mean absolute percentage error of monthly energy, origins from January 2016 to September 2026:
+
+| Horizon | P50 | Same month a year earlier | Same, climate-corrected |
+|---|---|---|---|
+| 1 month | 3.08 % | 4.41 % | 3.57 % |
+| 2-3 months | 3.57 % | 4.40 % | 3.58 % |
+| 4-6 months | 3.83 % | 4.41 % | 3.58 % |
+| 7-12 months | 3.72 % | 4.48 % | 3.63 % |
+
+The model beats the raw naive forecast at every horizon, but the climate-corrected one only a month
+ahead. From 2023 it underestimates June to August by about 5 %: a temperature response and an annual
+pattern estimated over 2012-2026 no longer match consumption after the 2022 energy crisis.
+
 ## Results on data up to August 2026
 
 - Winter thermosensitivity, December to February: 2.00 GW/°C.
