@@ -8,6 +8,10 @@ smoothing = 0.5
 # shape of the year can change, as it did after the 2022 energy crisis.
 seasonal_harmonics = 2
 
+# Years of data the forecasting model is estimated on. Over the 2016-2026 backtest, 3 years
+# forecast better than 4, 6 or all years: the response to temperature changed after 2022.
+window_years = 3
+
 # Each component is a group of terms, written as a patsy formula. Decompositions report one
 # contribution per component, so a new driver is added here as a new component.
 [components]

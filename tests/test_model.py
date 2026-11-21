@@ -35,6 +35,14 @@ def test_lockdowns_are_dropped_outside_their_period(synthetic_model: model.Daily
     assert not synthetic_model.coefficients.index.str.startswith("lockdown").any()
 
 
+def test_fit_recent_keeps_the_last_years(
+    synthetic_frame: pd.DataFrame, synthetic_spec: model.ModelSpec
+) -> None:
+    fitted = model.fit_recent(synthetic_frame, synthetic_spec)
+
+    assert fitted.level.index[0] == pd.Timestamp("2023-01-01")
+
+
 def test_spec_reads_the_repository_config() -> None:
     spec = model.load_spec(Path(__file__).parents[1] / "config" / "model.toml")
 

@@ -29,6 +29,7 @@ from france_load_forecast.calendar import calendar_features
 class ModelSpec:
     smoothing: float
     seasonal_harmonics: int
+    window_years: int
     components: dict[str, str]
 
 
@@ -38,6 +39,7 @@ def load_spec(path: Path) -> ModelSpec:
     return ModelSpec(
         smoothing=config["smoothing"],
         seasonal_harmonics=config["seasonal_harmonics"],
+        window_years=config["window_years"],
         components=config["components"],
     )
 
@@ -121,6 +123,12 @@ def fit(frame: pd.DataFrame, spec: ModelSpec) -> DailyModel:
         mle_regression=False,
     )
     return DailyModel(spec, designs, model.fit(disp=False))
+
+
+def fit_recent(history: pd.DataFrame, spec: ModelSpec) -> DailyModel:
+    """Fit the model on the last `spec.window_years` years of `history`."""
+    end = pd.DatetimeIndex(history.index)[-1]
+    return fit(history[history.index > end - pd.DateOffset(years=spec.window_years)], spec)
 
 
 def exog(model: DailyModel, frame: pd.DataFrame) -> pd.DataFrame:
