@@ -10,7 +10,7 @@ import duckdb
 import httpx
 import pandas as pd
 
-from france_load_forecast import backtest, correction, forecast, model, odre, warehouse
+from france_load_forecast import backtest, conformal, correction, forecast, model, odre, warehouse
 
 
 def ingest(data_dir: Path) -> int:
@@ -80,25 +80,28 @@ def correct(data_dir: Path, config: Path) -> int:
 
 
 def run_forecast(data_dir: Path, config: Path) -> int:
-    """Forecast monthly energy over the 12 months after the last consolidated day."""
+    """Forecast monthly energy over the 12 months after the last consolidated day, with a P10-P90
+    band calibrated on the backtest errors."""
+    backtest_file = data_dir / "backtest.csv"
+    if not backtest_file.exists():
+        print(f"{backtest_file} is missing: run `flf backtest` first", file=sys.stderr)
+        return 1
+    past_forecasts = pd.read_csv(backtest_file, parse_dates=["origin", "month"])
+
     spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
     fitted = model.fit_recent(history, spec)
-    dates = pd.DatetimeIndex(history.index)
-    years = forecast.complete_years(dates)
-    paths = forecast.paths(fitted, history, history, years)
+    years = forecast.complete_years(pd.DatetimeIndex(history.index))
+    p50 = forecast.paths(fitted, history, history, years).median(axis=1)
 
-    summary = pd.DataFrame(
-        {
-            "p10": paths.quantile(0.1, axis=1),
-            "p50": paths.median(axis=1),
-            "p90": paths.quantile(0.9, axis=1),
-        }
-    )
+    start = pd.Timestamp(p50.index[0])
+    horizon = pd.Series(range(1, len(p50) + 1), index=p50.index)
+    quantiles = conformal.error_quantiles(past_forecasts, known_before=start)
+    summary = conformal.band(p50, horizon, quantiles).assign(p50=p50)[["p10", "p50", "p90"]]
     summary.index = pd.DatetimeIndex(summary.index).strftime("%Y-%m")
-    print(f"monthly energy in TWh, from data up to {dates[-1].date()}")
-    print(f"P10 and P90 over the weather of {years[0]}-{years[-1]} only")
+    print(f"monthly energy in TWh, from data up to {start - pd.Timedelta(days=1):%Y-%m-%d}")
+    print(f"P50 over {len(years)} weather years, P10-P90 from backtest errors before {start:%Y-%m}")
     print(summary.to_string(float_format=lambda value: f"{value:.1f}"))
     print(f"total P50: {summary['p50'].sum():.1f} TWh")
     return 0
@@ -106,6 +109,8 @@ def run_forecast(data_dir: Path, config: Path) -> int:
 
 # Origins from 2023 come after the 2022 energy crisis.
 RECENT_ORIGINS = pd.Timestamp("2023-01-01")
+# The band of an origin needs two years of backtest errors before it.
+FIRST_BAND_ORIGIN = pd.Timestamp("2018-01-01")
 
 
 def run_backtest(data_dir: Path, config: Path, first: str) -> int:
@@ -120,6 +125,10 @@ def run_backtest(data_dir: Path, config: Path, first: str) -> int:
     for label, part in (("all origins", results), ("origins since 2023", recent)):
         print(f"mean absolute percentage error of monthly energy, {label}")
         print(backtest.accuracy(part).to_string(float_format=lambda value: f"{value:.2f}"))
+    for first_origin in (FIRST_BAND_ORIGIN, RECENT_ORIGINS):
+        coverage = conformal.online_coverage(results, first_origin)
+        shares = ", ".join(f"{name} {100 * share:.0f} %" for name, share in coverage.items())
+        print(f"P10-P90 coverage, origins since {first_origin:%Y}: {shares}")
     return 0
 
 

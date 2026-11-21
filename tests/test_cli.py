@@ -26,3 +26,8 @@ def test_ingest_builds_the_warehouse(
     assert exit_code == 0
     assert (tmp_path / "warehouse.duckdb").exists()
     assert "load_realtime" in capsys.readouterr().out
+
+
+def test_forecast_needs_the_backtest(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert cli.main(["forecast", "--data-dir", str(tmp_path)]) == 1
+    assert "flf backtest" in capsys.readouterr().err
