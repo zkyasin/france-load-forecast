@@ -1,10 +1,12 @@
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import pytest
 
 from france_load_forecast import model
+from france_load_forecast.agent import tools
 from france_load_forecast.calendar import calendar_features
 from france_load_forecast.warehouse import SOURCES
 
@@ -90,3 +92,14 @@ def past_forecasts() -> pd.DataFrame:
 @pytest.fixture(scope="session")
 def synthetic_model(synthetic_frame: pd.DataFrame) -> model.DailyModel:
     return model.fit(synthetic_frame, SYNTHETIC_SPEC)
+
+
+@pytest.fixture
+def bundle(fixtures: Path) -> tools.Bundle:
+    """The bundle published on 22 November 2026."""
+    return tools.load_bundle(fixtures / "bundle")
+
+
+@pytest.fixture
+def facts() -> dict[str, dict[str, Any]]:
+    return tools.load_facts(Path(__file__).parents[1] / "config" / "facts.toml")

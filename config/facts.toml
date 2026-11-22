@@ -1,0 +1,47 @@
+# Dated and sourced facts the agent may quote, by topic, in French like its answers. Figures
+# that change with each publication come from the bundle instead.
+
+[method]
+date = 2026-11-22
+source = "docs/methodology.md"
+text = """
+Un modèle journalier relie la consommation à la température nationale lissée publiée par RTE, \
+au calendrier (types de jours, ponts, fin d'année, août) et à des états structurels (niveau et \
+saisonnalité) estimés par un filtre de Kalman. Chaque trajectoire de prévision rejoue la météo \
+d'une année passée complète autour de la température de référence ; la P50 est la médiane des \
+trajectoires. La bande P10-P90 applique à la P50 les erreurs relatives des prévisions passées, \
+par horizon."""
+
+[sources]
+date = 2026-11-22
+source = "https://odre.opendatasoft.com"
+text = """
+Jeux de données de RTE publiés sur ODRÉ sous Licence Ouverte 2.0 : éCO2mix consolidé \
+(eco2mix-national-cons-def) et temps réel (eco2mix-national-tr), consommation quotidienne brute \
+(consommation-quotidienne-brute), pic journalier et températures \
+(pic-journalier-consommation-brute), consommation mensuelle brute et corrigée \
+(conso_brute_corrigee_client_direct)."""
+
+[perimeter]
+date = 2026-11-22
+source = "docs/methodology.md"
+text = """
+Consommation nationale publiée dans éCO2mix : France continentale hors Corse. La série mensuelle \
+de RTE, Corse et pertes comprises, la dépasse de 0,1 à 0,8 % selon les années."""
+
+[revision]
+date = 2026-11-22
+source = "docs/methodology.md"
+text = """
+Le temps réel est une télémesure instantanée ; le consolidé, une moyenne de relevés de \
+compteurs, plus élevée. La révision est l'écart moyen entre les deux sur les jours que les deux \
+séries couvrent. Elle est ajoutée aux jours en temps réel en attendant les données consolidées, \
+et les mois concernés restent provisoires."""
+
+[temperature]
+date = 2026-11-22
+source = "docs/methodology.md"
+text = """
+RTE publie la température nationale une fois par mois, avec environ un mois de décalage. Le \
+modèle s'arrête au dernier jour qui a une température ; les jours mesurés depuis complètent le \
+mois en cours."""
