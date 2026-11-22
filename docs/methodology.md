@@ -62,10 +62,16 @@ smoothed temperature continues from the last observed day, the level stays at it
 value and the autoregressive term fades out. Monthly energies are summed over the real length of
 each day.
 
+The forecast starts with the current month. Days measured after the last day with a temperature,
+from real-time data raised by the revision, replace the forecast: the current month adds the days
+measured so far to the forecast of the remaining days.
+
 P50 is the median across paths. The P10-P90 band is calibrated on the backtest errors (split
 conformal prediction): it applies to P50 the 10th and 90th percentiles of past relative errors,
 actual / P50 - 1, by horizon bucket, using only the months known at the origin. It covers weather,
-model and structural errors together.
+model and structural errors together. It applies to the days still to come only. Horizons count
+from the last day the model knows, so the temperature lag makes them one or two months longer;
+beyond 12 months, the errors of the 7-12 month bucket apply.
 
 ## Backtest
 

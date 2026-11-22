@@ -33,9 +33,9 @@ uv run flf decompose
 ```
 
 fit the daily load model, compare the climate-corrected consumption with RTE's, score forecasts
-made from past months, forecast monthly energy over the next 12 months with a band calibrated on
-those past errors, and split the energy gaps of the last 12 months into climate, calendar,
-structural and residual terms.
+made from past months, forecast monthly energy over the current month and the next 11 with a band
+calibrated on those past errors, and split the energy gaps of the last 12 months into climate,
+calendar, structural and residual terms.
 [docs/methodology.md](docs/methodology.md) describes the model and its results.
 
 ## Development
