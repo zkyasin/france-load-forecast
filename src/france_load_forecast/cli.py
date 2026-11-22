@@ -216,6 +216,14 @@ def run_publish(data_dir: Path, config: Path, scenario_config: Path, out: Path) 
     return 0
 
 
+def snapshot(data_dir: Path, out: Path) -> int:
+    """Save the real-time load of the warehouse, which RTE overwrites once consolidated."""
+    with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
+        rows = warehouse.export_realtime(con, out)
+    print(f"{rows} real-time values written to {out}")
+    return 0
+
+
 def load_agent(
     bundle_dir: Path, agent_config: Path, facts: Path
 ) -> tuple[tools.Bundle, dict[str, dict[str, object]], agent.AgentConfig] | None:
@@ -308,6 +316,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     publish_parser.add_argument("--out", type=Path, default=Path("data/bundle"))
     publish_parser.add_argument("--scenarios", type=Path, default=Path("config/scenarios.toml"))
+    snapshot_parser = commands.add_parser(
+        "snapshot", parents=[common], help="save the real-time load as a Parquet file"
+    )
+    snapshot_parser.add_argument("out", type=Path)
     agent_options = argparse.ArgumentParser(add_help=False)
     agent_options.add_argument("--bundle", type=Path, default=Path("data/bundle"))
     agent_options.add_argument("--agent-config", type=Path, default=Path("config/agent.toml"))
@@ -337,6 +349,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return decompose(args.data_dir, args.config, args.months)
     if args.command == "publish":
         return run_publish(args.data_dir, args.config, args.scenarios, args.out)
+    if args.command == "snapshot":
+        return snapshot(args.data_dir, args.out)
     if args.command == "ask":
         return run_ask(args.question, args.bundle, args.agent_config, args.facts)
     if args.command == "note":
