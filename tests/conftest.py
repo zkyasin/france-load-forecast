@@ -9,6 +9,7 @@ from france_load_forecast.calendar import calendar_features
 from france_load_forecast.warehouse import SOURCES
 
 SYNTHETIC_SPEC = model.ModelSpec(
+    model_id="synthetic",
     smoothing=0.5,
     seasonal_harmonics=2,
     window_years=2,

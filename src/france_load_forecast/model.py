@@ -27,6 +27,7 @@ from france_load_forecast.calendar import calendar_features
 
 @dataclass(frozen=True)
 class ModelSpec:
+    model_id: str
     smoothing: float
     seasonal_harmonics: int
     window_years: int
@@ -37,6 +38,7 @@ def load_spec(path: Path) -> ModelSpec:
     with path.open("rb") as file:
         config = tomllib.load(file)
     return ModelSpec(
+        model_id=config["model_id"],
         smoothing=config["smoothing"],
         seasonal_harmonics=config["seasonal_harmonics"],
         window_years=config["window_years"],

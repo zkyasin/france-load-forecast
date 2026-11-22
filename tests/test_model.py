@@ -46,6 +46,7 @@ def test_fit_recent_keeps_the_last_years(
 def test_spec_reads_the_repository_config() -> None:
     spec = model.load_spec(Path(__file__).parents[1] / "config" / "model.toml")
 
+    assert spec.model_id == "baseline"
     assert spec.components["climate"].startswith("cr(temperature_smooth")
     assert 0 < spec.smoothing <= 1
 
