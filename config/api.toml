@@ -1,0 +1,18 @@
+# The public question API (src/france_load_forecast/api.py).
+
+# The last bundle, as the page publishes it; it is read again after this many seconds.
+bundle_url = "https://zkyasin.github.io/france-load-forecast/data/latest/"
+bundle_ttl_seconds = 3600
+
+# Models tried in turn, as "provider:model": the next one answers when the first fails or is
+# rate-limited. Groq's free plan answers with an error instead of a bill beyond its limits.
+# FLF_MODELS overrides the list for a local run, for instance "ollama:ministral-3:14b".
+models = ["groq:openai/gpt-oss-120b", "groq:openai/gpt-oss-20b"]
+
+# Pages that may call the API: the published page, and the page in development.
+allowed_origins = ["https://zkyasin.github.io", "http://localhost:5173"]
+
+# Questions accepted, in all per day (UTC) and per visitor, which keep Cloud Run in its free tier.
+questions_per_day = 60
+questions_per_visitor_per_hour = 5
+questions_per_visitor_per_day = 20

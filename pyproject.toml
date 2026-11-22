@@ -25,6 +25,15 @@ requires = ["uv_build>=0.11.19,<0.12"]
 build-backend = "uv_build"
 
 [dependency-groups]
+# What the question API needs at run time. Its image installs this group alone: the agent uses
+# LangChain and the standard library, not the forecasting stack.
+api = [
+    "fastapi>=0.165.0",
+    "httpx>=0.28.1",
+    "langchain>=1.5.2",
+    "langchain-groq>=1.2.1",
+    "uvicorn>=0.54.0",
+]
 dev = [
     "commitizen>=4.19.4",
     "mypy>=2.4.1",
@@ -33,6 +42,9 @@ dev = [
     "pytest>=9.2.0",
     "ruff>=0.17.6",
 ]
+
+[tool.uv]
+default-groups = ["dev", "api"]
 
 [tool.ruff]
 line-length = 100
