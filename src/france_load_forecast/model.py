@@ -45,17 +45,16 @@ def load_spec(path: Path) -> ModelSpec:
 
 
 def daily_frame(con: duckdb.DuckDBPyConnection, smoothing: float) -> pd.DataFrame:
-    """Consolidated daily load with temperatures and calendar features.
+    """Daily load with temperatures and calendar features, on the days with a temperature.
 
-    Real-time days are left out: they sit about 2 % below consolidated data, which the level
-    would read as a structural drop.
+    Days after the last consolidated one come from real-time data raised by the measured
+    revision. Their `source` is "realtime" instead of "consolidated".
     """
     frame = (
         con.execute(
             """
-            SELECT date, load_gw, temperature_c, reference_c
+            SELECT date, load_gw, source, temperature_c, reference_c
             FROM load_daily JOIN temperature USING (date)
-            WHERE source = 'consolidated'
             ORDER BY date
             """
         )

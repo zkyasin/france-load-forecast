@@ -88,9 +88,21 @@ def correct(data_dir: Path, config: Path) -> int:
     return 0
 
 
+def realtime_note(con: duckdb.DuckDBPyConnection, history: pd.DataFrame) -> str:
+    """Which days come from real-time data, and the revision added to them."""
+    realtime = pd.DatetimeIndex(history.index[history["source"] == "realtime"])
+    if realtime.empty:
+        return "all days are consolidated"
+    revision_gw, days = warehouse.mean_revision(con)
+    return (
+        f"days from {realtime[0]:%Y-%m-%d} are real-time data raised by {revision_gw:.2f} GW,"
+        f" the revision measured on {days} days"
+    )
+
+
 def run_forecast(data_dir: Path, config: Path) -> int:
-    """Forecast monthly energy over the 12 months after the last consolidated day, with a P10-P90
-    band calibrated on the backtest errors."""
+    """Forecast monthly energy over the 12 months after the last day with a temperature, with a
+    P10-P90 band calibrated on the backtest errors."""
     backtest_file = data_dir / "backtest.csv"
     if not backtest_file.exists():
         print(f"{backtest_file} is missing: run `flf backtest` first", file=sys.stderr)
@@ -100,6 +112,7 @@ def run_forecast(data_dir: Path, config: Path) -> int:
     spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
+        note = realtime_note(con, history)
     fitted = model.fit_recent(history, spec)
     years = forecast.complete_years(pd.DatetimeIndex(history.index))
     p50 = forecast.paths(fitted, history, history, years).median(axis=1)
@@ -110,6 +123,7 @@ def run_forecast(data_dir: Path, config: Path) -> int:
     summary = conformal.band(p50, horizon, quantiles).assign(p50=p50)[["p10", "p50", "p90"]]
     summary.index = pd.DatetimeIndex(summary.index).strftime("%Y-%m")
     print(f"monthly energy in TWh, from data up to {start - pd.Timedelta(days=1):%Y-%m-%d}")
+    print(note)
     print(f"P50 over {len(years)} weather years, P10-P90 from backtest errors before {start:%Y-%m}")
     print(summary.to_string(float_format=lambda value: f"{value:.1f}"))
     print(f"total P50: {summary['p50'].sum():.1f} TWh")
@@ -126,7 +140,9 @@ def run_backtest(data_dir: Path, config: Path, first: str) -> int:
     """Forecast from each month since `first` with the data known then, and score the forecasts."""
     spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
-        history = model.daily_frame(con, spec.smoothing)
+        frame = model.daily_frame(con, spec.smoothing)
+    # Past forecasts are scored against consolidated data only.
+    history = frame[frame["source"] == "consolidated"]
     results = backtest.run(history, spec, backtest.monthly_origins(history, first))
     results.to_csv(data_dir / "backtest.csv", index=False)
 
@@ -147,6 +163,7 @@ def decompose(data_dir: Path, config: Path, months: int) -> int:
     spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
+        print(realtime_note(con, history))
     recent = decomposition.recent_months(history, months)
     latest = model.fit_recent(history, spec)
     views = {

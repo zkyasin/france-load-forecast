@@ -50,12 +50,13 @@ def test_spec_reads_the_repository_config() -> None:
     assert 0 < spec.smoothing <= 1
 
 
-def test_daily_frame_smooths_consolidated_temperatures(export_files: dict[str, Path]) -> None:
+def test_daily_frame_continues_with_realtime_days(export_files: dict[str, Path]) -> None:
     con = duckdb.connect()
     warehouse.build(con, export_files)
 
     frame = model.daily_frame(con, smoothing=0.5)
 
-    assert frame.index.tolist() == list(pd.date_range("2026-08-30", "2026-08-31"))
-    first, second = frame["temperature_c"]
+    assert frame.index.tolist() == list(pd.date_range("2026-08-30", "2026-09-02"))
+    assert frame["source"].tolist() == ["consolidated"] * 2 + ["realtime"] * 2
+    first, second = frame["temperature_c"].iloc[:2]
     assert frame["temperature_smooth"].iloc[1] == pytest.approx((first + second) / 2)

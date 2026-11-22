@@ -13,6 +13,7 @@ All inputs are public datasets published by RTE on [ODRÉ](https://odre.opendata
 |---|---|
 | `eco2mix-national-cons-def` | National consumption every 30 minutes since 2012, consolidated then definitive |
 | `eco2mix-national-tr` | National consumption every 15 minutes, in real time, after the last consolidated day |
+| `consommation-quotidienne-brute` | Consolidated consumption every 30 minutes, a month ahead of éCO2mix, to measure the revision of real-time data |
 | `pic-journalier-consommation-brute` | Daily peak, national temperature and reference temperature |
 | `conso_brute_corrigee_client_direct` | Monthly gross and corrected consumption, used for validation |
 
