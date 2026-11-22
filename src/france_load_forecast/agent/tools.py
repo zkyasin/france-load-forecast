@@ -42,8 +42,10 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
 
     @tool
     def forecast(month: str | None = None) -> str:
-        """Monthly energy forecast in TWh: P10, P50, P90 and the energy already measured.
+        """Monthly energy forecast in TWh: P50, the P10-P90 band and the energy already measured.
 
+        P50 is the median forecast. P10 and P90 bound a band calibrated on the errors of past
+        forecasts: they are not scenarios. A month marked provisional relies on real-time data.
         With `month` (YYYY-MM), the forecast of that month. Without it, the current month and
         the 11 after, with the total P50 of these 12 months.
         """
@@ -75,34 +77,50 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
         for entry in bundle["gaps"]["months"]:
             if entry["month"] == month:
                 year, number = month.split("-")
-                return _json(published | entry | {"year_before": f"{int(year) - 1}-{number}"})
+                year_before = f"{int(year) - 1}-{number}"
+                content = entry | {
+                    "year_before": year_before,
+                    "against_forecast": {"compared_with": f"forecast made on {month}-01"}
+                    | entry["against_forecast"],
+                    "against_year_before": {"compared_with": year_before}
+                    | entry["against_year_before"],
+                }
+                return _json(published | content)
         months = [entry["month"] for entry in bundle["gaps"]["months"]]
         return _error(f"no gap for {month}: available months are {months[0]} to {months[-1]}")
 
     @tool
     def annual_energy(first: int, last: int) -> str:
         """Annual energy in TWh of the whole years from `first` to `last`: gross and
-        climate-corrected, ours (mainland France without Corsica) and RTE's (with Corsica), and
-        the change of our gross energy from the year before."""
+        climate-corrected, this tool's (mainland France without Corsica, keys gross and
+        corrected) and RTE's (with Corsica, keys gross_rte and corrected_rte), with the change
+        of this tool's energies from the year before."""
+        if first > last:
+            return _error(f"first ({first}) is after last ({last})")
         years = {year["year"]: year for year in bundle["history"]["years"]}
         selected = []
         for year in range(first, last + 1):
             if year not in years:
-                return _error(
-                    f"no whole year {year}: available years are {min(years)} to {max(years)}"
-                )
+                available = f"{min(years)} to {max(years)}"
+                return _error(f"no whole year {year}: available years are {available}")
             entry = dict(years[year])
             if year - 1 in years:
-                before = years[year - 1]["gross"]
-                entry["gross_change"] = round(entry["gross"] - before, 3)
-                entry["gross_change_pct"] = round(100 * (entry["gross"] / before - 1), 2)
+                gross, corrected = years[year - 1]["gross"], years[year - 1]["corrected"]
+                entry["change"] = {
+                    "from_year": year - 1,
+                    "gross": round(entry["gross"] - gross, 3),
+                    "gross_pct": round(100 * (entry["gross"] / gross - 1), 2),
+                    "corrected": round(entry["corrected"] - corrected, 3),
+                    "corrected_pct": round(100 * (entry["corrected"] / corrected - 1), 2),
+                }
             selected.append(entry)
         return _json(published | {"years": selected})
 
     @tool
     def thermosensitivity() -> str:
         """Load increase in GW for 1 °C less: mean over December to February, and by
-        temperature (negative above about 18 °C, where cooling takes over)."""
+        temperature. A negative value means that warmer weather raises the load, through
+        cooling."""
         content = bundle["model"]
         return _json(
             published
@@ -117,7 +135,7 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
     def accuracy() -> str:
         """Accuracy of past forecasts: mean absolute percentage error by horizon, for P50 and two
         naive forecasts (same month a year earlier, raw and climate-corrected), and the share of
-        months inside the P10-P90 band, in %."""
+        actual months inside the P10-P90 band, all horizons together, in %."""
         return _json(bundle["accuracy"])
 
     @tool

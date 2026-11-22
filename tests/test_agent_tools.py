@@ -37,13 +37,14 @@ def test_forecast_of_a_month_says_how_far_load_is_measured(by_name: dict[str, An
     content = call(by_name, "forecast", month="2026-11")
 
     assert content["measured_until"] == "2026-11-21"
+    assert content["provisional"]
     assert content["p10"] < content["p50"] < content["p90"]
 
 
 def test_month_gap_names_the_month_a_year_earlier(by_name: dict[str, Any]) -> None:
     content = call(by_name, "month_gap", month="2026-02")
 
-    assert content["year_before"] == "2025-02"
+    assert content["year_before"] == content["against_year_before"]["compared_with"] == "2025-02"
     assert content["against_forecast"]["climate"] == pytest.approx(-2.423)
     assert content["temperature"]["mean"] > content["temperature"]["reference"]
 
@@ -51,13 +52,16 @@ def test_month_gap_names_the_month_a_year_earlier(by_name: dict[str, Any]) -> No
 def test_unknown_months_and_years_get_an_error(by_name: dict[str, Any]) -> None:
     assert "2025-10 to 2026-09" in call(by_name, "month_gap", month="2020-01")["error"]
     assert "2014 to 2025" in call(by_name, "annual_energy", first=2010, last=2011)["error"]
+    assert "after" in call(by_name, "annual_energy", first=2025, last=2019)["error"]
 
 
 def test_annual_energy_gives_the_change_from_the_year_before(by_name: dict[str, Any]) -> None:
-    years = call(by_name, "annual_energy", first=2019, last=2020)["years"]
+    years = call(by_name, "annual_energy", first=2020, last=2020)["years"]
 
-    assert [year["year"] for year in years] == [2019, 2020]
-    assert years[1]["gross_change_pct"] == pytest.approx(-5.08, abs=0.01)
+    change = years[0]["change"]
+    assert change["from_year"] == 2019
+    assert change["gross_pct"] == pytest.approx(-5.08, abs=0.01)
+    assert "corrected_pct" in change
 
 
 def test_revision_fact_carries_the_measured_revision(by_name: dict[str, Any]) -> None:
