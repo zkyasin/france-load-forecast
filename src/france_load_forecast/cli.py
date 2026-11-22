@@ -101,8 +101,8 @@ def realtime_note(con: duckdb.DuckDBPyConnection, history: pd.DataFrame) -> str:
 
 
 def run_forecast(data_dir: Path, config: Path) -> int:
-    """Forecast monthly energy over the 12 months after the last day with a temperature, with a
-    P10-P90 band calibrated on the backtest errors."""
+    """Forecast monthly energy over the current month and the 11 after, with a P10-P90 band
+    calibrated on the backtest errors. Days already measured replace the forecast."""
     backtest_file = data_dir / "backtest.csv"
     if not backtest_file.exists():
         print(f"{backtest_file} is missing: run `flf backtest` first", file=sys.stderr)
@@ -112,21 +112,34 @@ def run_forecast(data_dir: Path, config: Path) -> int:
     spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
+        observed = model.load_after(con, history.index[-1])
         note = realtime_note(con, history)
     fitted = model.fit_recent(history, spec)
     years = forecast.complete_years(pd.DatetimeIndex(history.index))
-    p50 = forecast.paths(fitted, history, history, years).median(axis=1)
 
-    start = pd.Timestamp(p50.index[0])
-    horizon = pd.Series(range(1, len(p50) + 1), index=p50.index)
+    start = history.index[-1] + pd.Timedelta(days=1)
+    last_measured = observed.index[-1] if not observed.empty else history.index[-1]
+    current = (last_measured + pd.Timedelta(days=1)).to_period("M").to_timestamp()
+    months = 12 + (current.year - start.year) * 12 + current.month - start.month
+    p50 = forecast.paths(fitted, history, history, years, months, observed).median(axis=1)
+
+    measured = correction.monthly_energy(observed).reindex(p50.index, fill_value=0.0)
+    # Horizons count from the last day the model knows; the backtest stops at 12 months.
+    horizon = pd.Series(range(1, months + 1), index=p50.index).clip(upper=12)
     quantiles = conformal.error_quantiles(past_forecasts, known_before=start)
-    summary = conformal.band(p50, horizon, quantiles).assign(p50=p50)[["p10", "p50", "p90"]]
+    # The band only covers the days still to come.
+    summary = conformal.band(p50 - measured, horizon, quantiles).add(measured, axis=0)
+    summary = summary.assign(p50=p50, measured=measured)[["p10", "p50", "p90", "measured"]]
     summary.index = pd.DatetimeIndex(summary.index).strftime("%Y-%m")
-    print(f"monthly energy in TWh, from data up to {start - pd.Timedelta(days=1):%Y-%m-%d}")
+    print(
+        f"monthly energy in TWh: model up to {start - pd.Timedelta(days=1):%Y-%m-%d},"
+        f" measured load up to {last_measured:%Y-%m-%d}"
+    )
     print(note)
     print(f"P50 over {len(years)} weather years, P10-P90 from backtest errors before {start:%Y-%m}")
     print(summary.to_string(float_format=lambda value: f"{value:.1f}"))
-    print(f"total P50: {summary['p50'].sum():.1f} TWh")
+    ahead = summary.iloc[-12:]
+    print(f"total P50 from {ahead.index[0]}: {ahead['p50'].sum():.1f} TWh")
     return 0
 
 
