@@ -82,6 +82,7 @@ The page, in French, is at <https://zkyasin.github.io/france-load-forecast/>. It
 - the accuracy of past forecasts;
 - the gaps of the last twelve months, against the year before or against the forecast, split
   into weather, calendar and other effects;
+- the note of the month, written by the agent;
 - the load added by one degree less, by temperature;
 - the energy of each year since 2014, measured and corrected for the weather;
 - the BP2025 scenarios to 2031, for a trajectory and a winter chosen by the reader;
@@ -122,9 +123,16 @@ uv run flf note 2026-09
 ```
 
 `ask` prints the tool calls and the answer. `note` writes `notes/2026-09.md`: the energy of the
-month and its gaps term by term, then a reading written by the agent. Both exit with status 1 if
-a number has no source. [`evals/questions.toml`](evals/questions.toml) holds frozen questions and
-their expected answers.
+month and its gaps term by term, then a reading written by the agent, which may only read the gaps
+of the month. It also writes `notes/2026-09.json` for the page. Both commands exit with status 1
+if a number has no source. [`evals/questions.toml`](evals/questions.toml) holds frozen questions
+and their expected answers.
+
+A note reaches the page through a pull request: its reading is reviewed, then the page shows the
+latest note from its next deployment. Before writing a note, `flf note` checks every figure of its
+reading against the values of the note, with its unit and, when written, its sign. The tests run
+the same check on the committed notes, so that an edit by hand cannot add a figure the note does
+not give.
 
 ## Development
 

@@ -259,7 +259,8 @@ def run_ask(question: str, bundle_dir: Path, agent_config: Path, facts: Path) ->
 
 
 def run_note(month: str, bundle_dir: Path, agent_config: Path, facts: Path, out: Path) -> int:
-    """Write the note on a month, if every number of its reading has a source."""
+    """Write the note on a month, if every number of its reading has a source in the tool
+    results and in the note itself."""
     loaded = load_agent(bundle_dir, agent_config, facts)
     if loaded is None:
         return 1
@@ -268,14 +269,20 @@ def run_note(month: str, bundle_dir: Path, agent_config: Path, facts: Path, out:
     if month not in months:
         print(f"no gap for {month}: the bundle covers {months[0]} to {months[-1]}", file=sys.stderr)
         return 1
-    text, reading = note.write(month, bundle, fact_texts, agent.chat_model(config), config)
+    text, data, reading = note.write(month, bundle, fact_texts, agent.chat_model(config), config)
     report(reading)
     if not reading.verified:
         return 1
+    wrong = note.unsupported(data)
+    if wrong:
+        print(f"figures that the note does not give: {', '.join(wrong)}", file=sys.stderr)
+        return 1
     out.mkdir(parents=True, exist_ok=True)
-    path = out / f"{month}.md"
-    path.write_text(text, encoding="utf-8")
-    print(f"{path} written")
+    (out / f"{month}.md").write_text(text, encoding="utf-8")
+    (out / f"{month}.json").write_text(
+        json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    print(f"{out / month}.md and .json written")
     return 0
 
 

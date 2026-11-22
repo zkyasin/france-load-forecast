@@ -1,0 +1,32 @@
+{
+  "published": "2026-11-22",
+  "model": "ollama:ministral-3:14b",
+  "month": "2026-09",
+  "provisional": true,
+  "temperature": {
+    "mean": 19.9,
+    "reference": 17.757,
+    "year_before": 16.59
+  },
+  "against_forecast": {
+    "actual": 31.209,
+    "reference": 31.44,
+    "gap": -0.231,
+    "climate": -0.02,
+    "calendar": 0.0,
+    "lockdown": 0.0,
+    "structural": -0.101,
+    "residual": -0.11
+  },
+  "against_year_before": {
+    "actual": 31.209,
+    "reference": 31.41,
+    "gap": -0.201,
+    "climate": -0.139,
+    "calendar": 0.024,
+    "lockdown": 0.0,
+    "structural": 0.054,
+    "residual": -0.14
+  },
+  "reading": "Le climat a pesé −0,02 TWh par rapport à la prévision du début du mois. Le résidu a pesé −0,11 TWh. Le terme structurel a pesé −0,10 TWh.\n\nPar rapport à septembre 2025, le climat a pesé −0,14 TWh, avec une température moyenne de 19,9 °C contre 16,59 °C l’an dernier. Le calendrier a pesé +0,02 TWh. Le terme structurel a pesé +0,05 TWh. Le résidu a pesé −0,14 TWh."
+}
