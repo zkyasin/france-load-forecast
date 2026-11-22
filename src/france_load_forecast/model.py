@@ -72,6 +72,15 @@ def daily_frame(con: duckdb.DuckDBPyConnection, smoothing: float) -> pd.DataFram
     return frame.join(calendar_features(frame.index))
 
 
+def load_after(con: duckdb.DuckDBPyConnection, day: pd.Timestamp) -> pd.Series:
+    """Daily load measured after `day`, in GW: the real-time days still waiting for a
+    temperature when `day` is the last day of the daily frame."""
+    frame = con.execute(
+        "SELECT date, load_gw FROM load_daily WHERE date > ? ORDER BY date", [day.date()]
+    ).df()
+    return pd.Series(frame["load_gw"].to_numpy(), index=pd.DatetimeIndex(frame["date"]))
+
+
 @dataclass(frozen=True)
 class DailyModel:
     spec: ModelSpec
