@@ -5,26 +5,6 @@ import pytest
 from france_load_forecast import conformal, model, outlook
 
 
-@pytest.fixture(scope="module")
-def past_forecasts() -> pd.DataFrame:
-    """Forecasts made each month of 2020-2023, 1 to 12 months ahead, off by -5 % to +5 %."""
-    origins = pd.date_range("2020-01-01", "2023-12-01", freq="MS")
-    errors = np.linspace(-0.05, 0.05, len(origins))
-    return pd.DataFrame(
-        [
-            {
-                "origin": origin,
-                "month": origin + pd.DateOffset(months=horizon - 1),
-                "horizon": horizon,
-                "p50": 100.0,
-                "actual": 100.0 * (1 + error),
-            }
-            for origin, error in zip(origins, errors, strict=True)
-            for horizon in range(1, 13)
-        ]
-    )
-
-
 def test_current_month_adds_the_measured_days(
     synthetic_model: model.DailyModel, synthetic_frame: pd.DataFrame, past_forecasts: pd.DataFrame
 ) -> None:
