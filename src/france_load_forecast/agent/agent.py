@@ -71,6 +71,10 @@ RETRY = (
 RETRY_EMPTY = "Answer the question, in French."
 RETRY_LINK = "Rewrite the answer without links."
 
+# Per call of a hosted model. An answer takes up to five calls, which stays under the 60 s of a
+# request on Cloud Run.
+HOSTED_TIMEOUT_SECONDS = 10
+
 # Shown instead of an answer that failed the check.
 REFUSAL = "Je ne peux pas répondre à cette question avec des chiffres vérifiés."
 
@@ -111,8 +115,14 @@ def chat_model(config: AgentConfig) -> BaseChatModel:
             config.model, temperature=config.temperature, num_predict=config.max_output_tokens
         )
     else:
+        # A hosted model that stalls or is rate-limited fails at once rather than retrying, so
+        # that the next model can answer within the time of a request.
         model = init_chat_model(
-            config.model, temperature=config.temperature, max_tokens=config.max_output_tokens
+            config.model,
+            temperature=config.temperature,
+            max_tokens=config.max_output_tokens,
+            timeout=HOSTED_TIMEOUT_SECONDS,
+            max_retries=0,
         )
     if not isinstance(model, BaseChatModel):
         raise TypeError(f"{config.model} is not a chat model")
