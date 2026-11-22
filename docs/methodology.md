@@ -136,6 +136,37 @@ against February 2024.
 
 The level is smooth: a change that lasts a few months first shows in the residual.
 
+## Scenarios
+
+The scenarios give the energy of each year from 2027 to 2031 under a consumption trajectory of
+RTE's Bilan prévisionnel 2025 (BP2025) and a winter. They are set in
+[`config/scenarios.toml`](../config/scenarios.toml).
+
+The reference is the forecasting model at the reference temperature, with its level held where it
+stands today. The BP2025 trajectories count domestic consumption of mainland France without
+Corsica, corrected for weather and calendar, which is not the éCO2mix series. So the scenarios
+apply their growth rates to the reference, not their levels:
+
+| Trajectory | 2024 | 2030 | 2035 | Growth to 2030 | Pages |
+|---|---|---|---|---|---|
+| Stagnation (sensitivity test) | 447 TWh | 445 TWh | | -0.07 % a year | 11, 35 |
+| Slow decarbonisation | 447 TWh | 470 TWh | 505 TWh | +0.84 % a year | 11, 35 |
+| Rapid decarbonisation | 447 TWh | 510 TWh | 580 TWh | +2.22 % a year | 10, 35 |
+
+Pages of the consumption chapter, published on 23 December 2025. Growth is geometric between two
+years given; after the last one, its rate holds. The stagnation trajectory, at normal winter, is
+the reference the other cases are compared with.
+
+A cold or mild winter replays the winter months, January, February and December, of an observed
+year. The 14 complete years of data are ranked by the energy their weather adds to these months;
+the cold winter is the one at the 9th decile, the mild winter the one at the 1st. Today they are
+2013 and 2014, worth +4.6 TWh and -3.1 TWh in 2027. The effect of a winter does not grow with the
+trajectory.
+
+Two limits hold until more data come in: 14 winters are few for a winter that happens 1 year in
+10, and the trajectories start from today's level while the BP2025 levels for 2030 assume growth
+from 2024.
+
 ## Results on data up to August 2026
 
 - Winter thermosensitivity, December to February: 2.00 GW/°C.
