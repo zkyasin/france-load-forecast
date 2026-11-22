@@ -18,6 +18,7 @@ from france_load_forecast import (
     forecast,
     model,
     odre,
+    outlook,
     warehouse,
 )
 
@@ -115,29 +116,19 @@ def run_forecast(data_dir: Path, config: Path) -> int:
         observed = model.load_after(con, history.index[-1])
         note = realtime_note(con, history)
     fitted = model.fit_recent(history, spec)
-    years = forecast.complete_years(pd.DatetimeIndex(history.index))
+    summary = outlook.table(fitted, history, observed, past_forecasts)
 
-    start = history.index[-1] + pd.Timedelta(days=1)
+    start = pd.Timestamp(summary.index[0])
     last_measured = observed.index[-1] if not observed.empty else history.index[-1]
-    current = (last_measured + pd.Timedelta(days=1)).to_period("M").to_timestamp()
-    months = 12 + (current.year - start.year) * 12 + current.month - start.month
-    p50 = forecast.paths(fitted, history, history, years, months, observed).median(axis=1)
-
-    measured = correction.monthly_energy(observed).reindex(p50.index, fill_value=0.0)
-    # Horizons count from the last day the model knows; the backtest stops at 12 months.
-    horizon = pd.Series(range(1, months + 1), index=p50.index).clip(upper=12)
-    quantiles = conformal.error_quantiles(past_forecasts, known_before=start)
-    # The band only covers the days still to come.
-    summary = conformal.band(p50 - measured, horizon, quantiles).add(measured, axis=0)
-    summary = summary.assign(p50=p50, measured=measured)[["p10", "p50", "p90", "measured"]]
-    summary.index = pd.DatetimeIndex(summary.index).strftime("%Y-%m")
+    years = forecast.complete_years(pd.DatetimeIndex(history.index))
     print(
         f"monthly energy in TWh: model up to {start - pd.Timedelta(days=1):%Y-%m-%d},"
         f" measured load up to {last_measured:%Y-%m-%d}"
     )
     print(note)
     print(f"P50 over {len(years)} weather years, P10-P90 from backtest errors before {start:%Y-%m}")
-    print(summary.to_string(float_format=lambda value: f"{value:.1f}"))
+    summary.index = pd.DatetimeIndex(summary.index).strftime("%Y-%m")
+    print(summary.drop(columns="horizon").to_string(float_format=lambda value: f"{value:.1f}"))
     ahead = summary.iloc[-12:]
     print(f"total P50 from {ahead.index[0]}: {ahead['p50'].sum():.1f} TWh")
     return 0
