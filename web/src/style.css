@@ -231,6 +231,10 @@ main > section + section {
   fill: var(--fourth);
 }
 
+.key line.third {
+  stroke: var(--third);
+}
+
 .key .total {
   fill: var(--ink);
 }
@@ -257,7 +261,8 @@ main > section + section {
 
 #accuracy-plot,
 #gaps-plot,
-#temperature-plot {
+#temperature-plot,
+#history-plot {
   min-height: 240px;
 }
 

@@ -1,6 +1,7 @@
 import "@fontsource-variable/archivo/wdth.css";
 import "./style.css";
 import * as accuracy from "./accuracy";
+import * as annual from "./annual";
 import { byId } from "./chart";
 import { latest, type Meta, publications } from "./data";
 import * as forecast from "./forecast";
@@ -46,6 +47,7 @@ async function main(): Promise<void> {
   accuracy.render(bundle.accuracy);
   gaps.render(bundle.gaps);
   temperature.render(bundle.model);
+  annual.render(bundle.history.years);
   method(bundle.meta);
 }
 

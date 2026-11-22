@@ -37,10 +37,23 @@ export interface HistoryMonth {
   provisional: boolean;
 }
 
+/** The energy of a complete year, in TWh, and RTE's monthly series summed over it. */
+export interface HistoryYear {
+  year: number;
+  gross: number;
+  gross_rte: number;
+  gross_gap_pct: number;
+  // Corrected for the weather.
+  corrected: number;
+  corrected_rte: number;
+  corrected_gap_pct: number;
+}
+
 export interface History {
   published: string;
   model_id: string;
   months: HistoryMonth[];
+  years: HistoryYear[];
 }
 
 export interface Accuracy {
