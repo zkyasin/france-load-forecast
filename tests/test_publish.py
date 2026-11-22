@@ -38,6 +38,8 @@ def test_forecast_starts_with_the_current_month(bundle: dict[str, dict[str, Any]
     first = forecast["months"][0]
 
     assert forecast["current_month"] == first["month"] == "2025-01"
+    assert first["provisional"]
+    assert not forecast["months"][1]["provisional"]
     assert first["measured"] == pytest.approx(60 * 5 * 24 / 1000)
     assert len(forecast["months"]) == 12
     total = sum(month["p50"] for month in forecast["months"])

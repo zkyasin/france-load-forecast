@@ -47,8 +47,11 @@ def meta_file(
     }
 
 
-def forecast_file(table: pd.DataFrame, current: pd.Timestamp) -> dict[str, Any]:
-    """Monthly forecast with its band, and the total P50 of the 12 months from the current one."""
+def forecast_file(
+    table: pd.DataFrame, current: pd.Timestamp, provisional: pd.Index
+) -> dict[str, Any]:
+    """Monthly forecast with its band, and the total P50 of the 12 months from the current one.
+    Months measured from real-time data are provisional."""
     return {
         "current_month": _month(current),
         "total_p50": _round(table.loc[table.index >= current, "p50"].sum()),
@@ -57,6 +60,7 @@ def forecast_file(table: pd.DataFrame, current: pd.Timestamp) -> dict[str, Any]:
                 "month": _month(month),
                 **_rounded(row.drop("horizon")),
                 "horizon": int(row["horizon"]),
+                "provisional": month in provisional,
             }
             for month, row in table.iterrows()
         ],
@@ -174,7 +178,7 @@ def build(
     files = {
         "meta": meta_file(history, observed, revision),
         "forecast": forecast_file(
-            outlook.table(latest, history, observed, past_forecasts), current
+            outlook.table(latest, history, observed, past_forecasts), current, provisional
         ),
         "gaps": gaps_file(
             decomposition.against_forecast(history, spec, months),
