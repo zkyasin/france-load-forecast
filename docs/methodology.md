@@ -46,7 +46,10 @@ anomaly to the reference observed that day in the past year. The smoothed temper
 from the last observed day, the level stays at its last filtered value and the autoregressive term
 fades out. Monthly energies are summed over the real length of each day.
 
-P10 and P90 across paths only reflect weather. Model and structural errors are not in them yet.
+P50 is the median across paths. The P10-P90 band is calibrated on the backtest errors (split
+conformal prediction): it applies to P50 the 10th and 90th percentiles of past relative errors,
+actual / P50 - 1, by horizon bucket, using only the months known at the origin. It covers weather,
+model and structural errors together.
 
 ## Backtest
 
@@ -67,6 +70,16 @@ Mean absolute percentage error of monthly energy, origins from January 2016 to S
 
 The model beats both naive forecasts at every horizon. On origins from 2023 it is level with the
 climate-corrected one four to six months ahead (2.51 % against 2.46 %) and better at other horizons.
+
+Share of actual monthly energies inside the P10-P90 band, each origin's band being calibrated on
+the errors known then (target 80 %):
+
+| Origins | All months | December to February | June to August |
+|---|---|---|---|
+| 2018-2026 | 79 % | 78 % | 84 % |
+| 2023-2026 | 88 % | 93 % | 78 % |
+
+The band is too wide after 2022: its errors still include 2020 and 2022.
 
 Two choices come from this backtest. With fixed annual harmonics and all years of data, the model
 only beat the climate-corrected naive forecast one month ahead, and from 2023 it underestimated
