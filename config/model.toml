@@ -4,11 +4,19 @@
 # likelihood of the model fitted on 2012-2026, on a grid from 0.3 to 0.6 in steps of 0.05.
 smoothing = 0.5
 
+# Harmonics of the annual pattern. It is a state of the model that drifts slowly, so that the
+# shape of the year can change, as it did after the 2022 energy crisis.
+seasonal_harmonics = 2
+
+# Years of data the forecasting model is estimated on. Over the 2016-2026 backtest, 3 years
+# forecast better than 4, 6 or all years: the response to temperature changed after 2022.
+window_years = 3
+
 # Each component is a group of terms, written as a patsy formula. Decompositions report one
 # contribution per component, so a new driver is added here as a new component.
 [components]
 # The climate terms are a function of `temperature_smooth` only: climate correction replaces it
 # with the smoothed reference temperature.
 climate = "cr(temperature_smooth, df=6, constraints='center', lower_bound=-15, upper_bound=35)"
-calendar = "C(day_type, Treatment('wed')) + bridge + christmas + august + sin1 + cos1 + sin2 + cos2"
+calendar = "C(day_type, Treatment('wed')) + bridge + christmas + august"
 lockdown = "lockdown_1 + lockdown_2 + lockdown_3"

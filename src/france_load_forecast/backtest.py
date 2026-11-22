@@ -1,7 +1,8 @@
 """Rolling-origin backtest of the monthly forecast.
 
 At each origin, the forecast only uses the days before it: the model is re-estimated on the first
-origin of each year, then filtered day by day up to the origin. Weather paths come from every
+origin of each year, over the preceding `window_years` years, then filtered day by day up to the
+origin. Weather paths come from every
 complete year outside the forecast window, so the target months never replay their own weather.
 """
 
@@ -36,7 +37,7 @@ def run(
     rows = []
     for _, group in groupby(origins, key=lambda origin: origin.year):
         year_origins = list(group)
-        fitted = model.fit(history[history.index < year_origins[0]], spec)
+        fitted = model.fit_recent(history[history.index < year_origins[0]], spec)
         for origin in year_origins:
             past = history[history.index < origin]
             at_origin = model.extend(fitted, past)

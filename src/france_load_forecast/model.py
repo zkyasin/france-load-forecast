@@ -1,11 +1,13 @@
 """Daily load model.
 
-    load[d] = sum of component effects[d] + level[d] + ar[d]
+    load[d] = sum of component effects[d] + level[d] + seasonal[d] + ar[d]
     level[d] = level[d - 1] + level shock        (structural drift, random walk)
+    seasonal[d] = annual harmonics whose amplitudes drift slowly
     ar[d] = phi * ar[d - 1] + shock              (short-lived deviations)
 
 Component effects are linear in the patsy design columns of `config/model.toml`. The level, the
-autoregressive term and the coefficients are estimated together with a Kalman filter.
+seasonal pattern, the autoregressive term and the coefficients are estimated together with a
+Kalman filter.
 """
 
 import tomllib
@@ -26,13 +28,20 @@ from france_load_forecast.calendar import calendar_features
 @dataclass(frozen=True)
 class ModelSpec:
     smoothing: float
+    seasonal_harmonics: int
+    window_years: int
     components: dict[str, str]
 
 
 def load_spec(path: Path) -> ModelSpec:
     with path.open("rb") as file:
         config = tomllib.load(file)
-    return ModelSpec(smoothing=config["smoothing"], components=config["components"])
+    return ModelSpec(
+        smoothing=config["smoothing"],
+        seasonal_harmonics=config["seasonal_harmonics"],
+        window_years=config["window_years"],
+        components=config["components"],
+    )
 
 
 def daily_frame(con: duckdb.DuckDBPyConnection, smoothing: float) -> pd.DataFrame:
@@ -79,7 +88,13 @@ class DailyModel:
     @property
     def level(self) -> pd.Series:
         """Smoothed structural level, in GW."""
-        return pd.Series(self.results.smoothed_state[0], index=self.results.fittedvalues.index)
+        return pd.Series(self.results.level["smoothed"], index=self.results.fittedvalues.index)
+
+    @property
+    def seasonal(self) -> pd.Series:
+        """Smoothed annual pattern, in GW."""
+        smoothed = self.results.freq_seasonal[0]["smoothed"]
+        return pd.Series(smoothed, index=self.results.fittedvalues.index)
 
 
 def design_matrix(design: patsy.DesignInfo, frame: pd.DataFrame) -> pd.DataFrame:
@@ -101,11 +116,19 @@ def fit(frame: pd.DataFrame, spec: ModelSpec) -> DailyModel:
         stochastic_level=True,
         irregular=False,
         autoregressive=1,
+        freq_seasonal=[{"period": 365.25, "harmonics": spec.seasonal_harmonics}],
+        stochastic_freq_seasonal=[True],
         exog=exog,
         # Coefficients go into the state vector: fitting is much faster and gives the same values.
         mle_regression=False,
     )
     return DailyModel(spec, designs, model.fit(disp=False))
+
+
+def fit_recent(history: pd.DataFrame, spec: ModelSpec) -> DailyModel:
+    """Fit the model on the last `spec.window_years` years of `history`."""
+    end = pd.DatetimeIndex(history.index)[-1]
+    return fit(history[history.index > end - pd.DateOffset(years=spec.window_years)], spec)
 
 
 def exog(model: DailyModel, frame: pd.DataFrame) -> pd.DataFrame:

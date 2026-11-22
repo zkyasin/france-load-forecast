@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -51,11 +50,3 @@ def test_lockdown_periods_include_both_ends(features: pd.DataFrame) -> None:
 def test_end_of_year_period(features: pd.DataFrame) -> None:
     assert features.loc["2025-12-23", "christmas"] == 0
     assert features.loc["2025-12-24":"2025-12-31", "christmas"].eq(1).all()
-
-
-def test_annual_harmonics_repeat_every_year(features: pd.DataFrame) -> None:
-    harmonics = ["sin1", "cos1", "sin2", "cos2"]
-
-    np.testing.assert_allclose(
-        features.loc["2022-03-01", harmonics], features.loc["2023-03-01", harmonics]
-    )

@@ -84,7 +84,7 @@ def run_forecast(data_dir: Path, config: Path) -> int:
     spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
-    fitted = model.fit(history, spec)
+    fitted = model.fit_recent(history, spec)
     dates = pd.DatetimeIndex(history.index)
     years = forecast.complete_years(dates)
     paths = forecast.paths(fitted, history, history, years)

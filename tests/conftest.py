@@ -10,6 +10,8 @@ from france_load_forecast.warehouse import SOURCES
 
 SYNTHETIC_SPEC = model.ModelSpec(
     smoothing=0.5,
+    seasonal_harmonics=2,
+    window_years=2,
     components={
         "climate": (
             "cr(temperature_smooth, df=6, constraints='center', lower_bound=-15, upper_bound=35)"
