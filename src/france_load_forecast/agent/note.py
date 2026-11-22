@@ -11,7 +11,7 @@ from typing import Any
 
 from langchain_core.language_models import BaseChatModel
 
-from france_load_forecast.agent.agent import AgentConfig, Answer, ask
+from france_load_forecast.agent.agent import AgentConfig, Answer, ask, plain
 from france_load_forecast.agent.tools import TOTALS, Bundle
 
 MONTHS = (
@@ -114,16 +114,6 @@ def render(entry: dict[str, Any], meta: dict[str, Any], reading: str) -> str:
         " docs/methodology.md.*",
     ]
     return "\n".join(lines) + "\n"
-
-
-def plain(text: str) -> str:
-    """The reading as plain French text: without the asterisks of Markdown emphasis, with decimal
-    commas, a true minus sign where the model wrote a dash, and a non-breaking space before units,
-    so that no line breaks inside a value."""
-    text = text.replace("*", "")
-    text = re.sub(r"(?<=\d)\.(?=\d)", ",", text)
-    text = re.sub(r"(?<!\w)[-\u2013](?=\d)", "\u2212", text)
-    return re.sub(r"(?<=\d) (?=TWh|GWh|GW|MW|°C|%)", "\u00a0", text)
 
 
 # A figure of a reading: the sign written before it, its value and its unit, if any. A figure
