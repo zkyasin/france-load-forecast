@@ -1,0 +1,11 @@
+# Only what the image of the question API copies.
+*
+!pyproject.toml
+!uv.lock
+!src/france_load_forecast/__init__.py
+!src/france_load_forecast/api.py
+!src/france_load_forecast/bundle.py
+!src/france_load_forecast/agent/*.py
+!config/agent.toml
+!config/api.toml
+!config/facts.toml

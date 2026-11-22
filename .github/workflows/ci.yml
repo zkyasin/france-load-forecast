@@ -39,6 +39,15 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  api-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build --tag questions .
+      # The app must start without a valid key: it checks the key only when it asks the model.
+      - run: docker run --detach --publish 8080:8080 --env GROQ_API_KEY=not-a-key questions
+      - run: curl --fail --silent --retry 10 --retry-connrefused --retry-delay 1 localhost:8080/health
+
   commit-messages:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
