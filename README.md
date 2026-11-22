@@ -56,6 +56,20 @@ results of `flf backtest`. Every file carries the publication date and the model
 | `model.json` | Estimation window and response to temperature of the forecasting model |
 | `scenarios.json` | Energy of each year from 2027 to 2031 by BP2025 trajectory and winter, month by month |
 
+## Publication
+
+The [Publish](.github/workflows/publish.yml) workflow runs every Monday at 06:00 UTC, after each
+merge on `main`, and on demand. It runs `ingest`, `backtest` and `publish`, which refuses to write
+a bundle that breaks its schema ([`bundle.py`](src/france_load_forecast/bundle.py)): a band out
+of order, an implausible energy, terms that do not add up to their gap. `flf snapshot` then saves
+the real-time load, which RTE overwrites once it is consolidated.
+
+[`scripts/archive.sh`](scripts/archive.sh) commits the result to the `data` branch:
+
+- `latest/`: the last bundle, read by the page;
+- `archive/<date>/`: each published bundle with its real-time snapshot, so that a forecast can be
+  judged once its months are over.
+
 ## Agent
 
 The agent answers questions in French and writes the monthly note from the bundle. Its tools are
