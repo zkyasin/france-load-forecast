@@ -87,6 +87,16 @@ class AgentConfig:
     max_question_chars: int
 
 
+def plain(text: str) -> str:
+    """A text of the agent as plain French text: without the asterisks of Markdown emphasis, with
+    decimal commas, a true minus sign where the model wrote a dash, and a non-breaking space before
+    units, so that no line breaks inside a value."""
+    text = text.replace("*", "")
+    text = re.sub(r"(?<=\d)\.(?=\d)", ",", text)
+    text = re.sub(r"(?<!\w)[-\u2013](?=\d)", "\u2212", text)
+    return re.sub(r"(?<=\d) (?=TWh|GWh|GW|MW|°C|%)", "\u00a0", text)
+
+
 def load_config(path: Path) -> AgentConfig:
     with path.open("rb") as file:
         return AgentConfig(**tomllib.load(file))
