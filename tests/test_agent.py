@@ -24,6 +24,17 @@ def test_answer_quotes_the_tool_results(
     assert answer.text.startswith("Février 2026")
 
 
+def test_only_the_tools_named_can_run(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(("thermosensitivity", {}), "Le climat a pesé sur la consommation.")
+
+    answer = agent.ask(QUESTION, bundle, facts, model, agent_config, only={"month_gap"})
+
+    assert answer.verified
+    assert answer.tool_calls == []
+
+
 def test_a_number_without_source_gets_one_more_try(
     script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
 ) -> None:
