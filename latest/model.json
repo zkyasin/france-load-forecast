@@ -7,10 +7,6 @@
     "winter": 2.001,
     "by_temperature": [
       {
-        "temperature": -5.0,
-        "gw_per_c": 2.548
-      },
-      {
         "temperature": 0.0,
         "gw_per_c": 2.38
       },
@@ -33,6 +29,10 @@
       {
         "temperature": 25.0,
         "gw_per_c": -0.703
+      },
+      {
+        "temperature": 30.0,
+        "gw_per_c": -0.89
       }
     ]
   }

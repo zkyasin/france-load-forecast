@@ -123,7 +123,7 @@
       "trajectory": "stagnation",
       "winter": "cold",
       "annual_energy": 449.108,
-      "winter_energy": 142.193,
+      "winter_energy": 142.192,
       "months": [
         49.823,
         46.251,
@@ -207,7 +207,7 @@
       "trajectory": "slow",
       "winter": "mild",
       "annual_energy": 445.469,
-      "winter_energy": 135.745,
+      "winter_energy": 135.744,
       "months": [
         46.849,
         41.344,
@@ -332,7 +332,7 @@
       "year": 2028,
       "trajectory": "stagnation",
       "winter": "mild",
-      "annual_energy": 442.165,
+      "annual_energy": 442.164,
       "winter_energy": 135.673,
       "months": [
         46.459,
@@ -360,14 +360,14 @@
         44.453,
         41.932,
         35.071,
-        32.717,
+        32.716,
         31.276,
         32.489,
         32.297,
         31.153,
         34.802,
         40.39,
-        47.364
+        47.363
       ]
     },
     {
@@ -381,7 +381,7 @@
         48.73,
         41.932,
         35.071,
-        32.717,
+        32.716,
         31.276,
         32.489,
         32.297,
@@ -396,13 +396,13 @@
       "trajectory": "slow",
       "winter": "mild",
       "annual_energy": 450.351,
-      "winter_energy": 138.225,
+      "winter_energy": 138.224,
       "months": [
         47.353,
-        43.253,
+        43.252,
         41.932,
         35.071,
-        32.717,
+        32.716,
         31.276,
         32.489,
         32.297,
@@ -458,7 +458,7 @@
       "year": 2028,
       "trajectory": "rapid",
       "winter": "mild",
-      "annual_energy": 462.866,
+      "annual_energy": 462.865,
       "winter_energy": 142.124,
       "months": [
         48.718,
@@ -500,8 +500,8 @@
       "year": 2029,
       "trajectory": "stagnation",
       "winter": "cold",
-      "annual_energy": 447.951,
-      "winter_energy": 141.724,
+      "annual_energy": 447.95,
+      "winter_energy": 141.723,
       "months": [
         50.007,
         46.165,
@@ -606,7 +606,7 @@
       "trajectory": "rapid",
       "winter": "normal",
       "annual_energy": 474.636,
-      "winter_energy": 146.807,
+      "winter_energy": 146.806,
       "months": [
         52.157,
         45.083,
@@ -668,7 +668,7 @@
       "year": 2030,
       "trajectory": "stagnation",
       "winter": "normal",
-      "annual_energy": 443.19,
+      "annual_energy": 443.189,
       "winter_energy": 137.27,
       "months": [
         48.692,
@@ -689,7 +689,7 @@
       "year": 2030,
       "trajectory": "stagnation",
       "winter": "cold",
-      "annual_energy": 447.781,
+      "annual_energy": 447.78,
       "winter_energy": 141.861,
       "months": [
         49.979,
@@ -773,7 +773,7 @@
       "year": 2030,
       "trajectory": "slow",
       "winter": "mild",
-      "annual_energy": 456.521,
+      "annual_energy": 456.52,
       "winter_energy": 139.248,
       "months": [
         48.368,
@@ -836,7 +836,7 @@
       "year": 2030,
       "trajectory": "rapid",
       "winter": "mild",
-      "annual_energy": 482.243,
+      "annual_energy": 482.242,
       "winter_energy": 147.215,
       "months": [
         51.194,
@@ -920,11 +920,11 @@
       "year": 2031,
       "trajectory": "slow",
       "winter": "normal",
-      "annual_energy": 466.046,
+      "annual_energy": 466.045,
       "winter_energy": 144.51,
       "months": [
         51.223,
-        44.299,
+        44.298,
         43.014,
         36.486,
         33.479,
@@ -962,7 +962,7 @@
       "year": 2031,
       "trajectory": "slow",
       "winter": "mild",
-      "annual_energy": 462.93,
+      "annual_energy": 462.929,
       "winter_energy": 141.394,
       "months": [
         49.092,
