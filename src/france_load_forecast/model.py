@@ -9,7 +9,7 @@ autoregressive term and the coefficients are estimated together with a Kalman fi
 """
 
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import duckdb
@@ -113,6 +113,18 @@ def exog(model: DailyModel, frame: pd.DataFrame) -> pd.DataFrame:
     columns = pd.concat([design_matrix(design, frame) for design in model.designs.values()], axis=1)
     fitted_columns: list[str] = model.results.model.exog_names
     return columns[fitted_columns]
+
+
+def extend(model: DailyModel, frame: pd.DataFrame) -> DailyModel:
+    """Filter the days of `frame` after the fitted sample, keeping the estimated parameters.
+
+    The level, the autoregressive term and the coefficients still update with the new days.
+    """
+    new = frame[frame.index > model.results.fittedvalues.index[-1]]
+    if new.empty:
+        return model
+    results = model.results.append(new["load_gw"], exog=exog(model, new))
+    return replace(model, results=results)
 
 
 def component_effect(model: DailyModel, component: str, frame: pd.DataFrame) -> pd.Series:

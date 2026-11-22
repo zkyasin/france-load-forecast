@@ -57,5 +57,10 @@ def synthetic_frame() -> pd.DataFrame:
 
 
 @pytest.fixture(scope="session")
+def synthetic_spec() -> model.ModelSpec:
+    return SYNTHETIC_SPEC
+
+
+@pytest.fixture(scope="session")
 def synthetic_model(synthetic_frame: pd.DataFrame) -> model.DailyModel:
     return model.fit(synthetic_frame, SYNTHETIC_SPEC)

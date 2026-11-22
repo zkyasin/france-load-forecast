@@ -27,10 +27,11 @@ and runs the data checks. The command exits with status 1 if a check fails.
 uv run flf fit
 uv run flf correct
 uv run flf forecast
+uv run flf backtest
 ```
 
-fit the daily load model, compare the climate-corrected consumption with RTE's, and forecast
-monthly energy over the next 12 months.
+fit the daily load model, compare the climate-corrected consumption with RTE's, forecast
+monthly energy over the next 12 months, and score forecasts made from past months.
 [docs/methodology.md](docs/methodology.md) describes the model and its results.
 
 ## Development
