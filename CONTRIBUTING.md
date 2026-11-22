@@ -26,3 +26,9 @@ npm run check
 npm test
 npm run build
 ```
+
+The CI also builds the image of the question API and checks that it starts:
+
+```sh
+docker build --tag questions .
+```
