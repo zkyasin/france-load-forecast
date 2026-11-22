@@ -55,3 +55,12 @@ test("the tip of a month gives its gap, its terms and its temperatures", () => {
     ].join("\n"),
   );
 });
+
+test("against the forecast, the tip gives the temperature of the month alone", () => {
+  const months = monthGaps(gaps, "against_forecast");
+  const september = months.at(-1);
+  if (september === undefined) throw new Error("no month");
+  expect(tipText(september, "against_forecast", shownTerms(months)).split("\n").at(-1)).toBe(
+    `Température : 19,9${NBSP}°C`,
+  );
+});
