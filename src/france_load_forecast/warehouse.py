@@ -57,6 +57,20 @@ SOURCES = (
         },
         where="consommation IS NOT NULL",
     ),
+    # RTE's consolidated consumption as published with the gas data, every half-hour. It runs
+    # about a month ahead of éCO2mix's consolidated series, so it overlaps the first real-time
+    # days.
+    Source(
+        table="load_revised",
+        dataset="consommation-quotidienne-brute",
+        columns={
+            "date": ("date", "DATE"),
+            "time": ("heure", "VARCHAR"),
+            "load_mw": ("consommation_brute_electricite_rte", "DOUBLE"),
+        },
+        where="consommation_brute_electricite_rte IS NOT NULL",
+        date_format="%d/%m/%Y",
+    ),
     Source(
         table="temperature",
         dataset="pic-journalier-consommation-brute",
@@ -79,17 +93,33 @@ SOURCES = (
     ),
 )
 
+# Real-time values are instantaneous telemetry; consolidated values are means of meter readings
+# and sit higher. The revision is measured on the days covered by both real-time and revised data.
+REVISION = """
+CREATE OR REPLACE VIEW revision AS
+SELECT date, revised.load_gw - realtime.load_gw AS revision_gw
+FROM (
+    SELECT date, avg(load_mw) / 1000 AS load_gw FROM load_revised
+    GROUP BY date HAVING count(*) >= 46
+) AS revised
+JOIN (
+    -- A full day has 96 quarter-hours; the current day is still incomplete.
+    SELECT date, avg(load_mw) / 1000 AS load_gw FROM load_realtime
+    GROUP BY date HAVING count(*) >= 92
+) AS realtime USING (date)
+"""
+
+# Real-time days after the last consolidated day, raised by the mean revision.
 LOAD_DAILY = """
 CREATE OR REPLACE VIEW load_daily AS
 SELECT date, avg(load_mw) / 1000 AS load_gw, count(*) AS n_values, 'consolidated' AS source
 FROM load_consolidated
 GROUP BY date
 UNION ALL
-SELECT date, avg(load_mw) / 1000, count(*), 'realtime'
+SELECT date, avg(load_mw) / 1000 + (SELECT avg(revision_gw) FROM revision), count(*), 'realtime'
 FROM load_realtime
 WHERE date > (SELECT max(date) FROM load_consolidated)
 GROUP BY date
--- A full day has 96 quarter-hours; the current day is still incomplete.
 HAVING count(*) >= 92
 """
 
@@ -104,6 +134,14 @@ CHECKS = {
         SELECT date, time, load_mw FROM load_consolidated WHERE load_mw NOT BETWEEN 20e3 AND 110e3
         UNION ALL
         SELECT date, time, load_mw FROM load_realtime WHERE load_mw NOT BETWEEN 20e3 AND 110e3
+        UNION ALL
+        SELECT date, time, load_mw FROM load_revised WHERE load_mw NOT BETWEEN 20e3 AND 110e3
+    """,
+    "real-time days without a measured revision": """
+        SELECT date FROM load_daily WHERE source = 'realtime' AND load_gw IS NULL
+    """,
+    "mean revision outside 0-2 GW": """
+        SELECT avg(revision_gw) FROM revision HAVING avg(revision_gw) NOT BETWEEN 0 AND 2
     """,
     "missing days in daily load": """
         SELECT day::DATE AS date
@@ -151,6 +189,7 @@ def build(con: duckdb.DuckDBPyConnection, files: Mapping[str, Path]) -> None:
             "SELECT * FROM read_csv(?, delim=';', header=true, columns=?, dateformat=?)",
             [str(files[source.table]), source.column_types, source.date_format],
         )
+    con.execute(REVISION)
     con.execute(LOAD_DAILY)
 
 

@@ -40,6 +40,46 @@ def test_realtime_days_extend_the_consolidated_series(con: duckdb.DuckDBPyConnec
     assert days[dt.date(2026, 9, 1)][1:] == (96, "realtime")
 
 
+def mean_by_day(path: Path, field: str, day_format: str) -> dict[dt.date, float]:
+    by_day: dict[dt.date, list[float]] = {}
+    with path.open(encoding="utf-8-sig") as file:
+        for row in csv.DictReader(file, delimiter=";"):
+            day = dt.datetime.strptime(row["date"], day_format).date()
+            by_day.setdefault(day, []).append(float(row[field]) / 1000)
+    return {day: sum(values) / len(values) for day, values in by_day.items()}
+
+
+def test_realtime_days_are_raised_by_the_mean_revision(
+    con: duckdb.DuckDBPyConnection, fixtures: Path
+) -> None:
+    realtime = mean_by_day(fixtures / "eco2mix-national-tr.csv", "consommation", "%Y-%m-%d")
+    revised = mean_by_day(
+        fixtures / "consommation-quotidienne-brute.csv",
+        "consommation_brute_electricite_rte",
+        "%d/%m/%Y",
+    )
+    revision = sum(revised[day] - realtime[day] for day in realtime) / len(realtime)
+
+    load_gw, _, _ = daily_load(con)[dt.date(2026, 9, 1)]
+
+    assert load_gw == pytest.approx(realtime[dt.date(2026, 9, 1)] + revision)
+    assert 0.5 < revision < 1.5
+
+
+def test_checks_report_realtime_days_without_revision(
+    export_files: dict[str, Path], fixtures: Path, tmp_path: Path
+) -> None:
+    lines = (fixtures / "consommation-quotidienne-brute.csv").read_text(encoding="utf-8-sig")
+    august_only = tmp_path / "revised.csv"
+    august_only.write_text("\n".join(line for line in lines.splitlines() if "/09/" not in line))
+    con = duckdb.connect()
+
+    warehouse.build(con, export_files | {"load_revised": august_only})
+
+    failures = warehouse.run_checks(con)
+    assert any(f.startswith("real-time days without a measured revision") for f in failures)
+
+
 def test_incomplete_realtime_day_is_left_out(
     export_files: dict[str, Path], fixtures: Path, tmp_path: Path
 ) -> None:
