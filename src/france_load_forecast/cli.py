@@ -19,6 +19,7 @@ from france_load_forecast import (
     model,
     odre,
     outlook,
+    publish,
     warehouse,
 )
 
@@ -101,14 +102,21 @@ def realtime_note(con: duckdb.DuckDBPyConnection, history: pd.DataFrame) -> str:
     )
 
 
+def read_backtest(data_dir: Path) -> pd.DataFrame | None:
+    """The backtest results, or None after a message if they are missing."""
+    path = data_dir / "backtest.csv"
+    if not path.exists():
+        print(f"{path} is missing: run `flf backtest` first", file=sys.stderr)
+        return None
+    return pd.read_csv(path, parse_dates=["origin", "month"])
+
+
 def run_forecast(data_dir: Path, config: Path) -> int:
     """Forecast monthly energy over the current month and the 11 after, with a P10-P90 band
     calibrated on the backtest errors. Days already measured replace the forecast."""
-    backtest_file = data_dir / "backtest.csv"
-    if not backtest_file.exists():
-        print(f"{backtest_file} is missing: run `flf backtest` first", file=sys.stderr)
+    past_forecasts = read_backtest(data_dir)
+    if past_forecasts is None:
         return 1
-    past_forecasts = pd.read_csv(backtest_file, parse_dates=["origin", "month"])
 
     spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
@@ -177,6 +185,25 @@ def decompose(data_dir: Path, config: Path, months: int) -> int:
     return 0
 
 
+def run_publish(data_dir: Path, config: Path, out: Path) -> int:
+    """Write the weekly bundle of JSON files."""
+    past_forecasts = read_backtest(data_dir)
+    if past_forecasts is None:
+        return 1
+
+    spec = model.load_spec(config)
+    with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
+        history = model.daily_frame(con, spec.smoothing)
+        observed = model.load_after(con, history.index[-1])
+        rte = correction.rte_monthly(con)
+        revision = warehouse.mean_revision(con)
+    published = datetime.now(UTC).date()
+    files = publish.build(history, observed, spec, past_forecasts, rte, revision, published)
+    publish.write(files, out)
+    print(f"{', '.join(files)} written to {out}")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--data-dir", type=Path, default=Path("data"))
@@ -209,6 +236,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     decompose_parser.add_argument(
         "--months", type=int, default=12, help="number of recent complete months"
     )
+    publish_parser = commands.add_parser(
+        "publish", parents=[model_options], help="write the weekly bundle of JSON files"
+    )
+    publish_parser.add_argument("--out", type=Path, default=Path("data/bundle"))
     args = parser.parse_args(argv)
 
     if args.command == "ingest":
@@ -223,4 +254,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_backtest(args.data_dir, args.config, args.first)
     if args.command == "decompose":
         return decompose(args.data_dir, args.config, args.months)
+    if args.command == "publish":
+        return run_publish(args.data_dir, args.config, args.out)
     parser.error(f"unknown command {args.command}")
