@@ -87,10 +87,42 @@ June to August by about 5 %: the response to temperature and the shape of the ye
 the 2022 energy crisis. A drifting seasonal state and a three-year estimation window bring the
 error down at every horizon and the summer bias to about 3 %.
 
+## Monthly gap decomposition
+
+`flf decompose` explains the energy of each of the last twelve complete months twice: against the
+forecast made at the start of the month, and against the same month a year earlier. The terms are
+the components declared in [`config/model.toml`](../config/model.toml), `structural` for the level
+and seasonal states, and `residual`. They add up to the gap.
+
+Against the forecast, P50 one month ahead in the backtest:
+
+- each component contributes the effect of the gap between its actual inputs and those the
+  forecast assumed, valued with the coefficients of the forecast. For `climate`, it is the actual
+  weather against the weather paths. The calendar was known in advance, so it contributes nothing.
+- `structural` compares the states estimated with all the days known today with those projected
+  at the origin.
+- `residual` holds the deviations that last a few days and the update of the coefficients by the
+  days after the origin.
+
+P50 is a median across weather paths, so its terms are those of the median path, or the mean of
+the two middle paths when their number is even.
+
+Against the same month a year earlier, with the model fitted on the last three years, each term is
+the change in the effect of a component, in the structural states or in the residual. 29 February
+only exists in leap years, so its whole load counts as calendar effect: -1.43 TWh in February 2025
+against February 2024.
+
+The level is smooth: a change that lasts a few months first shows in the residual.
+
 ## Results on data up to August 2026
 
 - Winter thermosensitivity, December to February: 2.00 GW/°C.
 - Annual corrected energy against RTE's corrected series, 2014-2025: 0.38 % mean absolute gap,
   1.09 % at most (2022).
+- September 2025 to August 2026, against the forecast made at the start of each month: 1.20 TWh
+  mean absolute gap, 0.92 TWh mean absolute climate term. The weather of the month is the main
+  source of error one month ahead.
+- The same twelve months against the twelve before: +3.42 TWh, of which -1.58 TWh from the
+  weather, +0.19 TWh from the calendar, +1.67 TWh structural and +3.14 TWh residual.
 
-`flf fit` and `flf correct` print these figures.
+`flf fit`, `flf correct` and `flf decompose` print these figures.
