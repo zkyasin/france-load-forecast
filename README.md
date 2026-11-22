@@ -134,6 +134,32 @@ reading against the values of the note, with its unit and, when written, its sig
 the same check on the committed notes, so that an edit by hand cannot add a figure the note does
 not give.
 
+## Question API
+
+[`api.py`](src/france_load_forecast/api.py) serves the agent to the page. `POST /ask` takes
+`{"question": "..."}` and returns the answer, the tools the agent called and the date of the data,
+or the agent's refusal when a number of the answer has no source. The API reads the last bundle
+from the page and reads it again every hour. The limits of [`config/api.toml`](config/api.toml)
+keep it within free tiers: 60 questions a day in all, and 5 an hour and 20 a day per visitor.
+
+To run it locally with the Ollama model:
+
+```sh
+FLF_MODELS=ollama:ministral-3:14b uv run uvicorn france_load_forecast.api:build --factory
+```
+
+Online, it runs on Cloud Run in Paris (europe-west9), with Groq's free plan: gpt-oss-120b, then
+gpt-oss-20b. Beyond its limits, Groq answers with an error instead of a bill. The image holds only
+the agent and its dependencies. The [Deploy](.github/workflows/deploy.yml) workflow builds the
+image and deploys it after each merge that changes the agent. To set it up once:
+
+1. Create a Google Cloud project with two budgets: a Cloud Run spend cap of 2 € a month, and an
+   alert at 1 €.
+2. Create a Groq API key.
+3. Run `scripts/cloud-setup.sh <project id>`. It asks for the key. Then set the variables it
+   prints on the repository.
+4. Run the Deploy workflow.
+
 ## Development
 
 Requires [uv](https://docs.astral.sh/uv/). It installs Python 3.12 and the locked dependencies.
