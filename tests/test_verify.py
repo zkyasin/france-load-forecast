@@ -28,3 +28,16 @@ def test_numbers_without_a_source_are_reported() -> None:
 
 def test_more_decimals_than_the_source_must_still_round_to_it() -> None:
     assert unsupported("Un écart de 1,29 TWh.", SOURCES) == ["1,29"]
+
+
+def test_labels_of_the_sources_support_nothing() -> None:
+    sources = ['{"month": "2027-01", "p50": 49.15, "p90": 51.5}']
+
+    assert unsupported("Janvier 2027 : 50 TWh en P50, et 90 % de chances.", sources) == [
+        "50",
+        "90",
+    ]
+
+
+def test_names_with_a_number_are_labels() -> None:
+    assert unsupported("Après la crise du Covid-19.", SOURCES) == []

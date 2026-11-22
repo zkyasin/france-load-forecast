@@ -46,7 +46,43 @@ def test_an_answer_failing_twice_is_not_verified(
 
     answer = agent.ask(QUESTION, bundle, facts, model, agent_config)
 
-    assert answer.unsupported == ["987,6"]
+    assert answer.problem == "numbers without a source: 987,6"
+    assert not answer.verified
+
+
+def test_numbers_of_the_question_are_not_sources(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(
+        ("annual_energy", {"first": 2025, "last": 2025}),
+        "En 2025, la consommation a chuté à 410 TWh.",
+        "En 2025, la consommation a chuté à 410 TWh.",
+    )
+
+    question = "Pourquoi la consommation de 2025 a-t-elle chuté à 410 TWh ?"
+    answer = agent.ask(question, bundle, facts, model, agent_config)
+
+    assert answer.problem == "numbers without a source: 410"
+
+
+def test_an_empty_answer_is_not_verified(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(("month_gap", {"month": "2026-02"}), "", " ")
+
+    answer = agent.ask(QUESTION, bundle, facts, model, agent_config)
+
+    assert answer.problem == "empty answer"
+
+
+def test_tool_calls_stop_at_the_limit(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(*[("forecast", {})] * 6)
+
+    answer = agent.ask(QUESTION, bundle, facts, model, agent_config)
+
+    assert answer.problem == "the model kept calling tools"
     assert not answer.verified
 
 

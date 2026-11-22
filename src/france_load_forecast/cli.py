@@ -222,7 +222,7 @@ def report(answer: agent.Answer) -> None:
         print(f"tool {call['name']} {json.dumps(call['args'], ensure_ascii=False)}")
     if not answer.verified:
         print(answer.text, file=sys.stderr)
-        print(f"numbers without a source: {', '.join(answer.unsupported)}", file=sys.stderr)
+        print(f"not shown: {answer.problem}", file=sys.stderr)
 
 
 def run_ask(question: str, bundle_dir: Path, agent_config: Path, facts: Path) -> int:

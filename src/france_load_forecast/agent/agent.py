@@ -1,10 +1,11 @@
 """An LLM that answers from the read-only tools, checked by the verifier.
 
-Every number of an answer must come from a tool result, the question or the data dates given to
-the model. Otherwise the model gets one more try, told which numbers lack a source; an answer
-that still fails is not shown.
+Every number of an answer must come from a tool result, the data dates or a year named in the
+question. Otherwise, or when the answer is empty, the model gets one more try within the same
+tool budget; an answer that still fails is not shown.
 """
 
+import re
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,6 +18,7 @@ from langchain.agents.middleware import (
     ModelCallLimitMiddleware,
     ToolCallLimitMiddleware,
 )
+from langchain.agents.middleware.model_call_limit import ModelCallLimitExceededError
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
@@ -47,9 +49,13 @@ RETRY = (
     "These numbers appear in no tool result: {numbers}. Rewrite the answer without them, or call "
     "a tool that gives them."
 )
+RETRY_EMPTY = "Answer the question, in French."
 
-# Shown instead of an answer that failed the verifier.
+# Shown instead of an answer that failed the check.
 REFUSAL = "Je ne peux pas répondre à cette question avec des chiffres vérifiés."
+
+DATES = ("published", "consolidated_until", "temperature_until", "measured_until")
+YEAR = re.compile(r"\b(?:19|20)\d{2}\b")
 
 
 @dataclass(frozen=True)
@@ -85,20 +91,35 @@ def chat_model(config: AgentConfig) -> BaseChatModel:
 @dataclass(frozen=True)
 class Answer:
     text: str
+    # The tool calls that ran, with their arguments.
     tool_calls: list[dict[str, Any]]
-    # Numbers of the final text that no source supports.
-    unsupported: list[str]
+    # Why the text must not be shown, or None when it passed the check.
+    problem: str | None
 
     @property
     def verified(self) -> bool:
-        return not self.unsupported
+        return self.problem is None
 
 
 def instructions(bundle: Bundle, words: int) -> str:
-    meta = bundle["meta"]
     return INSTRUCTIONS.format(
-        words=words, current_month=bundle["forecast"]["current_month"], **meta
+        words=words, current_month=bundle["forecast"]["current_month"], **bundle["meta"]
     )
+
+
+def _calls_that_ran(messages: list[AnyMessage]) -> list[dict[str, Any]]:
+    """Tool calls of `messages` answered by a tool result, not by a limit error."""
+    requested = {
+        call["id"]: {"name": call["name"], "args": call["args"]}
+        for message in messages
+        if isinstance(message, AIMessage)
+        for call in message.tool_calls
+    }
+    return [
+        requested[message.tool_call_id]
+        for message in messages
+        if isinstance(message, ToolMessage) and message.status != "error"
+    ]
 
 
 def ask(
@@ -111,28 +132,38 @@ def ask(
 ) -> Answer:
     """Answer `question` with the tools, and check every number of the answer."""
     system = instructions(bundle, words)
-    limits: list[AgentMiddleware[Any, Any, Any]] = [
-        ToolCallLimitMiddleware(run_limit=config.max_tool_calls),
-        # The tool calls, then the answer, with one turn to spare.
-        ModelCallLimitMiddleware(run_limit=config.max_tool_calls + 2),
-    ]
-    agent = create_agent(
-        model, tools=make_tools(bundle, facts), system_prompt=system, middleware=limits
-    )
+    tools = make_tools(bundle, facts)
+    dates = [bundle["meta"][key] for key in DATES] + [bundle["forecast"]["current_month"]]
+    known = [" ".join(dates), *YEAR.findall(question)]
     conversation: list[AnyMessage | dict[str, Any]] = [HumanMessage(question)]
+    ran: list[dict[str, Any]] = []
+    text, problem = "", None
     for _ in range(2):
-        state = agent.invoke(InputAgentState(messages=conversation))
+        budget = config.max_tool_calls - len(ran)
+        limits: list[AgentMiddleware[Any, Any, Any]] = [
+            # The tool calls, then the answer, with one turn to spare.
+            ModelCallLimitMiddleware(run_limit=budget + 2, exit_behavior="error")
+        ]
+        if budget > 0:
+            limits.append(ToolCallLimitMiddleware(run_limit=budget))
+        agent = create_agent(
+            model, tools=tools if budget > 0 else [], system_prompt=system, middleware=limits
+        )
+        try:
+            state = agent.invoke(InputAgentState(messages=conversation))
+        except ModelCallLimitExceededError:
+            return Answer("", ran, "the model kept calling tools")
         messages: list[AnyMessage] = state["messages"]
-        text = messages[-1].text
-        results = [message.text for message in messages if isinstance(message, ToolMessage)]
-        missing = verify.unsupported(text, [question, system, *results])
-        if not missing:
-            break
-        conversation = [*messages, HumanMessage(RETRY.format(numbers=", ".join(missing)))]
-    calls = [
-        {"name": call["name"], "args": call["args"]}
-        for message in messages
-        if isinstance(message, AIMessage)
-        for call in message.tool_calls
-    ]
-    return Answer(text, calls, missing)
+        ran += _calls_that_ran(messages[len(conversation) :])
+        text = messages[-1].text.strip()
+        results = [m.text for m in messages if isinstance(m, ToolMessage) and m.status != "error"]
+        missing = verify.unsupported(text, [*known, *results])
+        if not text:
+            problem, retry = "empty answer", RETRY_EMPTY
+        elif missing:
+            problem = f"numbers without a source: {', '.join(missing)}"
+            retry = RETRY.format(numbers=", ".join(missing))
+        else:
+            return Answer(text, ran, None)
+        conversation = [*messages, HumanMessage(retry)]
+    return Answer(text, ran, problem)
