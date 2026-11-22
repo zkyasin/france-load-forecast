@@ -22,6 +22,7 @@
             <li><a href="#accuracy-title">Fiabilité</a></li>
             <li><a href="#gaps-title">Écarts</a></li>
             <li><a href="#note-title">Note</a></li>
+            <li><a href="#ask-title">Questions</a></li>
             <li><a href="#temperature-title">Température</a></li>
             <li><a href="#history-title">Historique</a></li>
             <li><a href="#scenarios-title">Scénarios</a></li>
@@ -207,6 +208,47 @@
           <div id="note-reading"></div>
         </div>
         <p class="note-credit" id="note-credit"></p>
+      </section>
+
+      <section id="ask" aria-labelledby="ask-title">
+        <h2 id="ask-title">Poser une question</h2>
+        <p class="prose">
+          Un agent répond avec des outils qui lisent les données publiées : la prévision, les
+          écarts, l'historique, les scénarios, la méthode. Chaque nombre de sa réponse doit venir de
+          ces données, sinon la réponse n'est pas affichée. La question est transmise à Groq, qui
+          héberge le modèle de langue.
+        </p>
+        <p class="examples-title" id="examples-title">Exemples</p>
+        <ul class="examples" aria-labelledby="examples-title">
+          <li>
+            <button type="button" data-question="Quelle consommation prévoyez-vous pour janvier 2027 ?">
+              Quelle consommation prévoyez-vous pour janvier 2027 ?
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              data-question="Pourquoi la consommation de février 2026 a-t-elle été plus basse que prévu ?"
+            >
+              Pourquoi la consommation de février 2026 a-t-elle été plus basse que prévu ?
+            </button>
+          </li>
+          <li>
+            <button type="button" data-question="Que se passerait-il en 2027 avec un hiver froid ?">
+              Que se passerait-il en 2027 avec un hiver froid ?
+            </button>
+          </li>
+        </ul>
+        <form class="ask" id="ask-form">
+          <label for="ask-question">Votre question</label>
+          <textarea id="ask-question" name="question" rows="2" maxlength="300" required></textarea>
+          <div class="ask-send">
+            <button type="submit" id="ask-send">Demander</button>
+            <p>300 caractères au plus. 60 questions par jour pour tout le site.</p>
+          </div>
+        </form>
+        <div class="prose" id="ask-answer" aria-live="polite"></div>
+        <p class="ask-origin" id="ask-origin"></p>
       </section>
 
       <section aria-labelledby="temperature-title">

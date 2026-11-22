@@ -2,6 +2,7 @@ import "@fontsource-variable/archivo/wdth.css";
 import "./style.css";
 import * as accuracy from "./accuracy";
 import * as annual from "./annual";
+import * as ask from "./ask";
 import { byId } from "./chart";
 import { latest, type Meta, publications } from "./data";
 import * as forecast from "./forecast";
@@ -55,6 +56,7 @@ async function main(): Promise<void> {
     ["Fiabilité", () => accuracy.render(bundle.accuracy)],
     ["Écarts", () => gaps.render(bundle.gaps)],
     ["Note du mois", () => notes.render()],
+    ["Poser une question", () => ask.render()],
     ["Température", () => temperature.render(bundle.model)],
     ["Historique", () => annual.render(bundle.history.years)],
     ["Scénarios", () => scenarios.render(bundle.scenarios)],
