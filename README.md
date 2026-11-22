@@ -75,9 +75,17 @@ GitHub Actions once, in the Pages settings of the repository.
 
 ## Page
 
-The page, in French, is at <https://zkyasin.github.io/france-load-forecast/>. It shows the
-forecast of the next twelve months with its band, the forecast of any past publication against
-the months measured since, the accuracy of past forecasts, the method and the sources.
+The page, in French, is at <https://zkyasin.github.io/france-load-forecast/>. It shows:
+
+- the forecast of the next twelve months with its band, and the forecast of any past
+  publication against the months measured since;
+- the accuracy of past forecasts;
+- the gaps of the last twelve months, against the year before or against the forecast, split
+  into weather, calendar and other effects;
+- the load added by one degree less, by temperature;
+- the energy of each year since 2014, measured and corrected for the weather;
+- the BP2025 scenarios to 2031, for a trajectory and a winter chosen by the reader;
+- the method and the sources.
 
 [`web/`](web) is a static site built with [Vite](https://vite.dev), TypeScript and
 [Observable Plot](https://observablehq.com/plot/). It reads the bundles of the `data` branch,

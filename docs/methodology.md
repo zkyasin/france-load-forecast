@@ -165,7 +165,9 @@ trajectory.
 
 Two limits hold until more data come in: 14 winters are few for a winter that happens 1 year in
 10, and the trajectories start from today's level while the BP2025 levels for 2030 assume growth
-from 2024.
+from 2024. A third comes from the source: RTE's trajectories do not grow at the same rate each
+year, the slow one rising mostly from 2027 (figure 2.5 of the chapter), so a mean growth from
+2024 understates their growth over the years the scenarios cover.
 
 ## Results on data up to August 2026
 

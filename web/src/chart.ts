@@ -2,11 +2,13 @@
 
 export interface Colors {
   paper: string;
+  ink: string;
   muted: string;
   rule: string;
   forecast: string;
   measured: string;
   third: string;
+  fourth: string;
 }
 
 /** The colors of the current color scheme, set in style.css. */
@@ -15,11 +17,13 @@ export function colors(): Colors {
   const read = (name: string) => style.getPropertyValue(`--${name}`).trim();
   return {
     paper: read("paper"),
+    ink: read("ink"),
     muted: read("muted"),
     rule: read("rule"),
     forecast: read("forecast"),
     measured: read("measured"),
     third: read("third"),
+    fourth: read("fourth"),
   };
 }
 
@@ -35,12 +39,19 @@ export const frame = (width: number, colors: Colors) => ({
   },
 });
 
-/** Options of the hover tip, in the colors of the page. */
-export const tipStyle = (colors: Colors) => ({
+/**
+ * Options of the hover tip, in the colors of the page. A tip with no y hangs from the top of the
+ * frame, where Plot turns it left or right near the edges; on a phone its lines wrap sooner. Both
+ * keep it whole on a small screen.
+ */
+export const tipStyle = (colors: Colors, width: number) => ({
   fill: colors.paper,
   stroke: colors.rule,
   textPadding: 8,
   pathFilter: "none",
+  frameAnchor: "top" as const,
+  preferredAnchor: "top" as const,
+  lineWidth: width < 480 ? 13 : 20,
 });
 
 /**
@@ -61,8 +72,13 @@ export function drawIn(box: HTMLElement, draw: (width: number, colors: Colors) =
   return redraw;
 }
 
-/** Replaces the content of `table`: one row per entry of `body`, its first cell as a row header. */
-export function fillTable(table: HTMLTableElement, header: string[], body: string[][]): void {
+/** Replaces the content of `table`: one row per entry of `body`, its first cells as row headers. */
+export function fillTable(
+  table: HTMLTableElement,
+  header: string[],
+  body: string[][],
+  rowHeaders = 1,
+): void {
   table.replaceChildren();
   const head = table.createTHead().insertRow();
   for (const text of header) {
@@ -75,8 +91,8 @@ export function fillTable(table: HTMLTableElement, header: string[], body: strin
   for (const values of body) {
     const row = rows.insertRow();
     values.forEach((text, index) => {
-      const cell = document.createElement(index === 0 ? "th" : "td");
-      if (index === 0) cell.setAttribute("scope", "row");
+      const cell = document.createElement(index < rowHeaders ? "th" : "td");
+      if (index < rowHeaders) cell.setAttribute("scope", "row");
       cell.textContent = text;
       row.append(cell);
     });

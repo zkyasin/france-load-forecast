@@ -30,9 +30,22 @@ export const number = (value: number, digits = 1): string => format(value, digit
 /** "+1,5", "0,0" or a negative value with a true minus sign. */
 export const signed = (value: number, digits = 1): string => format(value, digits, "exceptZero");
 
+/** An axis label: whole values without a decimal, the others with one, so that close ticks differ. */
+export const tick = (value: number): string => number(value, Number.isInteger(value) ? 0 : 1);
+
+/** An axis label with its sign, as `signed` writes it. */
+export const signedTick = (value: number): string => signed(value, Number.isInteger(value) ? 0 : 1);
+
 export const twh = (value: number, digits = 1): string => `${number(value, digits)}${NBSP}TWh`;
 
 export const percent = (value: number, digits = 1): string => `${number(value, digits)}${NBSP}%`;
+
+export const celsius = (value: number, digits = 1): string => `${number(value, digits)}${NBSP}°C`;
+
+/** "de mars", "d'avril": the preposition before a word, elided before a vowel. */
+export const of = (word: string): string => (/^[aeiouéè]/i.test(word) ? `d'${word}` : `de ${word}`);
+
+export const capitalize = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
 
 export const monthDate = (month: string): Date =>
   new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1, 1));

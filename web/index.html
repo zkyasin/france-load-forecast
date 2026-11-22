@@ -17,6 +17,17 @@
       <div class="wrap">
         <p class="site-name">Consommation d'électricité en France</p>
         <p class="issue" id="issue"></p>
+        <nav aria-label="Sections de la page">
+          <ul>
+            <li><a href="#accuracy-title">Fiabilité</a></li>
+            <li><a href="#gaps-title">Écarts</a></li>
+            <li><a href="#temperature-title">Température</a></li>
+            <li><a href="#history-title">Historique</a></li>
+            <li><a href="#scenarios-title">Scénarios</a></li>
+            <li><a href="#method-title">Méthode</a></li>
+            <li><a href="#sources-title">Sources</a></li>
+          </ul>
+        </nav>
       </div>
     </header>
 
@@ -116,6 +127,200 @@
         </details>
       </section>
 
+      <section aria-labelledby="gaps-title">
+        <h2 id="gaps-title">Écarts</h2>
+        <p class="prose">
+          L'écart de chaque mois à sa référence se décompose avec le modèle : l'effet de la météo,
+          celui du calendrier (jour de la semaine, jours fériés, ponts) et les autres effets, qui
+          regroupent l'évolution de fond de la consommation et les écarts de quelques jours.
+        </p>
+        <fieldset class="choice" id="gaps-view">
+          <legend>Comparer chaque mois</legend>
+          <div class="options">
+            <label>
+              <input type="radio" name="gaps-view" value="against_year_before" checked />
+              <span>à l'année précédente</span>
+            </label>
+            <label>
+              <input type="radio" name="gaps-view" value="against_forecast" />
+              <span>à sa prévision</span>
+            </label>
+          </div>
+        </fieldset>
+        <p class="prose" id="gaps-summary" aria-live="polite"></p>
+        <ul class="legend" id="gaps-legend">
+          <li data-term="climate">
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <rect class="measured" x="6" y="0" width="12" height="12" rx="2" />
+            </svg>
+            Météo
+          </li>
+          <li data-term="calendar">
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <rect class="third" x="6" y="0" width="12" height="12" rx="2" />
+            </svg>
+            Calendrier
+          </li>
+          <li data-term="others">
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <rect class="fourth" x="6" y="0" width="12" height="12" rx="2" />
+            </svg>
+            Autres effets
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <circle class="total" cx="12" cy="6" r="4.5" />
+            </svg>
+            Écart total
+          </li>
+          <li id="gaps-provisional">
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <circle class="total provisional" cx="12" cy="6" r="4" />
+            </svg>
+            Mois provisoire
+          </li>
+        </ul>
+        <figure class="chart">
+          <div
+            class="plot"
+            id="gaps-plot"
+            role="img"
+            aria-label="Écart de chaque mois au même mois un an plus tôt, décomposé en météo, calendrier et autres effets"
+          ></div>
+        </figure>
+        <details>
+          <summary id="gaps-values">Valeurs du graphique, en TWh et en °C</summary>
+          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+          <section class="table-scroll" tabindex="0" aria-labelledby="gaps-values">
+            <table id="gaps-table"></table>
+          </section>
+        </details>
+      </section>
+
+      <section aria-labelledby="temperature-title">
+        <h2 id="temperature-title">Température</h2>
+        <p class="prose" id="temperature-summary"></p>
+        <figure class="chart narrow">
+          <div
+            class="plot"
+            id="temperature-plot"
+            role="img"
+            aria-label="Hausse de la consommation pour un degré de moins, selon la température"
+          ></div>
+        </figure>
+        <details>
+          <summary id="temperature-values">Valeurs du graphique</summary>
+          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+          <section class="table-scroll" tabindex="0" aria-labelledby="temperature-values">
+            <table id="temperature-table"></table>
+          </section>
+        </details>
+      </section>
+
+      <section aria-labelledby="history-title">
+        <h2 id="history-title">Historique</h2>
+        <p class="prose" id="history-summary"></p>
+        <ul class="legend">
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <line class="measured" x1="0" y1="6" x2="24" y2="6" />
+              <circle class="measured" cx="12" cy="6" r="4" />
+            </svg>
+            Mesurée
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <line class="third" x1="0" y1="6" x2="24" y2="6" />
+              <rect class="third" x="8.5" y="2.5" width="7" height="7" />
+            </svg>
+            Corrigée de la météo
+          </li>
+        </ul>
+        <figure class="chart narrow">
+          <div
+            class="plot"
+            id="history-plot"
+            role="img"
+            aria-label="Énergie consommée chaque année, mesurée et corrigée de la météo"
+          ></div>
+        </figure>
+        <details>
+          <summary id="history-values">Valeurs du graphique, en TWh</summary>
+          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+          <section class="table-scroll" tabindex="0" aria-labelledby="history-values">
+            <table id="history-table"></table>
+          </section>
+        </details>
+      </section>
+
+      <section aria-labelledby="scenarios-title">
+        <h2 id="scenarios-title">Scénarios</h2>
+        <p class="prose">
+          Les scénarios prolongent la consommation jusqu'en 2031 selon trois trajectoires du Bilan
+          prévisionnel 2025 de RTE. Ils appliquent au niveau actuel de la consommation, à
+          température de référence, la croissance annuelle moyenne de chaque trajectoire entre les
+          années dont RTE donne le niveau (2024, 2030, 2035), et non ces niveaux, qui portent sur un
+          autre périmètre. La stagnation, un test de sensibilité de RTE, sert de référence avec un
+          hiver normal.
+        </p>
+        <p class="prose" id="scenarios-winters"></p>
+        <div class="controls">
+          <fieldset class="choice" id="scenario-trajectory">
+            <legend>Trajectoire</legend>
+            <div class="options"></div>
+          </fieldset>
+          <fieldset class="choice" id="scenario-winter">
+            <legend>Hiver</legend>
+            <div class="options"></div>
+          </fieldset>
+        </div>
+        <p class="prose" id="scenarios-result" aria-live="polite"></p>
+        <ul class="legend">
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <line class="chosen" x1="0" y1="6" x2="24" y2="6" />
+              <circle class="chosen" cx="12" cy="6" r="4" />
+            </svg>
+            Trajectoire choisie
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <line class="other" x1="0" y1="6" x2="24" y2="6" />
+            </svg>
+            Autres trajectoires
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <rect class="band" x="0" y="0" width="24" height="12" rx="2" />
+            </svg>
+            D'un hiver doux à un hiver froid
+          </li>
+        </ul>
+        <figure class="chart narrow">
+          <div
+            class="plot"
+            id="scenarios-plot"
+            role="img"
+            aria-label="Énergie de chaque année jusqu'en 2031 selon trois trajectoires de consommation"
+          ></div>
+        </figure>
+        <p class="prose">
+          Ce sont des ordres de grandeur, pas des prévisions. Les hivers observés depuis 2012 sont
+          peu nombreux pour estimer un hiver qui revient une année sur dix. Les trajectoires de RTE
+          ne croissent pas au même rythme chaque année : la lente monte surtout à partir de 2027,
+          et une croissance moyenne depuis 2024 sous-estime alors celle des années 2027 à 2031.
+          Enfin, les scénarios partent du niveau d'aujourd'hui, alors que les niveaux du Bilan
+          prévisionnel pour 2030 supposent une croissance depuis 2024.
+        </p>
+        <details>
+          <summary id="scenarios-values">Énergie de chaque scénario, en TWh</summary>
+          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+          <section class="table-scroll" tabindex="0" aria-labelledby="scenarios-values">
+            <table id="scenarios-table"></table>
+          </section>
+        </details>
+      </section>
+
       <section class="prose" aria-labelledby="method-title">
         <h2 id="method-title">Méthode</h2>
         <p>
@@ -181,6 +386,13 @@
             >, Corse et pertes comprises, pour vérifier la correction du climat.
           </li>
         </ul>
+        <p>
+          Les trajectoires des scénarios viennent du
+          <a
+            href="https://assets.rte-france.com/prod/public/2025-12/2025-12-23-bilan-previsionnel-2025-consommation.pdf"
+            >Bilan prévisionnel 2025-2035 de RTE, chapitre « La consommation d'électricité »</a
+          >, publié le 23 décembre 2025, p. 10, 11 et 35.
+        </p>
       </section>
     </main>
 

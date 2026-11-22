@@ -147,9 +147,8 @@ function plot(history: HistoryMonth[], forecast: Forecast, width: number, colors
         months,
         Plot.pointerX({
           x: "date",
-          y: (row: Row) => row.measured?.energy ?? row.forecasted?.p50,
           title: tipText,
-          ...tipStyle(colors),
+          ...tipStyle(colors, width),
         }),
       ),
     ],
