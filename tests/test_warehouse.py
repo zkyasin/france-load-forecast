@@ -61,8 +61,11 @@ def test_realtime_days_are_raised_by_the_mean_revision(
     revision = sum(revised[day] - realtime[day] for day in realtime) / len(realtime)
 
     load_gw, _, _ = daily_load(con)[dt.date(2026, 9, 1)]
+    mean_gw, days = warehouse.mean_revision(con)
 
     assert load_gw == pytest.approx(realtime[dt.date(2026, 9, 1)] + revision)
+    assert mean_gw == pytest.approx(revision)
+    assert days == 2
     assert 0.5 < revision < 1.5
 
 

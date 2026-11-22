@@ -202,6 +202,12 @@ def summarize(con: duckdb.DuckDBPyConnection) -> list[tuple[str, int, date, date
     return con.execute(query).fetchall()
 
 
+def mean_revision(con: duckdb.DuckDBPyConnection) -> tuple[float, int]:
+    """Revision added to real-time load, in GW, and the number of days it is measured on."""
+    revision_gw, days = con.execute("SELECT avg(revision_gw), count(*) FROM revision").fetchall()[0]
+    return revision_gw, days
+
+
 def run_checks(con: duckdb.DuckDBPyConnection) -> list[str]:
     """Return one message per failed data check."""
     failures = []
