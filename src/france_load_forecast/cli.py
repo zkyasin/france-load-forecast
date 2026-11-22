@@ -246,6 +246,10 @@ def run_note(month: str, bundle_dir: Path, agent_config: Path, facts: Path, out:
     if loaded is None:
         return 1
     bundle, fact_texts, config = loaded
+    months = [entry["month"] for entry in bundle["gaps"]["months"]]
+    if month not in months:
+        print(f"no gap for {month}: the bundle covers {months[0]} to {months[-1]}", file=sys.stderr)
+        return 1
     text, reading = note.write(month, bundle, fact_texts, agent.chat_model(config), config)
     report(reading)
     if not reading.verified:

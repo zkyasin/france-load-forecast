@@ -31,3 +31,12 @@ def test_ingest_builds_the_warehouse(
 def test_forecast_needs_the_backtest(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["forecast", "--data-dir", str(tmp_path)]) == 1
     assert "flf backtest" in capsys.readouterr().err
+
+
+def test_note_needs_a_month_of_the_bundle(
+    fixtures: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    exit_code = cli.main(["note", "2026-10", "--bundle", str(fixtures / "bundle")])
+
+    assert exit_code == 1
+    assert "covers 2025-10 to 2026-09" in capsys.readouterr().err
