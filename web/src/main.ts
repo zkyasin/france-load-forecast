@@ -7,6 +7,7 @@ import { latest, type Meta, publications } from "./data";
 import * as forecast from "./forecast";
 import { dayName, daysSince, NBSP, signed } from "./format";
 import * as gaps from "./gaps";
+import * as notes from "./notes";
 import * as scenarios from "./scenarios";
 import * as temperature from "./temperature";
 
@@ -53,6 +54,7 @@ async function main(): Promise<void> {
     ["Prévision", () => forecast.render(bundle, days)],
     ["Fiabilité", () => accuracy.render(bundle.accuracy)],
     ["Écarts", () => gaps.render(bundle.gaps)],
+    ["Note du mois", () => notes.render()],
     ["Température", () => temperature.render(bundle.model)],
     ["Historique", () => annual.render(bundle.history.years)],
     ["Scénarios", () => scenarios.render(bundle.scenarios)],
