@@ -256,7 +256,8 @@ main > section + section {
 }
 
 #accuracy-plot,
-#gaps-plot {
+#gaps-plot,
+#temperature-plot {
   min-height: 240px;
 }
 

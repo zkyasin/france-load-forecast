@@ -6,6 +6,7 @@ import { latest, type Meta, publications } from "./data";
 import * as forecast from "./forecast";
 import { dayName, daysSince, NBSP, signed } from "./format";
 import * as gaps from "./gaps";
+import * as temperature from "./temperature";
 
 // The bundle is published every Monday: an older one means that an update did not run.
 const STALE_AFTER_DAYS = 8;
@@ -44,6 +45,7 @@ async function main(): Promise<void> {
   forecast.render(bundle, days);
   accuracy.render(bundle.accuracy);
   gaps.render(bundle.gaps);
+  temperature.render(bundle.model);
   method(bundle.meta);
 }
 

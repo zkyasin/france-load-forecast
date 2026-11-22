@@ -186,6 +186,26 @@
         </details>
       </section>
 
+      <section aria-labelledby="temperature-title">
+        <h2 id="temperature-title">Température</h2>
+        <p class="prose" id="temperature-summary"></p>
+        <figure class="chart narrow">
+          <div
+            class="plot"
+            id="temperature-plot"
+            role="img"
+            aria-label="Hausse de la consommation pour un degré de moins, selon la température"
+          ></div>
+        </figure>
+        <details>
+          <summary id="temperature-values">Valeurs du graphique</summary>
+          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+          <section class="table-scroll" tabindex="0" aria-labelledby="temperature-values">
+            <table id="temperature-table"></table>
+          </section>
+        </details>
+      </section>
+
       <section class="prose" aria-labelledby="method-title">
         <h2 id="method-title">Méthode</h2>
         <p>

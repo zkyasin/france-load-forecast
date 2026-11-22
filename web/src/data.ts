@@ -84,12 +84,28 @@ export interface Gaps {
   months: GapMonth[];
 }
 
+export interface Gradient {
+  temperature: number;
+  // GW of daily load added by one degree less, at this smoothed temperature.
+  gw_per_c: number;
+}
+
+export interface Model {
+  published: string;
+  model_id: string;
+  fitted_from: string;
+  fitted_until: string;
+  // `winter` is the mean gradient over the days of December to February.
+  thermosensitivity: { winter: number; by_temperature: Gradient[] };
+}
+
 export interface Bundle {
   meta: Meta;
   forecast: Forecast;
   history: History;
   accuracy: Accuracy;
   gaps: Gaps;
+  model: Model;
 }
 
 async function get<T>(path: string): Promise<T> {
@@ -102,14 +118,15 @@ async function get<T>(path: string): Promise<T> {
 
 /** The last published bundle. */
 export async function latest(): Promise<Bundle> {
-  const [meta, forecast, history, accuracy, gaps] = await Promise.all([
+  const [meta, forecast, history, accuracy, gaps, model] = await Promise.all([
     get<Meta>("data/latest/meta.json"),
     get<Forecast>("data/latest/forecast.json"),
     get<History>("data/latest/history.json"),
     get<Accuracy>("data/latest/accuracy.json"),
     get<Gaps>("data/latest/gaps.json"),
+    get<Model>("data/latest/model.json"),
   ]);
-  return { meta, forecast, history, accuracy, gaps };
+  return { meta, forecast, history, accuracy, gaps, model };
 }
 
 /** Dates of all publications, oldest first. */
