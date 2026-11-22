@@ -6,7 +6,7 @@
 - Small commits whose messages follow [Conventional Commits](https://www.conventionalcommits.org/).
   The `commit-msg` hook and the CI check them.
 - One pull request per branch. The CI must pass before review.
-- `main` changes only through reviewed pull requests, merged by rebase.
+- `main` changes only through reviewed pull requests, merged with a merge commit.
 
 ## Checks
 

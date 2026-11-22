@@ -1,0 +1,33 @@
+name: Publish
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC.
+    - cron: "0 6 * * 1"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Pushes the data branch.
+permissions:
+  contents: write
+
+# One publication at a time, none cancelled.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run flf ingest
+      - run: uv run flf backtest
+      - run: uv run flf publish --out bundle
+      - run: uv run flf snapshot bundle/realtime.parquet
+      - run: scripts/archive.sh bundle

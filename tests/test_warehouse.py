@@ -136,3 +136,14 @@ def test_checks_report_consecutive_missing_temperatures(con: duckdb.DuckDBPyConn
     failures = warehouse.run_checks(con)
 
     assert any(f.startswith("temperature missing two days in a row") for f in failures)
+
+
+def test_realtime_snapshot_is_a_parquet_file(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    path = tmp_path / "archive" / "realtime.parquet"
+
+    rows = warehouse.export_realtime(con, path)
+
+    assert rows == 192
+    assert duckdb.connect().execute(f"SELECT count(*) FROM '{path}'").fetchall() == [(192,)]

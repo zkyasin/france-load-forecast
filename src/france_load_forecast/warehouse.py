@@ -202,6 +202,17 @@ def summarize(con: duckdb.DuckDBPyConnection) -> list[tuple[str, int, date, date
     return con.execute(query).fetchall()
 
 
+def export_realtime(con: duckdb.DuckDBPyConnection, path: Path) -> int:
+    """Write the real-time load to a Parquet file, and return its number of rows."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    target = str(path).replace("'", "''")
+    con.execute(
+        f"COPY (SELECT * FROM load_realtime ORDER BY date, time) TO '{target}' (FORMAT parquet)"
+    )
+    rows: int = con.execute("SELECT count(*) FROM load_realtime").fetchall()[0][0]
+    return rows
+
+
 def mean_revision(con: duckdb.DuckDBPyConnection) -> tuple[float, int]:
     """Revision added to real-time load, in GW, and the number of days it is measured on."""
     revision_gw, days = con.execute("SELECT avg(revision_gw), count(*) FROM revision").fetchall()[0]
