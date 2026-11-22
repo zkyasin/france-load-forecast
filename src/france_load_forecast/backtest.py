@@ -13,6 +13,9 @@ import pandas as pd
 
 from france_load_forecast import correction, forecast, model
 
+# Origins from 2023 come after the 2022 energy crisis.
+RECENT_ORIGINS = pd.Timestamp("2023-01-01")
+
 HORIZON_BUCKETS = {
     "1 month": (1, 1),
     "2-3 months": (2, 3),

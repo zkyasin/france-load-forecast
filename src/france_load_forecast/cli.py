@@ -134,12 +134,6 @@ def run_forecast(data_dir: Path, config: Path) -> int:
     return 0
 
 
-# Origins from 2023 come after the 2022 energy crisis.
-RECENT_ORIGINS = pd.Timestamp("2023-01-01")
-# The band of an origin needs two years of backtest errors before it.
-FIRST_BAND_ORIGIN = pd.Timestamp("2018-01-01")
-
-
 def run_backtest(data_dir: Path, config: Path, first: str) -> int:
     """Forecast from each month since `first` with the data known then, and score the forecasts."""
     spec = model.load_spec(config)
@@ -150,11 +144,11 @@ def run_backtest(data_dir: Path, config: Path, first: str) -> int:
     results = backtest.run(history, spec, backtest.monthly_origins(history, first))
     results.to_csv(data_dir / "backtest.csv", index=False)
 
-    recent = results[results["origin"] >= RECENT_ORIGINS]
+    recent = results[results["origin"] >= backtest.RECENT_ORIGINS]
     for label, part in (("all origins", results), ("origins since 2023", recent)):
         print(f"mean absolute percentage error of monthly energy, {label}")
         print(backtest.accuracy(part).to_string(float_format=lambda value: f"{value:.2f}"))
-    for first_origin in (FIRST_BAND_ORIGIN, RECENT_ORIGINS):
+    for first_origin in (conformal.FIRST_BAND_ORIGIN, backtest.RECENT_ORIGINS):
         coverage = conformal.online_coverage(results, first_origin)
         shares = ", ".join(f"{name} {100 * share:.0f} %" for name, share in coverage.items())
         print(f"P10-P90 coverage, origins since {first_origin:%Y}: {shares}")
