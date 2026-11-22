@@ -10,7 +10,16 @@ import duckdb
 import httpx
 import pandas as pd
 
-from france_load_forecast import backtest, conformal, correction, forecast, model, odre, warehouse
+from france_load_forecast import (
+    backtest,
+    conformal,
+    correction,
+    decomposition,
+    forecast,
+    model,
+    odre,
+    warehouse,
+)
 
 
 def ingest(data_dir: Path) -> int:
@@ -132,6 +141,27 @@ def run_backtest(data_dir: Path, config: Path, first: str) -> int:
     return 0
 
 
+def decompose(data_dir: Path, config: Path, months: int) -> int:
+    """Explain the energy of the last complete months against the forecast made at their start and
+    against the same month a year earlier."""
+    spec = model.load_spec(config)
+    with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
+        history = model.daily_frame(con, spec.smoothing)
+    recent = decomposition.recent_months(history, months)
+    latest = model.fit_recent(history, spec)
+    views = {
+        "the forecast made at the start of the month": decomposition.against_forecast(
+            history, spec, recent
+        ),
+        "the same month a year earlier": decomposition.against_year_before(latest, history, recent),
+    }
+    for reference, table in views.items():
+        table.index = pd.DatetimeIndex(table.index).strftime("%Y-%m")
+        print(f"monthly energy in TWh, against {reference}")
+        print(table.to_string(float_format=lambda value: f"{value:.2f}"))
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--data-dir", type=Path, default=Path("data"))
@@ -158,6 +188,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         "backtest", parents=[model_options], help="score forecasts made from past months"
     )
     backtest_parser.add_argument("--first", default="2016-01-01", help="first origin")
+    decompose_parser = commands.add_parser(
+        "decompose", parents=[model_options], help="explain the energy gaps of recent months"
+    )
+    decompose_parser.add_argument(
+        "--months", type=int, default=12, help="number of recent complete months"
+    )
     args = parser.parse_args(argv)
 
     if args.command == "ingest":
@@ -170,4 +206,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_forecast(args.data_dir, args.config)
     if args.command == "backtest":
         return run_backtest(args.data_dir, args.config, args.first)
+    if args.command == "decompose":
+        return decompose(args.data_dir, args.config, args.months)
     parser.error(f"unknown command {args.command}")

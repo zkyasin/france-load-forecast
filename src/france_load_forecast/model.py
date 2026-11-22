@@ -96,6 +96,12 @@ class DailyModel:
         smoothed = self.results.freq_seasonal[0]["smoothed"]
         return pd.Series(smoothed, index=self.results.fittedvalues.index)
 
+    @property
+    def ar(self) -> pd.Series:
+        """Smoothed autoregressive term, in GW."""
+        smoothed = self.results.autoregressive["smoothed"]
+        return pd.Series(smoothed, index=self.results.fittedvalues.index)
+
 
 def design_matrix(design: patsy.DesignInfo, frame: pd.DataFrame) -> pd.DataFrame:
     # The level of the model replaces the intercept.
