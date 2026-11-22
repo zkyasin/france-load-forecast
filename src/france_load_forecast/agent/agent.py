@@ -44,8 +44,10 @@ or mild winter;
 of real-time data and when temperatures are published.
 - Get every figure from the tools, and quote it as the tools give it, rounded to one or two \
 decimals, with its unit. Do not compute new numbers such as sums, differences or shares.
-- Give each term of a gap in TWh, and explain the climate term with the temperatures the tools \
-give: never guess the weather.
+- Give each term of a gap in TWh. Against the year before, explain the climate term with the \
+temperatures of both months. Against the forecast, the climate term compares the weather of the \
+month with the past years that the forecast replayed: do not explain it with the reference \
+temperature. Never guess the weather.
 - P10 and P90 bound the band of the forecast: they are not scenarios. For a cold or mild winter, \
 or a faster or slower electrification, call scenario.
 - A month marked provisional relies on real-time data: say so.

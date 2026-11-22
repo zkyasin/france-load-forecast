@@ -78,7 +78,9 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
         of each, both gaps, then each term of both gaps side by side. The terms are climate,
         calendar, lockdown, structural (level and seasonal states) and residual. Also the mean
         temperature of the month, its reference (normal) temperature and the temperature of the
-        same month a year earlier, in °C."""
+        same month a year earlier, in °C. The climate term vs_year_before compares the weather of
+        the two months; vs_forecast, it compares the weather of the month with the past years
+        that the forecast replayed, not with the reference temperature."""
         for entry in bundle["gaps"]["months"]:
             if entry["month"] != month:
                 continue
