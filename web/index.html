@@ -75,6 +75,47 @@
         </details>
       </section>
 
+      <section aria-labelledby="accuracy-title">
+        <h2 id="accuracy-title">Fiabilité</h2>
+        <p class="prose" id="accuracy-summary"></p>
+        <ul class="legend">
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <circle class="forecast" cx="12" cy="6" r="5" />
+            </svg>
+            Ce modèle
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <rect class="measured" x="7.5" y="1.5" width="9" height="9" />
+            </svg>
+            Même mois un an plus tôt, corrigé du climat
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <path class="third" d="M12 0.5 L17.5 11 L6.5 11 Z" />
+            </svg>
+            Même mois un an plus tôt
+          </li>
+        </ul>
+        <figure class="chart narrow">
+          <div
+            class="plot"
+            id="accuracy-plot"
+            role="img"
+            aria-label="Erreur moyenne des prévisions passées selon leur horizon, pour ce modèle et deux prévisions naïves"
+          ></div>
+        </figure>
+        <p class="prose" id="accuracy-coverage"></p>
+        <details>
+          <summary id="accuracy-values">Erreurs moyennes par horizon</summary>
+          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+          <section class="table-scroll" tabindex="0" aria-labelledby="accuracy-values">
+            <table id="accuracy-table"></table>
+          </section>
+        </details>
+      </section>
+
       <section class="prose" aria-labelledby="method-title">
         <h2 id="method-title">Méthode</h2>
         <p>

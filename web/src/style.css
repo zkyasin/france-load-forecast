@@ -224,9 +224,18 @@ main > section + section {
   margin: 0 0 1rem;
 }
 
+/* Four horizons need no more width than the text. */
+.chart.narrow {
+  max-width: 46rem;
+}
+
 /* The height of each plot, kept before it is drawn. */
 #forecast-plot {
   min-height: 300px;
+}
+
+#accuracy-plot {
+  min-height: 240px;
 }
 
 .plot svg {

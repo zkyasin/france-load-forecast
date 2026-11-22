@@ -1,5 +1,6 @@
 import "@fontsource-variable/archivo/wdth.css";
 import "./style.css";
+import * as accuracy from "./accuracy";
 import { byId } from "./chart";
 import { latest, type Meta, publications } from "./data";
 import * as forecast from "./forecast";
@@ -40,6 +41,7 @@ async function main(): Promise<void> {
   const days = await publications().catch(() => [bundle.meta.published]);
   masthead(bundle.meta, new Date());
   forecast.render(bundle, days);
+  accuracy.render(bundle.accuracy);
   method(bundle.meta);
 }
 
