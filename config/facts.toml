@@ -9,8 +9,9 @@ Un modèle journalier relie la consommation à la température nationale lissée
 au calendrier (types de jours, ponts, fin d'année, août) et à des états structurels (niveau et \
 saisonnalité) estimés par un filtre de Kalman. Chaque trajectoire de prévision rejoue la météo \
 d'une année passée complète autour de la température de référence ; la P50 est la médiane des \
-trajectoires. La bande P10-P90 applique à la P50 les erreurs relatives des prévisions passées, \
-par horizon."""
+trajectoires. La bande P10-P90 applique les erreurs relatives des prévisions passées, par \
+horizon, à la part de la P50 encore à venir ; l'énergie déjà mesurée du mois s'y ajoute telle \
+quelle."""
 
 [sources]
 date = 2026-11-22
