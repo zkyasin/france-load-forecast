@@ -19,8 +19,8 @@ source = "https://odre.opendatasoft.com"
 text = """
 Jeux de données de RTE publiés sur ODRÉ sous Licence Ouverte 2.0 : éCO2mix consolidé \
 (eco2mix-national-cons-def) et temps réel (eco2mix-national-tr), consommation quotidienne brute \
-(consommation-quotidienne-brute), pic journalier et températures \
-(pic-journalier-consommation-brute), consommation mensuelle brute et corrigée \
+(consommation-quotidienne-brute), pic journalier et température moyenne nationale publiée par \
+RTE (pic-journalier-consommation-brute), consommation mensuelle brute et corrigée \
 (conso_brute_corrigee_client_direct)."""
 
 [perimeter]
