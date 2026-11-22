@@ -57,11 +57,39 @@ export interface Accuracy {
   coverage_since_2023: Record<string, number>;
 }
 
+/** The gap between the energy of a month and a reference, and its terms, which add up to it. */
+export interface GapView {
+  actual: number;
+  reference: number;
+  gap: number;
+  climate: number;
+  calendar: number;
+  lockdown: number;
+  structural: number;
+  residual: number;
+}
+
+export interface GapMonth {
+  month: string;
+  provisional: boolean;
+  // Mean temperatures of the month, in °C.
+  temperature: { mean: number; reference: number; year_before: number };
+  against_forecast: GapView;
+  against_year_before: GapView;
+}
+
+export interface Gaps {
+  published: string;
+  model_id: string;
+  months: GapMonth[];
+}
+
 export interface Bundle {
   meta: Meta;
   forecast: Forecast;
   history: History;
   accuracy: Accuracy;
+  gaps: Gaps;
 }
 
 async function get<T>(path: string): Promise<T> {
@@ -74,13 +102,14 @@ async function get<T>(path: string): Promise<T> {
 
 /** The last published bundle. */
 export async function latest(): Promise<Bundle> {
-  const [meta, forecast, history, accuracy] = await Promise.all([
+  const [meta, forecast, history, accuracy, gaps] = await Promise.all([
     get<Meta>("data/latest/meta.json"),
     get<Forecast>("data/latest/forecast.json"),
     get<History>("data/latest/history.json"),
     get<Accuracy>("data/latest/accuracy.json"),
+    get<Gaps>("data/latest/gaps.json"),
   ]);
-  return { meta, forecast, history, accuracy };
+  return { meta, forecast, history, accuracy, gaps };
 }
 
 /** Dates of all publications, oldest first. */

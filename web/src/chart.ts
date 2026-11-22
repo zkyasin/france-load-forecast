@@ -2,11 +2,13 @@
 
 export interface Colors {
   paper: string;
+  ink: string;
   muted: string;
   rule: string;
   forecast: string;
   measured: string;
   third: string;
+  fourth: string;
 }
 
 /** The colors of the current color scheme, set in style.css. */
@@ -15,11 +17,13 @@ export function colors(): Colors {
   const read = (name: string) => style.getPropertyValue(`--${name}`).trim();
   return {
     paper: read("paper"),
+    ink: read("ink"),
     muted: read("muted"),
     rule: read("rule"),
     forecast: read("forecast"),
     measured: read("measured"),
     third: read("third"),
+    fourth: read("fourth"),
   };
 }
 
