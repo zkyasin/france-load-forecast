@@ -55,3 +55,18 @@ def test_measured_days_replace_the_forecast(
 
     np.testing.assert_allclose(with_observed.loc["2025-01-01"], 60 * 744 / 1000)
     pd.testing.assert_frame_equal(with_observed.iloc[1:], forecast_only.iloc[1:])
+
+
+def test_normal_climate_lies_between_a_cold_and_a_warm_year(
+    synthetic_model: model.DailyModel, synthetic_frame: pd.DataFrame
+) -> None:
+    weather = synthetic_frame.copy()
+    year = pd.DatetimeIndex(weather.index).year
+    weather["temperature_c"] = weather["reference_c"] + np.where(year == 2022, -3.0, 3.0)
+
+    paths = forecast.paths(synthetic_model, synthetic_frame, weather, [2022, 2023])
+    normal = forecast.normal(synthetic_model, synthetic_frame, 12)
+
+    january = pd.Timestamp("2025-01-01")
+    assert paths.at[january, 2022] > normal[january] > paths.at[january, 2023]
+    assert normal.index.equals(paths.index)

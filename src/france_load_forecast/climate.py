@@ -17,6 +17,12 @@ def _by_calendar_day(daily: pd.Series) -> pd.Series:
     return by_day
 
 
+def normal(history: pd.DataFrame, dates: pd.DatetimeIndex) -> pd.Series:
+    """Reference temperature on `dates`, taken from the latest year of `history`."""
+    reference = _by_calendar_day(history["reference_c"])
+    return pd.Series(reference.reindex(_calendar_days(dates)).to_numpy(), index=dates)
+
+
 def members(
     history: pd.DataFrame, weather: pd.DataFrame, dates: pd.DatetimeIndex, years: Iterable[int]
 ) -> pd.DataFrame:

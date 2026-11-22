@@ -1,4 +1,5 @@
 import json
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -6,7 +7,9 @@ from typing import Any
 import pandas as pd
 import pytest
 
-from france_load_forecast import correction, model, publish
+from france_load_forecast import correction, model, publish, scenarios
+
+SCENARIOS = Path(__file__).parents[1] / "config" / "scenarios.toml"
 
 TOTALS = {"actual", "reference", "gap"}
 
@@ -21,8 +24,17 @@ def bundle(
     observed = pd.Series(60.0, index=pd.date_range("2025-01-01", "2025-01-05"))
     energy = correction.monthly_energy(synthetic_frame["load_gw"])
     rte = pd.DataFrame({"gross": 1.005 * energy, "corrected": 1.005 * energy})
+    # The synthetic history ends in 2024, so the scenarios cover 2025 and 2026.
+    scenario_spec = replace(scenarios.load_spec(SCENARIOS), first_year=2025, last_year=2026)
     return publish.build(
-        history, observed, synthetic_spec, past_forecasts, rte, (0.8, 30), date(2025, 1, 6)
+        history,
+        observed,
+        synthetic_spec,
+        past_forecasts,
+        rte,
+        (0.8, 30),
+        scenario_spec,
+        date(2025, 1, 6),
     )
 
 
@@ -75,3 +87,19 @@ def test_bundle_is_written_as_json(bundle: dict[str, dict[str, Any]], tmp_path: 
 
     assert sorted(path.stem for path in tmp_path.iterdir()) == sorted(bundle)
     assert json.loads((tmp_path / "gaps.json").read_text(encoding="utf-8")) == bundle["gaps"]
+
+
+def test_scenarios_cover_each_year_trajectory_and_winter(bundle: dict[str, dict[str, Any]]) -> None:
+    cases = bundle["scenarios"]["cases"]
+
+    assert len(cases) == 2 * 3 * 3
+    assert all(len(case["months"]) == 12 for case in cases)
+    rapid = next(
+        c for c in cases if (c["year"], c["trajectory"], c["winter"]) == (2026, "rapid", "normal")
+    )
+    flat = next(
+        c
+        for c in cases
+        if (c["year"], c["trajectory"], c["winter"]) == (2026, "stagnation", "normal")
+    )
+    assert rapid["annual_energy"] > flat["annual_energy"]

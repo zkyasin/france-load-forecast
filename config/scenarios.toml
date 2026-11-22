@@ -1,0 +1,33 @@
+# Consumption trajectories of RTE's Bilan prévisionnel 2025 (BP2025). Its perimeter is domestic
+# consumption of mainland France without Corsica, corrected for weather and calendar, which is not
+# éCO2mix's: the simulator applies the growth rates of the trajectories to today's level, not their
+# levels. Growth between two years is geometric; after the last year given, the last rate holds.
+source = "RTE, Bilan prévisionnel 2025-2035, chapitre « La consommation d'électricité », 23 décembre 2025"
+base_year = 2024
+# Page 35, also the chart of page 3.
+base_twh = 447.0
+
+# Years of the simulator.
+first_year = 2027
+last_year = 2031
+
+[trajectories.stagnation]
+label = "Stagnation (test de sensibilité)"
+pages = "p. 11 et 35"
+twh = { 2030 = 445.0 }
+
+[trajectories.slow]
+label = "Décarbonation lente"
+pages = "p. 11 et 35"
+twh = { 2030 = 470.0, 2035 = 505.0 }
+
+[trajectories.rapid]
+label = "Décarbonation rapide"
+pages = "p. 10 et 35"
+twh = { 2030 = 510.0, 2035 = 580.0 }
+
+# A cold or mild winter replays the winter months (January, February, December) of the observed
+# year ranked at this share of the years, from the mildest: about 1 year in 10.
+[winters]
+cold = 0.9
+mild = 0.1

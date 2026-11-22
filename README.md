@@ -54,12 +54,13 @@ results of `flf backtest`. Every file carries the publication date and the model
 | `history.json` | Energy of each whole month, annual gross and corrected energy against RTE's |
 | `accuracy.json` | Backtest errors by horizon and coverage of the P10-P90 band |
 | `model.json` | Estimation window and response to temperature of the forecasting model |
+| `scenarios.json` | Energy of each year from 2027 to 2031 by BP2025 trajectory and winter, month by month |
 
 ## Agent
 
 The agent answers questions in French and writes the monthly note from the bundle. Its tools are
 read-only and return the figures it may quote: the forecast, the gaps of a month, annual energies,
-the response to temperature, the accuracy of past forecasts, and dated facts from
+the response to temperature, the accuracy of past forecasts, the scenarios, and dated facts from
 [`config/facts.toml`](config/facts.toml). A verifier checks that every number of a text comes
 from a tool result or is a year named in the question, and that the text holds no link. The model
 gets one more try, and a text that still fails, or stays empty, is not shown.

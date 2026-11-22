@@ -35,6 +35,28 @@ def scenarios(
     return {year: calendar.assign(temperature_smooth=smoothed[year]) for year in years}
 
 
+def _horizon(history: pd.DataFrame, months: int) -> pd.DatetimeIndex:
+    """The days of the `months` months after `history`, which must end on the last day of a
+    month so that the forecast covers whole months."""
+    end = pd.DatetimeIndex(history.index)[-1]
+    if not end.is_month_end:
+        raise ValueError(f"the history must end on the last day of a month, not on {end.date()}")
+    start = end + pd.Timedelta(days=1)
+    return pd.date_range(start, start + pd.DateOffset(months=months), freq="D", inclusive="left")
+
+
+def normal(model: DailyModel, history: pd.DataFrame, months: int) -> pd.Series:
+    """Monthly energy in TWh over the `months` months after `history`, at the reference
+    temperature."""
+    dates = _horizon(history, months)
+    temperature = climate.normal(history, dates).to_frame("normal")
+    start = history["temperature_smooth"].iloc[-1]
+    smoothed = climate.smooth(temperature, model.spec.smoothing, start)["normal"]
+    future = calendar_features(dates).assign(temperature_smooth=smoothed)
+    daily = model.results.forecast(len(dates), exog=exog(model, future))
+    return monthly_energy(pd.Series(daily.to_numpy(), index=dates))
+
+
 def paths(
     model: DailyModel,
     history: pd.DataFrame,
@@ -49,11 +71,7 @@ def paths(
     that the forecast covers whole months. The daily load in `observed`, measured after `history`
     but not usable by the model yet, replaces the forecast on its days.
     """
-    end = pd.DatetimeIndex(history.index)[-1]
-    if not end.is_month_end:
-        raise ValueError(f"the history must end on the last day of a month, not on {end.date()}")
-    start = end + pd.Timedelta(days=1)
-    dates = pd.date_range(start, start + pd.DateOffset(months=months), freq="D", inclusive="left")
+    dates = _horizon(history, months)
     known = pd.Series(np.nan, index=dates) if observed is None else observed.reindex(dates)
     energy = {}
     for year, future in scenarios(history, weather, years, dates, model.spec.smoothing).items():

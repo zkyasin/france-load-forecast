@@ -165,4 +165,50 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
             content |= {"revision_gw": meta["revision"]["gw"], "days": meta["revision"]["days"]}
         return _json(content)
 
-    return [forecast, month_gap, annual_energy, thermosensitivity, accuracy, fact]
+    @tool
+    def scenario(
+        year: int | None = None,
+        trajectory: Literal["stagnation", "slow", "rapid"] = "stagnation",
+        winter: Literal["normal", "cold", "mild"] = "normal",
+    ) -> str:
+        """Energy in TWh of a calendar year ahead under a scenario: a consumption trajectory of
+        RTE's Bilan prévisionnel 2025 (stagnation, slow or rapid decarbonisation), applied as
+        growth rates to today's level, and a winter (normal, or cold or mild as observed about
+        once in ten years). Gives the annual energy and the energy of January, February and
+        December, next to the reference: normal winter and stagnation. Without a year, the first
+        year of the scenarios."""
+        content = bundle["scenarios"]
+        years = content["years"]
+        year = year or years[0]
+        if year not in years:
+            return _error(f"no scenario for {year}: years are {years[0]} to {years[-1]}")
+        cases = {(c["year"], c["trajectory"], c["winter"]): c for c in content["cases"]}
+        case, reference = cases[year, trajectory, winter], cases[year, "stagnation", "normal"]
+        about = content["trajectories"][trajectory]
+        result = published | {
+            "year": year,
+            "years": years,
+            "trajectory": about["label"],
+            "growth_pct": about["growth_pct"][str(year)],
+            "source": f"{content['source']}, {about['pages']}",
+            "winter": winter,
+            "annual_energy": case["annual_energy"],
+            "winter_energy": case["winter_energy"],
+            "reference": {
+                "annual_energy": reference["annual_energy"],
+                "winter_energy": reference["winter_energy"],
+            },
+            "change": {
+                key: round(case[key] - reference[key], 3)
+                for key in ("annual_energy", "winter_energy")
+            },
+        }
+        if winter != "normal":
+            replayed = content["replayed_winters"]
+            result["replays_the_winter_months_of"] = next(
+                r["weather_year"] for r in replayed if (r["year"], r["winter"]) == (year, winter)
+            )
+            result["frequency"] = "about 1 year in 10"
+        return _json(result)
+
+    return [forecast, month_gap, annual_energy, thermosensitivity, accuracy, fact, scenario]
