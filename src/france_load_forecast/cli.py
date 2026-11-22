@@ -21,6 +21,7 @@ from france_load_forecast import (
     odre,
     outlook,
     publish,
+    scenarios,
     warehouse,
 )
 from france_load_forecast.agent import agent, note, tools
@@ -187,20 +188,23 @@ def decompose(data_dir: Path, config: Path, months: int) -> int:
     return 0
 
 
-def run_publish(data_dir: Path, config: Path, out: Path) -> int:
+def run_publish(data_dir: Path, config: Path, scenario_config: Path, out: Path) -> int:
     """Write the weekly bundle of JSON files."""
     past_forecasts = read_backtest(data_dir)
     if past_forecasts is None:
         return 1
 
     spec = model.load_spec(config)
+    scenario_spec = scenarios.load_spec(scenario_config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
         observed = model.load_after(con, history.index[-1])
         rte = correction.rte_monthly(con)
         revision = warehouse.mean_revision(con)
     published = datetime.now(UTC).date()
-    files = publish.build(history, observed, spec, past_forecasts, rte, revision, published)
+    files = publish.build(
+        history, observed, spec, past_forecasts, rte, revision, scenario_spec, published
+    )
     publish.write(files, out)
     print(f"{', '.join(files)} written to {out}")
     return 0
@@ -297,6 +301,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "publish", parents=[model_options], help="write the weekly bundle of JSON files"
     )
     publish_parser.add_argument("--out", type=Path, default=Path("data/bundle"))
+    publish_parser.add_argument("--scenarios", type=Path, default=Path("config/scenarios.toml"))
     agent_options = argparse.ArgumentParser(add_help=False)
     agent_options.add_argument("--bundle", type=Path, default=Path("data/bundle"))
     agent_options.add_argument("--agent-config", type=Path, default=Path("config/agent.toml"))
@@ -325,7 +330,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "decompose":
         return decompose(args.data_dir, args.config, args.months)
     if args.command == "publish":
-        return run_publish(args.data_dir, args.config, args.out)
+        return run_publish(args.data_dir, args.config, args.scenarios, args.out)
     if args.command == "ask":
         return run_ask(args.question, args.bundle, args.agent_config, args.facts)
     if args.command == "note":

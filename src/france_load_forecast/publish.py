@@ -11,7 +11,15 @@ from typing import Any
 
 import pandas as pd
 
-from france_load_forecast import backtest, conformal, correction, decomposition, model, outlook
+from france_load_forecast import (
+    backtest,
+    conformal,
+    correction,
+    decomposition,
+    model,
+    outlook,
+    scenarios,
+)
 
 GAP_MONTHS = 12
 
@@ -154,6 +162,45 @@ def model_file(fitted: model.DailyModel, history: pd.DataFrame) -> dict[str, Any
     }
 
 
+def scenarios_file(
+    table: pd.DataFrame, replayed: pd.DataFrame, spec: scenarios.ScenarioSpec
+) -> dict[str, Any]:
+    """Energy of each year, trajectory and winter, month by month, with the growth rates of the
+    trajectories and the weather year each cold or mild winter replays."""
+    cases = []
+    for (year, trajectory, winter), rows in table.groupby(
+        ["year", "trajectory", "winter"], sort=False
+    ):
+        in_winter = pd.DatetimeIndex(rows["month"]).month.isin(scenarios.WINTER)
+        cases.append(
+            {
+                "year": int(str(year)),
+                "trajectory": trajectory,
+                "winter": winter,
+                "annual_energy": _round(rows["energy"].sum()),
+                "winter_energy": _round(rows.loc[in_winter, "energy"].sum()),
+                "months": [_round(energy) for energy in rows["energy"]],
+            }
+        )
+    return {
+        "source": spec.source,
+        "years": spec.years,
+        "trajectories": {
+            name: {
+                "label": trajectory.label,
+                "pages": trajectory.pages,
+                "growth_pct": {
+                    str(year): round(100 * scenarios.growth(spec, name, year), 2)
+                    for year in spec.years
+                },
+            }
+            for name, trajectory in spec.trajectories.items()
+        },
+        "replayed_winters": replayed.to_dict(orient="records"),
+        "cases": cases,
+    }
+
+
 def build(
     history: pd.DataFrame,
     observed: pd.Series,
@@ -161,12 +208,14 @@ def build(
     past_forecasts: pd.DataFrame,
     rte: pd.DataFrame,
     revision: tuple[float, int],
+    scenario_spec: scenarios.ScenarioSpec,
     published: date,
 ) -> dict[str, dict[str, Any]]:
     """Every file of the bundle, by name.
 
     `history` is the daily frame, `observed` the load measured after it, `past_forecasts` the
-    backtest results, `rte` RTE's monthly series and `revision` the revision of real-time load.
+    backtest results, `rte` RTE's monthly series, `revision` the revision of real-time load and
+    `scenario_spec` the trajectories and winters of the scenarios.
     """
     latest = model.fit_recent(history, spec)
     current = outlook.current_month(history, observed)
@@ -191,6 +240,7 @@ def build(
         ),
         "accuracy": accuracy_file(past_forecasts),
         "model": model_file(latest, history),
+        "scenarios": scenarios_file(*scenarios.grid(latest, history, scenario_spec), scenario_spec),
     }
     header = {"published": published.isoformat(), "model_id": spec.model_id}
     return {name: header | content for name, content in files.items()}
