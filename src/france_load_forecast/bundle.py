@@ -21,6 +21,11 @@ AnnualEnergy = Annotated[float, Field(ge=ANNUAL_TWH[0], le=ANNUAL_TWH[1])]
 Percent = Annotated[float, Field(ge=0, le=100)]
 Celsius = Annotated[float, Field(ge=-20, le=40)]
 
+# The page and the agent read every year and trajectory under these winters, and compare each case
+# with this trajectory under a normal winter.
+WINTERS = frozenset({"normal", "cold", "mild"})
+REFERENCE_TRAJECTORY = "stagnation"
+
 
 class Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -183,8 +188,9 @@ class Scenarios(File):
 
     @model_validator(mode="after")
     def every_case(self) -> "Scenarios":
-        winters = {case.winter for case in self.cases}
-        expected = {(y, t, w) for y in self.years for t in self.trajectories for w in winters}
+        if REFERENCE_TRAJECTORY not in self.trajectories:
+            raise ValueError(f"the reference trajectory, {REFERENCE_TRAJECTORY}, is missing")
+        expected = {(y, t, w) for y in self.years for t in self.trajectories for w in WINTERS}
         if {(case.year, case.trajectory, case.winter) for case in self.cases} != expected:
             raise ValueError("some years, trajectories or winters have no case")
         return self

@@ -44,6 +44,19 @@ def test_implausible_energy_fails(files: dict[str, dict[str, Any]]) -> None:
     assert bundle.check(broken)[0].startswith("history:")
 
 
+def test_scenarios_without_a_winter_or_the_reference_fail(files: dict[str, dict[str, Any]]) -> None:
+    without_mild = copy.deepcopy(files)
+    scenarios = without_mild["scenarios"]
+    scenarios["cases"] = [case for case in scenarios["cases"] if case["winter"] != "mild"]
+    without_reference = copy.deepcopy(files)
+    scenarios = without_reference["scenarios"]
+    del scenarios["trajectories"]["stagnation"]
+    scenarios["cases"] = [case for case in scenarios["cases"] if case["trajectory"] != "stagnation"]
+
+    assert bundle.check(without_mild)[0].startswith("scenarios:")
+    assert "reference trajectory" in bundle.check(without_reference)[0]
+
+
 def test_missing_scenario_and_missing_file_fail(files: dict[str, dict[str, Any]]) -> None:
     broken = copy.deepcopy(files)
     broken["scenarios"]["cases"].pop()
