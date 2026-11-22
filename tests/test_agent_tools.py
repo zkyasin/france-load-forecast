@@ -44,8 +44,12 @@ def test_forecast_of_a_month_says_how_far_load_is_measured(by_name: dict[str, An
 def test_month_gap_names_the_month_a_year_earlier(by_name: dict[str, Any]) -> None:
     content = call(by_name, "month_gap", month="2026-02")
 
-    assert content["year_before"] == content["against_year_before"]["compared_with"] == "2025-02"
-    assert content["against_forecast"]["climate"] == pytest.approx(-2.423)
+    assert (content["year_before"], content["forecast_made_on"]) == ("2025-02", "2026-02-01")
+    assert content["terms"]["climate"] == {
+        "vs_forecast": pytest.approx(-2.423),
+        "vs_year_before": pytest.approx(-3.439),
+    }
+    assert content["gap"]["vs_forecast"] == pytest.approx(-1.275)
     assert content["temperature"]["mean"] > content["temperature"]["reference"]
 
 

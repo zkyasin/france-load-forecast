@@ -10,7 +10,7 @@ from typing import Any
 from langchain_core.language_models import BaseChatModel
 
 from france_load_forecast.agent.agent import AgentConfig, Answer, ask
-from france_load_forecast.agent.tools import Bundle
+from france_load_forecast.agent.tools import TOTALS, Bundle
 
 MONTHS = (
     "janvier",
@@ -34,7 +34,6 @@ LABELS = {
     "structural": "Structurel",
     "residual": "Résidu",
 }
-TOTALS = ("actual", "reference", "gap")
 
 READING = """\
 Write the reading of the monthly note on {month}, in one paragraph. The note already gives the \

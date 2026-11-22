@@ -13,6 +13,9 @@ from langchain_core.tools import BaseTool, tool
 
 Bundle = dict[str, dict[str, Any]]
 FactTopic = Literal["method", "sources", "perimeter", "revision", "temperature"]
+# Fields of a gap that are not terms.
+TOTALS = ("actual", "reference", "gap")
+DATES = ("published", "consolidated_until", "temperature_until", "measured_until")
 
 
 def load_bundle(path: Path) -> Bundle:
@@ -38,7 +41,9 @@ def _error(message: str) -> str:
 
 def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseTool]:
     """The agent's tools, reading `bundle` and `facts`."""
-    published = {"published": bundle["meta"]["published"]}
+    meta = bundle["meta"]
+    # Every result says which publication it comes from and how recent its data are.
+    published = {key: meta[key] for key in DATES}
 
     @tool
     def forecast(month: str | None = None) -> str:
@@ -62,30 +67,42 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
             )
         for entry in content["months"]:
             if entry["month"] == month:
-                measured = {"measured_until": bundle["meta"]["measured_until"]}
-                return _json(published | entry | measured)
+                return _json(published | entry)
         first, last = content["months"][0]["month"], content["months"][-1]["month"]
         return _error(f"no forecast for {month}: the forecast covers {first} to {last}")
 
     @tool
     def month_gap(month: str) -> str:
-        """Gap in TWh between the energy of a month (YYYY-MM) and the forecast made at its start,
-        and the energy of the same month a year earlier, each split into terms: climate,
+        """Why the energy of a month (YYYY-MM) differs from the forecast made at its start
+        (vs_forecast) and from the same month a year earlier (vs_year_before), in TWh: the energy
+        of each, both gaps, then each term of both gaps side by side. The terms are climate,
         calendar, lockdown, structural (level and seasonal states) and residual. Also the mean
         temperature of the month, its reference (normal) temperature and the temperature of the
         same month a year earlier, in °C."""
         for entry in bundle["gaps"]["months"]:
-            if entry["month"] == month:
-                year, number = month.split("-")
-                year_before = f"{int(year) - 1}-{number}"
-                content = entry | {
-                    "year_before": year_before,
-                    "against_forecast": {"compared_with": f"forecast made on {month}-01"}
-                    | entry["against_forecast"],
-                    "against_year_before": {"compared_with": year_before}
-                    | entry["against_year_before"],
-                }
-                return _json(published | content)
+            if entry["month"] != month:
+                continue
+            to_forecast, to_year_before = entry["against_forecast"], entry["against_year_before"]
+            year, number = month.split("-")
+            content = {
+                "month": month,
+                "forecast_made_on": f"{month}-01",
+                "year_before": f"{int(year) - 1}-{number}",
+                "provisional": entry["provisional"],
+                "energy": {
+                    "actual": to_forecast["actual"],
+                    "forecast": to_forecast["reference"],
+                    "year_before": to_year_before["reference"],
+                },
+                "gap": {"vs_forecast": to_forecast["gap"], "vs_year_before": to_year_before["gap"]},
+                "terms": {
+                    term: {"vs_forecast": to_forecast[term], "vs_year_before": to_year_before[term]}
+                    for term in to_forecast
+                    if term not in TOTALS
+                },
+                "temperature": entry["temperature"],
+            }
+            return _json(published | content)
         months = [entry["month"] for entry in bundle["gaps"]["months"]]
         return _error(f"no gap for {month}: available months are {months[0]} to {months[-1]}")
 
@@ -94,7 +111,8 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
         """Annual energy in TWh of the whole years from `first` to `last`: gross and
         climate-corrected, this tool's (mainland France without Corsica, keys gross and
         corrected) and RTE's (with Corsica, keys gross_rte and corrected_rte), with the change
-        of this tool's energies from the year before."""
+        of this tool's energies from the year before. Consumption means gross energy unless the
+        question asks for climate-corrected energy."""
         if first > last:
             return _error(f"first ({first}) is after last ({last})")
         years = {year["year"]: year for year in bundle["history"]["years"]}
@@ -136,18 +154,15 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
         """Accuracy of past forecasts: mean absolute percentage error by horizon, for P50 and two
         naive forecasts (same month a year earlier, raw and climate-corrected), and the share of
         actual months inside the P10-P90 band, all horizons together, in %."""
-        return _json(bundle["accuracy"])
+        return _json(published | bundle["accuracy"])
 
     @tool
     def fact(topic: FactTopic) -> str:
         """Dated and sourced fact on the method, the data sources, their perimeter, the revision
         of real-time data or the publication of temperatures."""
-        content = dict(facts[topic])
-        meta = bundle["meta"]
+        content = published | facts[topic]
         if topic == "revision" and meta["revision"]:
             content |= {"revision_gw": meta["revision"]["gw"], "days": meta["revision"]["days"]}
-        if topic in ("revision", "temperature"):
-            content |= {key: meta[key] for key in ("consolidated_until", "temperature_until")}
         return _json(content)
 
     return [forecast, month_gap, annual_energy, thermosensitivity, accuracy, fact]
