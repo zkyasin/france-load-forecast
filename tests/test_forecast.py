@@ -40,3 +40,18 @@ def test_history_must_end_with_a_month(
 ) -> None:
     with pytest.raises(ValueError, match="last day of a month"):
         forecast.paths(synthetic_model, synthetic_frame.iloc[:-1], synthetic_frame, [2022])
+
+
+def test_measured_days_replace_the_forecast(
+    synthetic_model: model.DailyModel, synthetic_frame: pd.DataFrame
+) -> None:
+    january = pd.date_range("2025-01-01", "2025-01-31")
+    observed = pd.Series(60.0, index=january)
+
+    forecast_only = forecast.paths(synthetic_model, synthetic_frame, synthetic_frame, [2022, 2023])
+    with_observed = forecast.paths(
+        synthetic_model, synthetic_frame, synthetic_frame, [2022, 2023], observed=observed
+    )
+
+    np.testing.assert_allclose(with_observed.loc["2025-01-01"], 60 * 744 / 1000)
+    pd.testing.assert_frame_equal(with_observed.iloc[1:], forecast_only.iloc[1:])

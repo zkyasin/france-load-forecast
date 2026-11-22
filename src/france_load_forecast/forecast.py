@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 
+import numpy as np
 import pandas as pd
 
 from france_load_forecast import climate
@@ -40,19 +41,22 @@ def paths(
     weather: pd.DataFrame,
     years: Iterable[int],
     months: int = 12,
+    observed: pd.Series | None = None,
 ) -> pd.DataFrame:
     """Monthly energy in TWh over the `months` months after `history`, one column per weather year.
 
     `history` is the frame the model was fitted on. It must end on the last day of a month, so
-    that the forecast covers whole months.
+    that the forecast covers whole months. The daily load in `observed`, measured after `history`
+    but not usable by the model yet, replaces the forecast on its days.
     """
     end = pd.DatetimeIndex(history.index)[-1]
     if not end.is_month_end:
         raise ValueError(f"the history must end on the last day of a month, not on {end.date()}")
     start = end + pd.Timedelta(days=1)
     dates = pd.date_range(start, start + pd.DateOffset(months=months), freq="D", inclusive="left")
+    known = pd.Series(np.nan, index=dates) if observed is None else observed.reindex(dates)
     energy = {}
     for year, future in scenarios(history, weather, years, dates, model.spec.smoothing).items():
         daily = model.results.forecast(len(dates), exog=exog(model, future))
-        energy[year] = monthly_energy(pd.Series(daily.to_numpy(), index=dates))
+        energy[year] = monthly_energy(known.fillna(pd.Series(daily.to_numpy(), index=dates)))
     return pd.DataFrame(energy)
