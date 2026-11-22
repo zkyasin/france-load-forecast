@@ -13,6 +13,7 @@ import pandas as pd
 
 from france_load_forecast import (
     backtest,
+    bundle,
     conformal,
     correction,
     decomposition,
@@ -205,6 +206,11 @@ def run_publish(data_dir: Path, config: Path, scenario_config: Path, out: Path) 
     files = publish.build(
         history, observed, spec, past_forecasts, rte, revision, scenario_spec, published
     )
+    problems = bundle.check(files)
+    for problem in problems:
+        print(f"bundle check failed: {problem}", file=sys.stderr)
+    if problems:
+        return 1
     publish.write(files, out)
     print(f"{', '.join(files)} written to {out}")
     return 0
