@@ -106,6 +106,31 @@ a:hover {
   font-size: 0.875rem;
 }
 
+/* Links to the sections below the forecast, on a line of their own. */
+.masthead nav {
+  flex-basis: 100%;
+}
+
+.masthead ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  font-size: 0.875rem;
+  list-style: none;
+}
+
+.masthead a {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.masthead a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
 .notice {
   margin: 1.5rem 0 0;
   padding: 0.625rem 0.875rem;
