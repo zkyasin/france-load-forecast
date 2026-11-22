@@ -60,3 +60,15 @@ def test_daily_frame_continues_with_realtime_days(export_files: dict[str, Path])
     assert frame["source"].tolist() == ["consolidated"] * 2 + ["realtime"] * 2
     first, second = frame["temperature_c"].iloc[:2]
     assert frame["temperature_smooth"].iloc[1] == pytest.approx((first + second) / 2)
+
+
+def test_load_after_returns_the_later_days(export_files: dict[str, Path]) -> None:
+    con = duckdb.connect()
+    warehouse.build(con, export_files)
+    daily = con.execute("SELECT date, load_gw FROM load_daily WHERE date > '2026-08-31'").fetchall()
+
+    later = model.load_after(con, pd.Timestamp("2026-08-31"))
+
+    assert later.index.tolist() == list(pd.date_range("2026-09-01", "2026-09-02"))
+    np.testing.assert_allclose(later, [load_gw for _, load_gw in sorted(daily)])
+    assert model.load_after(con, pd.Timestamp("2026-09-02")).empty
