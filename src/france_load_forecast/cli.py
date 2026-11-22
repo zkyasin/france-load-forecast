@@ -126,7 +126,9 @@ def run_backtest(data_dir: Path, config: Path, first: str) -> int:
     """Forecast from each month since `first` with the data known then, and score the forecasts."""
     spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
-        history = model.daily_frame(con, spec.smoothing)
+        frame = model.daily_frame(con, spec.smoothing)
+    # Past forecasts are scored against consolidated data only.
+    history = frame[frame["source"] == "consolidated"]
     results = backtest.run(history, spec, backtest.monthly_origins(history, first))
     results.to_csv(data_dir / "backtest.csv", index=False)
 
