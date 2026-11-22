@@ -1,6 +1,7 @@
 """Command-line interface."""
 
 import argparse
+import json
 import sys
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -22,6 +23,7 @@ from france_load_forecast import (
     publish,
     warehouse,
 )
+from france_load_forecast.agent import agent, note, tools
 
 
 def ingest(data_dir: Path) -> int:
@@ -204,6 +206,61 @@ def run_publish(data_dir: Path, config: Path, out: Path) -> int:
     return 0
 
 
+def load_agent(
+    bundle_dir: Path, agent_config: Path, facts: Path
+) -> tuple[tools.Bundle, dict[str, dict[str, object]], agent.AgentConfig] | None:
+    """The bundle, the facts and the agent's configuration, or None after a message if the bundle
+    is missing."""
+    if not (bundle_dir / "meta.json").exists():
+        print(f"no bundle in {bundle_dir}: run `flf publish` first", file=sys.stderr)
+        return None
+    return tools.load_bundle(bundle_dir), tools.load_facts(facts), agent.load_config(agent_config)
+
+
+def report(answer: agent.Answer) -> None:
+    for call in answer.tool_calls:
+        print(f"tool {call['name']} {json.dumps(call['args'], ensure_ascii=False)}")
+    if not answer.verified:
+        print(answer.text, file=sys.stderr)
+        print(f"not shown: {answer.problem}", file=sys.stderr)
+
+
+def run_ask(question: str, bundle_dir: Path, agent_config: Path, facts: Path) -> int:
+    """Answer a question with the agent, with its tool calls and the check of its numbers."""
+    loaded = load_agent(bundle_dir, agent_config, facts)
+    if loaded is None:
+        return 1
+    bundle, fact_texts, config = loaded
+    if len(question) > config.max_question_chars:
+        print(f"questions are limited to {config.max_question_chars} characters", file=sys.stderr)
+        return 1
+    answer = agent.ask(question, bundle, fact_texts, agent.chat_model(config), config)
+    report(answer)
+    print(answer.text if answer.verified else agent.REFUSAL)
+    return 0 if answer.verified else 1
+
+
+def run_note(month: str, bundle_dir: Path, agent_config: Path, facts: Path, out: Path) -> int:
+    """Write the note on a month, if every number of its reading has a source."""
+    loaded = load_agent(bundle_dir, agent_config, facts)
+    if loaded is None:
+        return 1
+    bundle, fact_texts, config = loaded
+    months = [entry["month"] for entry in bundle["gaps"]["months"]]
+    if month not in months:
+        print(f"no gap for {month}: the bundle covers {months[0]} to {months[-1]}", file=sys.stderr)
+        return 1
+    text, reading = note.write(month, bundle, fact_texts, agent.chat_model(config), config)
+    report(reading)
+    if not reading.verified:
+        return 1
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / f"{month}.md"
+    path.write_text(text, encoding="utf-8")
+    print(f"{path} written")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--data-dir", type=Path, default=Path("data"))
@@ -240,6 +297,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         "publish", parents=[model_options], help="write the weekly bundle of JSON files"
     )
     publish_parser.add_argument("--out", type=Path, default=Path("data/bundle"))
+    agent_options = argparse.ArgumentParser(add_help=False)
+    agent_options.add_argument("--bundle", type=Path, default=Path("data/bundle"))
+    agent_options.add_argument("--agent-config", type=Path, default=Path("config/agent.toml"))
+    agent_options.add_argument("--facts", type=Path, default=Path("config/facts.toml"))
+    ask_parser = commands.add_parser(
+        "ask", parents=[agent_options], help="answer a question with the agent"
+    )
+    ask_parser.add_argument("question")
+    note_parser = commands.add_parser(
+        "note", parents=[agent_options], help="write the note on a month with the agent"
+    )
+    note_parser.add_argument("month", help="month as YYYY-MM")
+    note_parser.add_argument("--out", type=Path, default=Path("notes"))
     args = parser.parse_args(argv)
 
     if args.command == "ingest":
@@ -256,4 +326,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return decompose(args.data_dir, args.config, args.months)
     if args.command == "publish":
         return run_publish(args.data_dir, args.config, args.out)
+    if args.command == "ask":
+        return run_ask(args.question, args.bundle, args.agent_config, args.facts)
+    if args.command == "note":
+        return run_note(args.month, args.bundle, args.agent_config, args.facts, args.out)
     parser.error(f"unknown command {args.command}")

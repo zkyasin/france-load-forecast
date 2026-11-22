@@ -38,6 +38,8 @@ def test_forecast_starts_with_the_current_month(bundle: dict[str, dict[str, Any]
     first = forecast["months"][0]
 
     assert forecast["current_month"] == first["month"] == "2025-01"
+    assert first["provisional"]
+    assert not forecast["months"][1]["provisional"]
     assert first["measured"] == pytest.approx(60 * 5 * 24 / 1000)
     assert len(forecast["months"]) == 12
     total = sum(month["p50"] for month in forecast["months"])
@@ -49,6 +51,7 @@ def test_gaps_cover_the_last_twelve_months(bundle: dict[str, dict[str, Any]]) ->
 
     assert [month["month"] for month in months] == [f"2024-{m:02d}" for m in range(1, 13)]
     assert [month["provisional"] for month in months] == [False] * 11 + [True]
+    assert set(months[0]["temperature"]) == {"mean", "reference", "year_before"}
     for month in months:
         for view in ("against_forecast", "against_year_before"):
             terms = sum(value for name, value in month[view].items() if name not in TOTALS)

@@ -68,7 +68,7 @@ category = "gap"
 text = "Pourquoi la consommation de février 2026 a-t-elle été plus basse que prévu ?"
 tool = "month_gap"
 arguments = { month = "2026-02" }
-figures = ["against_forecast.gap", "against_forecast.climate"]
+figures = ["gap.vs_forecast", "terms.climate.vs_forecast"]
 answer = """
 Elle a été 1,27 TWh sous la prévision du début du mois. Un mois plus doux que les scénarios \
 météo explique -2,42 TWh ; le résidu, +1,05 TWh, en compense une partie."""
@@ -79,7 +79,7 @@ category = "gap"
 text = "Quelle part de l'écart d'avril 2026 vient de la météo ?"
 tool = "month_gap"
 arguments = { month = "2026-04" }
-figures = ["against_forecast.gap", "against_forecast.climate"]
+figures = ["gap.vs_forecast", "terms.climate.vs_forecast"]
 answer = "Sur un écart de -2,58 TWh à la prévision, -2,15 TWh viennent du climat."
 
 [[questions]]
@@ -88,7 +88,7 @@ category = "gap"
 text = "La consommation d'août 2026 a-t-elle augmenté par rapport à août 2025, et pourquoi ?"
 tool = "month_gap"
 arguments = { month = "2026-08" }
-figures = ["against_year_before.gap", "against_year_before.climate"]
+figures = ["gap.vs_year_before", "terms.climate.vs_year_before"]
 answer = """
 Oui, de 1,14 TWh. Le climat en explique 0,78 TWh, le calendrier 0,09, les états structurels \
 0,08 et le résidu 0,19."""
@@ -99,7 +99,7 @@ category = "gap"
 text = "Le calendrier a-t-il joué sur la consommation de juin 2026 par rapport à juin 2025 ?"
 tool = "month_gap"
 arguments = { month = "2026-06" }
-figures = ["against_year_before.calendar", "against_year_before.gap"]
+figures = ["terms.calendar.vs_year_before", "gap.vs_year_before"]
 answer = "Oui : +0,25 TWh sur un écart total de +1,36 TWh."
 
 [[questions]]

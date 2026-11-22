@@ -47,8 +47,11 @@ def meta_file(
     }
 
 
-def forecast_file(table: pd.DataFrame, current: pd.Timestamp) -> dict[str, Any]:
-    """Monthly forecast with its band, and the total P50 of the 12 months from the current one."""
+def forecast_file(
+    table: pd.DataFrame, current: pd.Timestamp, provisional: pd.Index
+) -> dict[str, Any]:
+    """Monthly forecast with its band, and the total P50 of the 12 months from the current one.
+    Months measured from real-time data are provisional."""
     return {
         "current_month": _month(current),
         "total_p50": _round(table.loc[table.index >= current, "p50"].sum()),
@@ -57,6 +60,7 @@ def forecast_file(table: pd.DataFrame, current: pd.Timestamp) -> dict[str, Any]:
                 "month": _month(month),
                 **_rounded(row.drop("horizon")),
                 "horizon": int(row["horizon"]),
+                "provisional": month in provisional,
             }
             for month, row in table.iterrows()
         ],
@@ -64,19 +68,34 @@ def forecast_file(table: pd.DataFrame, current: pd.Timestamp) -> dict[str, Any]:
 
 
 def gaps_file(
-    against_forecast: pd.DataFrame, against_year_before: pd.DataFrame, provisional: pd.Index
+    against_forecast: pd.DataFrame,
+    against_year_before: pd.DataFrame,
+    provisional: pd.Index,
+    temperatures: pd.DataFrame,
 ) -> dict[str, Any]:
-    """Both views of the gap of each recent month, term by term."""
+    """Both views of the gap of each recent month, term by term, with the mean temperature of
+    the month, its reference temperature and the temperature of the same month a year earlier."""
+    weather = pd.DataFrame(
+        {
+            "mean": temperatures["temperature_c"],
+            "reference": temperatures["reference_c"],
+            "year_before": temperatures["temperature_c"].shift(freq=pd.DateOffset(years=1)),
+        }
+    ).reindex(against_forecast.index)
     return {
         "months": [
             {
                 "month": _month(month),
                 "provisional": month in provisional,
+                "temperature": _rounded(temperature),
                 "against_forecast": _rounded(to_forecast),
                 "against_year_before": _rounded(to_year_before),
             }
-            for (month, to_forecast), (_, to_year_before) in zip(
-                against_forecast.iterrows(), against_year_before.iterrows(), strict=True
+            for (month, to_forecast), (_, to_year_before), (_, temperature) in zip(
+                against_forecast.iterrows(),
+                against_year_before.iterrows(),
+                weather.iterrows(),
+                strict=True,
             )
         ]
     }
@@ -159,12 +178,13 @@ def build(
     files = {
         "meta": meta_file(history, observed, revision),
         "forecast": forecast_file(
-            outlook.table(latest, history, observed, past_forecasts), current
+            outlook.table(latest, history, observed, past_forecasts), current, provisional
         ),
         "gaps": gaps_file(
             decomposition.against_forecast(history, spec, months),
             decomposition.against_year_before(latest, history, months),
             provisional,
+            history[["temperature_c", "reference_c"]].resample("MS").mean(),
         ),
         "history": history_file(
             load, provisional, correction.annual_comparison(history["load_gw"], corrected, rte)

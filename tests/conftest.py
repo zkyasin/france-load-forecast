@@ -1,10 +1,15 @@
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import pytest
+from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
+from langchain_core.messages import AIMessage
 
 from france_load_forecast import model
+from france_load_forecast.agent import agent, tools
 from france_load_forecast.calendar import calendar_features
 from france_load_forecast.warehouse import SOURCES
 
@@ -90,3 +95,42 @@ def past_forecasts() -> pd.DataFrame:
 @pytest.fixture(scope="session")
 def synthetic_model(synthetic_frame: pd.DataFrame) -> model.DailyModel:
     return model.fit(synthetic_frame, SYNTHETIC_SPEC)
+
+
+class ScriptedModel(GenericFakeChatModel):
+    """A chat model that replies with the given messages in turn, and accepts tools."""
+
+    def bind_tools(self, tools: Any, **kwargs: Any) -> "ScriptedModel":
+        return self
+
+
+@pytest.fixture
+def script() -> Callable[..., ScriptedModel]:
+    """Builds a scripted chat model. A reply is a text, or a tool call as (name, arguments)."""
+
+    def build(*replies: str | tuple[str, dict[str, Any]]) -> ScriptedModel:
+        messages = [
+            AIMessage(reply)
+            if isinstance(reply, str)
+            else AIMessage("", tool_calls=[{"name": reply[0], "args": reply[1], "id": str(i)}])
+            for i, reply in enumerate(replies)
+        ]
+        return ScriptedModel(messages=iter(messages))
+
+    return build
+
+
+@pytest.fixture
+def bundle(fixtures: Path) -> tools.Bundle:
+    """The bundle published on 22 November 2026."""
+    return tools.load_bundle(fixtures / "bundle")
+
+
+@pytest.fixture
+def facts() -> dict[str, dict[str, Any]]:
+    return tools.load_facts(Path(__file__).parents[1] / "config" / "facts.toml")
+
+
+@pytest.fixture
+def agent_config() -> agent.AgentConfig:
+    return agent.load_config(Path(__file__).parents[1] / "config" / "agent.toml")

@@ -1,0 +1,9 @@
+# LLM of the agent, as "provider:model" for LangChain's init_chat_model. Locally, Ollama runs
+# Ministral 3 14B; the online answers will use Groq.
+model = "ollama:ministral-3:14b"
+temperature = 0.0
+
+# Bounds of one answer.
+max_output_tokens = 600
+max_tool_calls = 3
+max_question_chars = 300

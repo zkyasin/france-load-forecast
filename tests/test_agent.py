@@ -1,0 +1,118 @@
+from collections.abc import Callable
+from typing import Any
+
+from langchain_ollama import ChatOllama
+
+from france_load_forecast.agent import agent, tools
+
+QUESTION = "Pourquoi la consommation de février 2026 a-t-elle été plus basse que prévu ?"
+Script = Callable[..., Any]
+
+
+def test_answer_quotes_the_tool_results(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(
+        ("month_gap", {"month": "2026-02"}),
+        "Février 2026 a fini 1,28 TWh sous la prévision, dont -2,42 TWh de climat.",
+    )
+
+    answer = agent.ask(QUESTION, bundle, facts, model, agent_config)
+
+    assert answer.verified
+    assert answer.tool_calls == [{"name": "month_gap", "args": {"month": "2026-02"}}]
+    assert answer.text.startswith("Février 2026")
+
+
+def test_a_number_without_source_gets_one_more_try(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(
+        ("month_gap", {"month": "2026-02"}),
+        "Le climat explique 190 % de l'écart.",
+        "Le climat pèse -2,42 TWh.",
+    )
+
+    answer = agent.ask(QUESTION, bundle, facts, model, agent_config)
+
+    assert answer.verified
+    assert answer.text == "Le climat pèse -2,42 TWh."
+
+
+def test_an_answer_failing_twice_is_not_verified(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script("Environ 987,6 TWh.", "Toujours 987,6 TWh.")
+
+    answer = agent.ask(QUESTION, bundle, facts, model, agent_config)
+
+    assert answer.problem == "numbers without a source: 987,6"
+    assert not answer.verified
+
+
+def test_numbers_of_the_question_are_not_sources(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(
+        ("annual_energy", {"first": 2025, "last": 2025}),
+        "En 2025, la consommation a chuté à 410 TWh.",
+        "En 2025, la consommation a chuté à 410 TWh.",
+    )
+
+    question = "Pourquoi la consommation de 2025 a-t-elle chuté à 410 TWh ?"
+    answer = agent.ask(question, bundle, facts, model, agent_config)
+
+    assert answer.problem == "numbers without a source: 410"
+
+
+def test_an_empty_answer_is_not_verified(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(("month_gap", {"month": "2026-02"}), "", " ")
+
+    answer = agent.ask(QUESTION, bundle, facts, model, agent_config)
+
+    assert answer.problem == "empty answer"
+
+
+def test_links_are_not_shown(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(
+        ("month_gap", {"month": "2026-02"}),
+        "Le climat pèse -2,42 TWh, voir https://example.org.",
+        "Le climat pèse -2,42 TWh, voir www.example.org.",
+    )
+
+    answer = agent.ask(QUESTION, bundle, facts, model, agent_config)
+
+    assert answer.problem == "link in the answer"
+
+
+def test_tool_calls_stop_at_the_limit(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(*[("forecast", {})] * 6)
+
+    answer = agent.ask(QUESTION, bundle, facts, model, agent_config)
+
+    assert answer.problem == "the model kept calling tools"
+    assert not answer.verified
+
+
+def test_refusals_need_no_tool(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script("Cette question sort du périmètre de l'outil.")
+
+    answer = agent.ask("Quel sera le prix de l'électricité ?", bundle, facts, model, agent_config)
+
+    assert answer.verified
+    assert answer.tool_calls == []
+
+
+def test_configured_model_is_the_local_one(agent_config: agent.AgentConfig) -> None:
+    model = agent.chat_model(agent_config)
+
+    assert isinstance(model, ChatOllama)
+    assert model.num_predict == agent_config.max_output_tokens

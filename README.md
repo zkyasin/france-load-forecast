@@ -55,6 +55,34 @@ results of `flf backtest`. Every file carries the publication date and the model
 | `accuracy.json` | Backtest errors by horizon and coverage of the P10-P90 band |
 | `model.json` | Estimation window and response to temperature of the forecasting model |
 
+## Agent
+
+The agent answers questions in French and writes the monthly note from the bundle. Its tools are
+read-only and return the figures it may quote: the forecast, the gaps of a month, annual energies,
+the response to temperature, the accuracy of past forecasts, and dated facts from
+[`config/facts.toml`](config/facts.toml). A verifier checks that every number of a text comes
+from a tool result or is a year named in the question, and that the text holds no link. The model
+gets one more try, and a text that still fails, or stays empty, is not shown.
+
+The model is set in [`config/agent.toml`](config/agent.toml). Locally, it is Ministral 3 14B on
+[Ollama](https://ollama.com):
+
+```sh
+brew install ollama
+brew services start ollama
+ollama pull ministral-3:14b
+```
+
+```sh
+uv run flf ask "Pourquoi la consommation de février 2026 a-t-elle été plus basse que prévu ?"
+uv run flf note 2026-09
+```
+
+`ask` prints the tool calls and the answer. `note` writes `notes/2026-09.md`: the energy of the
+month and its gaps term by term, then a reading written by the agent. Both exit with status 1 if
+a number has no source. [`evals/questions.toml`](evals/questions.toml) holds frozen questions and
+their expected answers.
+
 ## Development
 
 Requires [uv](https://docs.astral.sh/uv/). It installs Python 3.12 and the locked dependencies.
