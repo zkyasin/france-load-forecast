@@ -38,6 +38,23 @@ calibrated on those past errors, and split the energy gaps of the last 12 months
 calendar, structural and residual terms.
 [docs/methodology.md](docs/methodology.md) describes the model and its results.
 
+```sh
+uv run flf publish
+```
+
+writes the weekly bundle to `data/bundle/`, one JSON file per subject, from the warehouse and the
+results of `flf backtest`. Every file carries the publication date and the model id (`model_id` in
+[`config/model.toml`](config/model.toml)).
+
+| File | Content |
+|---|---|
+| `meta.json` | Last consolidated day, last day with a temperature, last measured day, revision of real-time load |
+| `forecast.json` | Monthly P10, P50 and P90 from the current month, energy measured so far, total P50 over 12 months |
+| `gaps.json` | Gaps of the last 12 months to the forecast and to the year before, term by term |
+| `history.json` | Energy of each whole month, annual gross and corrected energy against RTE's |
+| `accuracy.json` | Backtest errors by horizon and coverage of the P10-P90 band |
+| `model.json` | Estimation window and response to temperature of the forecasting model |
+
 ## Development
 
 Requires [uv](https://docs.astral.sh/uv/). It installs Python 3.12 and the locked dependencies.

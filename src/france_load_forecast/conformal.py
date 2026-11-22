@@ -11,6 +11,8 @@ import pandas as pd
 from france_load_forecast.backtest import HORIZON_BUCKETS
 
 QUANTILES = (0.1, 0.9)
+# The band of an origin needs two years of backtest errors before it.
+FIRST_BAND_ORIGIN = pd.Timestamp("2018-01-01")
 
 
 def horizon_bucket(horizon: pd.Series) -> pd.Series:

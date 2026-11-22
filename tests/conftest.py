@@ -9,6 +9,7 @@ from france_load_forecast.calendar import calendar_features
 from france_load_forecast.warehouse import SOURCES
 
 SYNTHETIC_SPEC = model.ModelSpec(
+    model_id="synthetic",
     smoothing=0.5,
     seasonal_harmonics=2,
     window_years=2,
@@ -48,6 +49,7 @@ def synthetic_frame() -> pd.DataFrame:
     frame = pd.DataFrame(
         {
             "load_gw": load,
+            "source": "consolidated",
             "temperature_c": temperature,
             "reference_c": season,
             "temperature_smooth": smooth,
@@ -61,6 +63,28 @@ def synthetic_frame() -> pd.DataFrame:
 @pytest.fixture(scope="session")
 def synthetic_spec() -> model.ModelSpec:
     return SYNTHETIC_SPEC
+
+
+@pytest.fixture(scope="session")
+def past_forecasts() -> pd.DataFrame:
+    """Forecasts made each month of 2016-2023, 1 to 12 months ahead, off by -5 % to +5 %."""
+    origins = pd.date_range("2016-01-01", "2023-12-01", freq="MS")
+    errors = np.linspace(-0.05, 0.05, len(origins))
+    return pd.DataFrame(
+        [
+            {
+                "origin": origin,
+                "month": origin + pd.DateOffset(months=horizon - 1),
+                "horizon": horizon,
+                "p50": 100.0,
+                "actual": 100.0 * (1 + error),
+                "naive": 100.0,
+                "naive_corrected": 100.0,
+            }
+            for origin, error in zip(origins, errors, strict=True)
+            for horizon in range(1, 13)
+        ]
+    )
 
 
 @pytest.fixture(scope="session")

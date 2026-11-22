@@ -1,5 +1,8 @@
 # Daily load model, see src/france_load_forecast/model.py.
 
+# Published outputs carry this id, so that a variant of the model can run next to this one.
+model_id = "baseline"
+
 # Weight of the current day in the exponentially smoothed temperature. 0.5 maximises the
 # likelihood of the model fitted on 2012-2026, on a grid from 0.3 to 0.6 in steps of 0.05.
 smoothing = 0.5

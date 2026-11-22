@@ -18,6 +18,8 @@ from france_load_forecast import (
     forecast,
     model,
     odre,
+    outlook,
+    publish,
     warehouse,
 )
 
@@ -100,14 +102,21 @@ def realtime_note(con: duckdb.DuckDBPyConnection, history: pd.DataFrame) -> str:
     )
 
 
+def read_backtest(data_dir: Path) -> pd.DataFrame | None:
+    """The backtest results, or None after a message if they are missing."""
+    path = data_dir / "backtest.csv"
+    if not path.exists():
+        print(f"{path} is missing: run `flf backtest` first", file=sys.stderr)
+        return None
+    return pd.read_csv(path, parse_dates=["origin", "month"])
+
+
 def run_forecast(data_dir: Path, config: Path) -> int:
     """Forecast monthly energy over the current month and the 11 after, with a P10-P90 band
     calibrated on the backtest errors. Days already measured replace the forecast."""
-    backtest_file = data_dir / "backtest.csv"
-    if not backtest_file.exists():
-        print(f"{backtest_file} is missing: run `flf backtest` first", file=sys.stderr)
+    past_forecasts = read_backtest(data_dir)
+    if past_forecasts is None:
         return 1
-    past_forecasts = pd.read_csv(backtest_file, parse_dates=["origin", "month"])
 
     spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
@@ -115,38 +124,22 @@ def run_forecast(data_dir: Path, config: Path) -> int:
         observed = model.load_after(con, history.index[-1])
         note = realtime_note(con, history)
     fitted = model.fit_recent(history, spec)
-    years = forecast.complete_years(pd.DatetimeIndex(history.index))
+    summary = outlook.table(fitted, history, observed, past_forecasts)
 
-    start = history.index[-1] + pd.Timedelta(days=1)
+    start = pd.Timestamp(summary.index[0])
     last_measured = observed.index[-1] if not observed.empty else history.index[-1]
-    current = (last_measured + pd.Timedelta(days=1)).to_period("M").to_timestamp()
-    months = 12 + (current.year - start.year) * 12 + current.month - start.month
-    p50 = forecast.paths(fitted, history, history, years, months, observed).median(axis=1)
-
-    measured = correction.monthly_energy(observed).reindex(p50.index, fill_value=0.0)
-    # Horizons count from the last day the model knows; the backtest stops at 12 months.
-    horizon = pd.Series(range(1, months + 1), index=p50.index).clip(upper=12)
-    quantiles = conformal.error_quantiles(past_forecasts, known_before=start)
-    # The band only covers the days still to come.
-    summary = conformal.band(p50 - measured, horizon, quantiles).add(measured, axis=0)
-    summary = summary.assign(p50=p50, measured=measured)[["p10", "p50", "p90", "measured"]]
-    summary.index = pd.DatetimeIndex(summary.index).strftime("%Y-%m")
+    years = forecast.complete_years(pd.DatetimeIndex(history.index))
     print(
         f"monthly energy in TWh: model up to {start - pd.Timedelta(days=1):%Y-%m-%d},"
         f" measured load up to {last_measured:%Y-%m-%d}"
     )
     print(note)
     print(f"P50 over {len(years)} weather years, P10-P90 from backtest errors before {start:%Y-%m}")
-    print(summary.to_string(float_format=lambda value: f"{value:.1f}"))
+    summary.index = pd.DatetimeIndex(summary.index).strftime("%Y-%m")
+    print(summary.drop(columns="horizon").to_string(float_format=lambda value: f"{value:.1f}"))
     ahead = summary.iloc[-12:]
     print(f"total P50 from {ahead.index[0]}: {ahead['p50'].sum():.1f} TWh")
     return 0
-
-
-# Origins from 2023 come after the 2022 energy crisis.
-RECENT_ORIGINS = pd.Timestamp("2023-01-01")
-# The band of an origin needs two years of backtest errors before it.
-FIRST_BAND_ORIGIN = pd.Timestamp("2018-01-01")
 
 
 def run_backtest(data_dir: Path, config: Path, first: str) -> int:
@@ -159,11 +152,11 @@ def run_backtest(data_dir: Path, config: Path, first: str) -> int:
     results = backtest.run(history, spec, backtest.monthly_origins(history, first))
     results.to_csv(data_dir / "backtest.csv", index=False)
 
-    recent = results[results["origin"] >= RECENT_ORIGINS]
+    recent = results[results["origin"] >= backtest.RECENT_ORIGINS]
     for label, part in (("all origins", results), ("origins since 2023", recent)):
         print(f"mean absolute percentage error of monthly energy, {label}")
         print(backtest.accuracy(part).to_string(float_format=lambda value: f"{value:.2f}"))
-    for first_origin in (FIRST_BAND_ORIGIN, RECENT_ORIGINS):
+    for first_origin in (conformal.FIRST_BAND_ORIGIN, backtest.RECENT_ORIGINS):
         coverage = conformal.online_coverage(results, first_origin)
         shares = ", ".join(f"{name} {100 * share:.0f} %" for name, share in coverage.items())
         print(f"P10-P90 coverage, origins since {first_origin:%Y}: {shares}")
@@ -189,6 +182,25 @@ def decompose(data_dir: Path, config: Path, months: int) -> int:
         table.index = pd.DatetimeIndex(table.index).strftime("%Y-%m")
         print(f"monthly energy in TWh, against {reference}")
         print(table.to_string(float_format=lambda value: f"{value:.2f}"))
+    return 0
+
+
+def run_publish(data_dir: Path, config: Path, out: Path) -> int:
+    """Write the weekly bundle of JSON files."""
+    past_forecasts = read_backtest(data_dir)
+    if past_forecasts is None:
+        return 1
+
+    spec = model.load_spec(config)
+    with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
+        history = model.daily_frame(con, spec.smoothing)
+        observed = model.load_after(con, history.index[-1])
+        rte = correction.rte_monthly(con)
+        revision = warehouse.mean_revision(con)
+    published = datetime.now(UTC).date()
+    files = publish.build(history, observed, spec, past_forecasts, rte, revision, published)
+    publish.write(files, out)
+    print(f"{', '.join(files)} written to {out}")
     return 0
 
 
@@ -224,6 +236,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     decompose_parser.add_argument(
         "--months", type=int, default=12, help="number of recent complete months"
     )
+    publish_parser = commands.add_parser(
+        "publish", parents=[model_options], help="write the weekly bundle of JSON files"
+    )
+    publish_parser.add_argument("--out", type=Path, default=Path("data/bundle"))
     args = parser.parse_args(argv)
 
     if args.command == "ingest":
@@ -238,4 +254,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_backtest(args.data_dir, args.config, args.first)
     if args.command == "decompose":
         return decompose(args.data_dir, args.config, args.months)
+    if args.command == "publish":
+        return run_publish(args.data_dir, args.config, args.out)
     parser.error(f"unknown command {args.command}")
