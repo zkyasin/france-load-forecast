@@ -13,6 +13,21 @@ Corsica, with transmission and distribution losses. Over 2014-2025 the éCO2mix 
 0.8 % below its gross consumption. This gap is not corrected: read the corrected gaps below
 against it.
 
+## Real-time days
+
+After the last consolidated day, the load comes from éCO2mix real-time data
+(`eco2mix-national-tr`). Real-time values are instantaneous telemetry, consolidated values are
+means of meter readings, and the first sit lower. RTE also publishes its consolidated consumption
+in `consommation-quotidienne-brute`, about a month ahead of éCO2mix. The gap between the two on
+the days both cover is the revision, and real-time days are raised by its mean. On September 2026
+it is +0.76 GW on average (1.8 %), from +0.24 to +1.23 GW depending on the day. The two
+consolidated releases are identical up to 2019 and within 0.2 GW of each other on yearly means
+since then.
+
+The model runs up to the last day with a temperature. RTE publishes its temperatures once a
+month, about a month late, so the latest real-time days wait for the next release. Months with
+real-time days are provisional: consolidated data replace them later.
+
 ## Daily model
 
     load[d] = climate[d] + calendar[d] + lockdown[d] + level[d] + seasonal[d] + ar[d]
@@ -28,7 +43,7 @@ against it.
 - `ar`: first-order autoregressive term for deviations that last a few days.
 
 A Kalman filter estimates the coefficients and the three states jointly
-(statsmodels `UnobservedComponents`), on consolidated days only. Components are declared in
+(statsmodels `UnobservedComponents`). Components are declared in
 [`config/model.toml`](../config/model.toml).
 
 ## Climate correction
@@ -40,11 +55,12 @@ also leaves out 29 February, so annual corrected energies do the same.
 
 ## Forecast
 
-The forecasting model is fitted on the last three years of consolidated days. Each forecast path replays the weather of one
-complete past year, 2012 to 2025 today: on each calendar day, the reference temperature plus the
-anomaly to the reference observed that day in the past year. The smoothed temperature continues
-from the last observed day, the level stays at its last filtered value and the autoregressive term
-fades out. Monthly energies are summed over the real length of each day.
+The forecasting model is fitted on the last three years of days with a temperature. Each forecast
+path replays the weather of one complete past year, 2012 to 2025 today: on each calendar day, the
+reference temperature plus the anomaly to the reference observed that day in the past year. The
+smoothed temperature continues from the last observed day, the level stays at its last filtered
+value and the autoregressive term fades out. Monthly energies are summed over the real length of
+each day.
 
 P50 is the median across paths. The P10-P90 band is calibrated on the backtest errors (split
 conformal prediction): it applies to P50 the 10th and 90th percentiles of past relative errors,
@@ -55,7 +71,7 @@ model and structural errors together.
 
 `flf backtest` forecasts from the first day of each month since January 2016, with only the data
 known then: the model is re-estimated on 1 January of each year on the three preceding years, then
-filtered day by day.
+filtered day by day. The backtest uses consolidated days only.
 Weather paths come from complete years outside the forecast window. Each forecast is compared with
 two naive ones: the same month a year earlier, raw and climate-corrected.
 
