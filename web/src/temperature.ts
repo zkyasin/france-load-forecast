@@ -90,7 +90,7 @@ function plot(gradients: Gradient[], width: number, colors: Colors) {
       }),
       Plot.tip(
         gradients,
-        Plot.pointerX({ x: "temperature", y: "gw_per_c", title: tipText, ...tipStyle(colors) }),
+        Plot.pointerX({ x: "temperature", title: tipText, ...tipStyle(colors, width) }),
       ),
     ],
   });

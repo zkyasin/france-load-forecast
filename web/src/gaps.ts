@@ -198,9 +198,8 @@ function plot(months: MonthGap[], terms: Term[], view: View, width: number, colo
         months,
         Plot.pointerX({
           x: "month",
-          y: "gap",
           title: (month: MonthGap) => tipText(month, view, terms),
-          ...tipStyle(colors),
+          ...tipStyle(colors, width),
         }),
       ),
     ],

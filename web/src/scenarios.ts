@@ -203,9 +203,8 @@ function plot(scenarios: Scenarios, choice: Choice, width: number, colors: Color
         years,
         Plot.pointerX({
           x: (year: number) => year,
-          y: (year: number) => energy(scenarios, year, choice),
           title: (year: number) => tipText(scenarios, year, choice.winter),
-          ...tipStyle(colors),
+          ...tipStyle(colors, width),
         }),
       ),
     ],

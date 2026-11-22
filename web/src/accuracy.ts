@@ -129,7 +129,7 @@ function plot(data: Score[], width: number, colors: Colors) {
           x: "horizon",
           y: "value",
           title: (score: Score) => `${score.method}\n${score.horizon} : ${percent(score.value)}`,
-          ...tipStyle(colors),
+          ...tipStyle(colors, width),
         }),
       ),
     ],

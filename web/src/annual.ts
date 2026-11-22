@@ -67,10 +67,7 @@ function plot(years: HistoryYear[], width: number, colors: Colors) {
       Plot.lineY(years, { ...series, y: "corrected", stroke: colors.third }),
       Plot.dot(years, { ...dot, y: "corrected", symbol: "square", fill: colors.third }),
       Plot.ruleX(years, Plot.pointerX({ x: "year", stroke: colors.muted, strokeOpacity: 0.5 })),
-      Plot.tip(
-        years,
-        Plot.pointerX({ x: "year", y: "gross", title: tipText, ...tipStyle(colors) }),
-      ),
+      Plot.tip(years, Plot.pointerX({ x: "year", title: tipText, ...tipStyle(colors, width) })),
     ],
   });
 }

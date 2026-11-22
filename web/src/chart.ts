@@ -39,12 +39,19 @@ export const frame = (width: number, colors: Colors) => ({
   },
 });
 
-/** Options of the hover tip, in the colors of the page. */
-export const tipStyle = (colors: Colors) => ({
+/**
+ * Options of the hover tip, in the colors of the page. A tip with no y hangs from the top of the
+ * frame, where Plot turns it left or right near the edges; on a phone its lines wrap sooner. Both
+ * keep it whole on a small screen.
+ */
+export const tipStyle = (colors: Colors, width: number) => ({
   fill: colors.paper,
   stroke: colors.rule,
   textPadding: 8,
   pathFilter: "none",
+  frameAnchor: "top" as const,
+  preferredAnchor: "top" as const,
+  lineWidth: width < 480 ? 13 : 20,
 });
 
 /**
