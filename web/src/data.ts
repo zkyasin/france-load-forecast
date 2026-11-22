@@ -112,6 +112,35 @@ export interface Model {
   thermosensitivity: { winter: number; by_temperature: Gradient[] };
 }
 
+/** A consumption trajectory of RTE's Bilan prévisionnel 2025. */
+export interface Trajectory {
+  label: string;
+  pages: string;
+  // Growth of each year, in %.
+  growth_pct: Record<string, number>;
+}
+
+/** The energy of a year under a trajectory and a winter: normal, cold or mild. */
+export interface Case {
+  year: number;
+  trajectory: string;
+  winter: string;
+  annual_energy: number;
+  winter_energy: number;
+  months: number[];
+}
+
+export interface Scenarios {
+  published: string;
+  model_id: string;
+  source: string;
+  years: number[];
+  trajectories: Record<string, Trajectory>;
+  // The observed year whose winter months a cold or mild winter replays, for each year.
+  replayed_winters: { year: number; winter: string; weather_year: number }[];
+  cases: Case[];
+}
+
 export interface Bundle {
   meta: Meta;
   forecast: Forecast;
@@ -119,6 +148,7 @@ export interface Bundle {
   accuracy: Accuracy;
   gaps: Gaps;
   model: Model;
+  scenarios: Scenarios;
 }
 
 async function get<T>(path: string): Promise<T> {
@@ -131,15 +161,16 @@ async function get<T>(path: string): Promise<T> {
 
 /** The last published bundle. */
 export async function latest(): Promise<Bundle> {
-  const [meta, forecast, history, accuracy, gaps, model] = await Promise.all([
+  const [meta, forecast, history, accuracy, gaps, model, scenarios] = await Promise.all([
     get<Meta>("data/latest/meta.json"),
     get<Forecast>("data/latest/forecast.json"),
     get<History>("data/latest/history.json"),
     get<Accuracy>("data/latest/accuracy.json"),
     get<Gaps>("data/latest/gaps.json"),
     get<Model>("data/latest/model.json"),
+    get<Scenarios>("data/latest/scenarios.json"),
   ]);
-  return { meta, forecast, history, accuracy, gaps, model };
+  return { meta, forecast, history, accuracy, gaps, model, scenarios };
 }
 
 /** Dates of all publications, oldest first. */

@@ -235,6 +235,16 @@ main > section + section {
   stroke: var(--third);
 }
 
+.key .chosen {
+  stroke: var(--forecast);
+  fill: var(--forecast);
+}
+
+.key line.other {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+
 .key .total {
   fill: var(--ink);
 }
@@ -264,6 +274,10 @@ main > section + section {
 #temperature-plot,
 #history-plot {
   min-height: 240px;
+}
+
+#scenarios-plot {
+  min-height: 280px;
 }
 
 .plot svg {
@@ -304,6 +318,12 @@ select {
 }
 
 /* A choice between a few views of a chart: radio buttons drawn as one row of buttons. */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 2rem;
+}
 
 .choice {
   min-width: 0;
@@ -429,6 +449,11 @@ tbody th {
 /* Short headers over narrow figures: kept on one line, the table scrolls on a phone. */
 #gaps-table thead th {
   white-space: nowrap;
+}
+
+/* The winter, a word, names the row with the year. */
+#scenarios-table :is(th, td):nth-child(2) {
+  text-align: left;
 }
 
 /* The measured energy may be followed by a word: aligned left, its figures stay in line. */

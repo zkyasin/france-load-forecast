@@ -65,8 +65,13 @@ export function drawIn(box: HTMLElement, draw: (width: number, colors: Colors) =
   return redraw;
 }
 
-/** Replaces the content of `table`: one row per entry of `body`, its first cell as a row header. */
-export function fillTable(table: HTMLTableElement, header: string[], body: string[][]): void {
+/** Replaces the content of `table`: one row per entry of `body`, its first cells as row headers. */
+export function fillTable(
+  table: HTMLTableElement,
+  header: string[],
+  body: string[][],
+  rowHeaders = 1,
+): void {
   table.replaceChildren();
   const head = table.createTHead().insertRow();
   for (const text of header) {
@@ -79,8 +84,8 @@ export function fillTable(table: HTMLTableElement, header: string[], body: strin
   for (const values of body) {
     const row = rows.insertRow();
     values.forEach((text, index) => {
-      const cell = document.createElement(index === 0 ? "th" : "td");
-      if (index === 0) cell.setAttribute("scope", "row");
+      const cell = document.createElement(index < rowHeaders ? "th" : "td");
+      if (index < rowHeaders) cell.setAttribute("scope", "row");
       cell.textContent = text;
       row.append(cell);
     });

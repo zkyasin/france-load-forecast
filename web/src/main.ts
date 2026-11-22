@@ -7,6 +7,7 @@ import { latest, type Meta, publications } from "./data";
 import * as forecast from "./forecast";
 import { dayName, daysSince, NBSP, signed } from "./format";
 import * as gaps from "./gaps";
+import * as scenarios from "./scenarios";
 import * as temperature from "./temperature";
 
 // The bundle is published every Monday: an older one means that an update did not run.
@@ -48,6 +49,7 @@ async function main(): Promise<void> {
   gaps.render(bundle.gaps);
   temperature.render(bundle.model);
   annual.render(bundle.history.years);
+  scenarios.render(bundle.scenarios);
   method(bundle.meta);
 }
 
