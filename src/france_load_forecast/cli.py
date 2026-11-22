@@ -10,7 +10,7 @@ import duckdb
 import httpx
 import pandas as pd
 
-from france_load_forecast import correction, model, odre, warehouse
+from france_load_forecast import correction, forecast, model, odre, warehouse
 
 
 def ingest(data_dir: Path) -> int:
@@ -79,6 +79,31 @@ def correct(data_dir: Path, config: Path) -> int:
     return 0
 
 
+def run_forecast(data_dir: Path, config: Path) -> int:
+    """Forecast monthly energy over the 12 months after the last consolidated day."""
+    spec = model.load_spec(config)
+    with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
+        history = model.daily_frame(con, spec.smoothing)
+    fitted = model.fit(history, spec)
+    dates = pd.DatetimeIndex(history.index)
+    years = forecast.complete_years(dates)
+    paths = forecast.paths(fitted, history, history, years)
+
+    summary = pd.DataFrame(
+        {
+            "p10": paths.quantile(0.1, axis=1),
+            "p50": paths.median(axis=1),
+            "p90": paths.quantile(0.9, axis=1),
+        }
+    )
+    summary.index = pd.DatetimeIndex(summary.index).strftime("%Y-%m")
+    print(f"monthly energy in TWh, from data up to {dates[-1].date()}")
+    print(f"P10 and P90 over the weather of {years[0]}-{years[-1]} only")
+    print(summary.to_string(float_format=lambda value: f"{value:.1f}"))
+    print(f"total P50: {summary['p50'].sum():.1f} TWh")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--data-dir", type=Path, default=Path("data"))
@@ -98,6 +123,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         parents=[model_options],
         help="compare the climate-corrected consumption with RTE's corrected series",
     )
+    commands.add_parser(
+        "forecast", parents=[model_options], help="forecast monthly energy over 12 months"
+    )
     args = parser.parse_args(argv)
 
     if args.command == "ingest":
@@ -106,4 +134,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         return fit(args.data_dir, args.config)
     if args.command == "correct":
         return correct(args.data_dir, args.config)
+    if args.command == "forecast":
+        return run_forecast(args.data_dir, args.config)
     parser.error(f"unknown command {args.command}")

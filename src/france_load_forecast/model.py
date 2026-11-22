@@ -56,8 +56,9 @@ def daily_frame(con: duckdb.DuckDBPyConnection, smoothing: float) -> pd.DataFram
     # The daily frequency also asserts that no day is missing.
     frame.index = pd.DatetimeIndex(frame.index, freq="D")
     # The data checks only let isolated missing temperatures through.
-    temperatures = frame[["temperature_c", "reference_c"]].interpolate(limit=1)
-    smoothed = temperatures.ewm(alpha=smoothing, adjust=False).mean()
+    temperatures = ["temperature_c", "reference_c"]
+    frame[temperatures] = frame[temperatures].interpolate(limit=1)
+    smoothed = frame[temperatures].ewm(alpha=smoothing, adjust=False).mean()
     frame["temperature_smooth"] = smoothed["temperature_c"]
     frame["reference_smooth"] = smoothed["reference_c"]
     return frame.join(calendar_features(frame.index))
@@ -105,6 +106,13 @@ def fit(frame: pd.DataFrame, spec: ModelSpec) -> DailyModel:
         mle_regression=False,
     )
     return DailyModel(spec, designs, model.fit(disp=False))
+
+
+def exog(model: DailyModel, frame: pd.DataFrame) -> pd.DataFrame:
+    """Design columns of the fitted model, for new days."""
+    columns = pd.concat([design_matrix(design, frame) for design in model.designs.values()], axis=1)
+    fitted_columns: list[str] = model.results.model.exog_names
+    return columns[fitted_columns]
 
 
 def component_effect(model: DailyModel, component: str, frame: pd.DataFrame) -> pd.Series:
