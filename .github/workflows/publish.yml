@@ -8,9 +8,7 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Pushes the data branch.
-permissions:
-  contents: write
+permissions: {}
 
 # One publication at a time, none cancelled.
 concurrency:
@@ -20,6 +18,9 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      # Pushes the data branch.
+      contents: write
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
@@ -31,3 +32,33 @@ jobs:
       - run: uv run flf publish --out bundle
       - run: uv run flf snapshot bundle/realtime.parquet
       - run: scripts/archive.sh bundle
+
+  # The page reads the bundles of the data branch, so it is built after each publication.
+  pages:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm run data
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: web/dist
+      - id: deployment
+        uses: actions/deploy-pages@v5
