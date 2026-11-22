@@ -61,8 +61,8 @@ The agent answers questions in French and writes the monthly note from the bundl
 read-only and return the figures it may quote: the forecast, the gaps of a month, annual energies,
 the response to temperature, the accuracy of past forecasts, and dated facts from
 [`config/facts.toml`](config/facts.toml). A verifier checks that every number of a text comes
-from a tool result, the data dates or a year named in the question. The model gets one more try,
-and a text that still fails, or stays empty, is not shown.
+from a tool result or is a year named in the question, and that the text holds no link. The model
+gets one more try, and a text that still fails, or stays empty, is not shown.
 
 The model is set in [`config/agent.toml`](config/agent.toml). Locally, it is Ministral 3 14B on
 [Ollama](https://ollama.com):

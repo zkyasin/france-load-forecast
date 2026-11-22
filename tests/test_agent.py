@@ -75,6 +75,20 @@ def test_an_empty_answer_is_not_verified(
     assert answer.problem == "empty answer"
 
 
+def test_links_are_not_shown(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(
+        ("month_gap", {"month": "2026-02"}),
+        "Le climat pèse -2,42 TWh, voir https://example.org.",
+        "Le climat pèse -2,42 TWh, voir www.example.org.",
+    )
+
+    answer = agent.ask(QUESTION, bundle, facts, model, agent_config)
+
+    assert answer.problem == "link in the answer"
+
+
 def test_tool_calls_stop_at_the_limit(
     script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
 ) -> None:
