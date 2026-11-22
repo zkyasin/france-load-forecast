@@ -82,6 +82,19 @@ def test_model_reports_the_winter_gradient(bundle: dict[str, dict[str, Any]]) ->
     assert bundle["model"]["thermosensitivity"]["winter"] == pytest.approx(2.0, abs=0.3)
 
 
+def test_model_reports_the_response_only_where_the_window_has_days(
+    bundle: dict[str, dict[str, Any]], synthetic_frame: pd.DataFrame
+) -> None:
+    model_file = bundle["model"]
+    window = slice(model_file["fitted_from"], model_file["fitted_until"])
+    smooth = synthetic_frame.loc[window, "temperature_smooth"]
+    temperatures = [g["temperature"] for g in model_file["thermosensitivity"]["by_temperature"]]
+
+    assert temperatures
+    assert smooth.min() <= min(temperatures)
+    assert max(temperatures) <= smooth.max()
+
+
 def test_bundle_is_written_as_json(bundle: dict[str, dict[str, Any]], tmp_path: Path) -> None:
     publish.write(bundle, tmp_path)
 

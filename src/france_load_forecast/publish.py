@@ -22,6 +22,8 @@ from france_load_forecast import (
 )
 
 GAP_MONTHS = 12
+# Temperatures, in °C, at which the response to temperature may be published.
+GRADIENT_GRID = [float(t) for t in range(-10, 40, 5)]
 
 
 def _round(value: float) -> float:
@@ -144,10 +146,13 @@ def accuracy_file(results: pd.DataFrame) -> dict[str, Any]:
 
 
 def model_file(fitted: model.DailyModel, history: pd.DataFrame) -> dict[str, Any]:
-    """Estimation window and response to temperature of the forecasting model."""
+    """Estimation window and response to temperature of the forecasting model, at the
+    temperatures of GRADIENT_GRID that lie between the coldest and the warmest smoothed day of the
+    window: beyond them, the spline has no data."""
     window = history.loc[fitted.level.index]
-    winter = window.loc[pd.DatetimeIndex(window.index).month.isin([12, 1, 2]), "temperature_smooth"]
-    temperatures = pd.Series([-5.0, 0.0, 5.0, 10.0, 15.0, 20.0, 25.0])
+    smooth = window["temperature_smooth"]
+    winter = smooth[pd.DatetimeIndex(window.index).month.isin([12, 1, 2])]
+    temperatures = pd.Series([t for t in GRADIENT_GRID if smooth.min() <= t <= smooth.max()])
     gradients = model.thermosensitivity(fitted, temperatures)
     return {
         "fitted_from": _day(window.index[0]),
