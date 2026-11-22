@@ -54,8 +54,8 @@ model and structural errors together.
 ## Backtest
 
 `flf backtest` forecasts from the first day of each month since January 2016, with only the data
-known then: the model is re-estimated at the first origin of each year on the three preceding
-years, then filtered day by day.
+known then: the model is re-estimated on 1 January of each year on the three preceding years, then
+filtered day by day.
 Weather paths come from complete years outside the forecast window. Each forecast is compared with
 two naive ones: the same month a year earlier, raw and climate-corrected.
 
