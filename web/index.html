@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Consommation d'électricité en France, prévision sur douze mois</title>
+    <meta
+      name="description"
+      content="Prévision mois par mois de la consommation d'électricité en France continentale, avec sa marge d'incertitude, publiée chaque semaine à partir des données ouvertes de RTE."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <header class="masthead">
+      <div class="wrap">
+        <p class="site-name">Consommation d'électricité en France</p>
+        <p class="issue" id="issue"></p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <p class="notice" id="notice" role="status" hidden></p>
+
+      <section class="hero" aria-labelledby="headline">
+        <h1 id="headline">Prévision de la consommation d'électricité sur douze mois</h1>
+        <p class="lead" id="lead"></p>
+        <ul class="legend">
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <line class="measured" x1="0" y1="6" x2="24" y2="6" />
+              <circle class="measured" cx="12" cy="6" r="4" />
+            </svg>
+            Consommation mesurée
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <circle class="provisional" cx="12" cy="6" r="3.5" />
+            </svg>
+            Mois provisoire, en temps réel
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <line class="forecast" x1="0" y1="6" x2="24" y2="6" />
+            </svg>
+            Prévision médiane (P50)
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <rect class="band" x="0" y="0" width="24" height="12" rx="2" />
+            </svg>
+            Bande P10–P90 : 8 chances sur 10 que le mois y tombe
+          </li>
+        </ul>
+        <figure class="chart">
+          <div
+            class="plot"
+            id="forecast-plot"
+            role="img"
+            aria-label="Consommation mensuelle mesurée puis prévue, avec la bande P10–P90"
+          ></div>
+          <figcaption id="forecast-caption"></figcaption>
+        </figure>
+        <p class="archive" id="archive" hidden>
+          <label for="publication">Prévision publiée le</label>
+          <select id="publication"></select>
+        </p>
+        <details>
+          <summary id="forecast-values">Valeurs du graphique, en TWh</summary>
+          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+          <section class="table-scroll" tabindex="0" aria-labelledby="forecast-values">
+            <table id="forecast-table"></table>
+          </section>
+        </details>
+      </section>
+
+      <section class="prose" aria-labelledby="method-title">
+        <h2 id="method-title">Méthode</h2>
+        <p>
+          Un modèle journalier relie la consommation à la température nationale lissée, au
+          calendrier (jour de la semaine, jours fériés, ponts, fin d'année, mois d'août) et à deux
+          états qui évoluent lentement, le niveau de consommation et la forme de l'année, estimés
+          par un filtre de Kalman sur les trois dernières années.
+        </p>
+        <p>
+          Chaque trajectoire de prévision rejoue la météo d'une année passée complète, depuis 2012,
+          autour des températures de référence. La prévision médiane est la médiane de ces
+          trajectoires. La bande P10–P90 applique à la part de cette médiane encore à venir les
+          erreurs relatives des prévisions passées au même horizon, puis ajoute l'énergie déjà
+          mesurée du mois. Elle couvre la météo, les erreurs du modèle et les changements de
+          structure.
+        </p>
+        <p id="realtime">
+          Les données consolidées s'arrêtent quelques mois avant la publication. Les jours
+          suivants viennent du temps réel, relevé de l'écart moyen observé entre temps réel et
+          consolidé, <span id="revision"></span> : les mois concernés restent provisoires.
+        </p>
+        <p>
+          Le code, la méthode détaillée (en anglais) et toutes les publications passées sont sur
+          <a href="https://github.com/zkyasin/france-load-forecast">GitHub</a>.
+        </p>
+      </section>
+
+      <section class="prose" aria-labelledby="sources-title">
+        <h2 id="sources-title">Sources</h2>
+        <p>
+          Jeux de données de RTE publiés sur
+          <a href="https://odre.opendatasoft.com">ODRÉ</a> sous Licence Ouverte 2.0 :
+        </p>
+        <ul class="sources">
+          <li>
+            <a
+              href="https://odre.opendatasoft.com/explore/dataset/eco2mix-national-cons-def/information/"
+              >Données éCO2mix nationales consolidées et définitives</a
+            >, la consommation toutes les demi-heures depuis 2012 ;
+          </li>
+          <li>
+            <a
+              href="https://odre.opendatasoft.com/explore/dataset/eco2mix-national-tr/information/"
+              >Données éCO2mix nationales temps réel</a
+            >, après le dernier jour consolidé ;
+          </li>
+          <li>
+            <a
+              href="https://odre.opendatasoft.com/explore/dataset/consommation-quotidienne-brute/information/"
+              >Consommation quotidienne brute</a
+            >, qui mesure l'écart entre temps réel et consolidé ;
+          </li>
+          <li>
+            <a
+              href="https://odre.opendatasoft.com/explore/dataset/pic-journalier-consommation-brute/information/"
+              >Pic journalier de la consommation brute d'électricité</a
+            >, pour la température moyenne nationale et la température de référence ;
+          </li>
+          <li>
+            <a
+              href="https://odre.opendatasoft.com/explore/dataset/conso_brute_corrigee_client_direct/information/"
+              >Consommation mensuelle brute corrigée et des clients RPT</a
+            >, Corse et pertes comprises, pour vérifier la correction du climat.
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="colophon">
+      <div class="wrap">
+        Code sous licence MIT. Données RTE sous Licence Ouverte 2.0. Modèle
+        <span id="model-id"></span>.
+      </div>
+    </footer>
+  </body>
+</html>

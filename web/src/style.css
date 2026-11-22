@@ -1,0 +1,344 @@
+/*
+ * Colors: chart colors pass the colorblind and contrast checks on their background, in both
+ * schemes. Copper is the forecast, blue the measured energy, green a third series.
+ */
+:root {
+  color-scheme: light;
+  --paper: #f6f7f9;
+  --ink: #15233b;
+  --ink-2: #45536b;
+  --muted: #5b687d;
+  --rule: #dce1e8;
+  --forecast: #b4561f;
+  --measured: #2f5f9e;
+  --third: #14917c;
+
+  font-family: "Archivo Variable", system-ui, sans-serif;
+  font-size: 106.25%;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper);
+  text-size-adjust: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #0f1826;
+    --ink: #e6ebf2;
+    --ink-2: #aeb9ca;
+    --muted: #8f9cb1;
+    --rule: #26344a;
+    --forecast: #d9773f;
+    --measured: #5b8fd6;
+    --third: #1fa48c;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--forecast);
+  outline-offset: 2px;
+}
+
+.wrap {
+  max-width: 70rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 40rem) {
+  .wrap {
+    padding-inline: 2rem;
+  }
+}
+
+/* Masthead: the name of the page and the date of the publication shown. */
+
+.masthead {
+  border-bottom: 1px solid var(--rule);
+}
+
+.masthead .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 2rem;
+  padding-block: 0.875rem;
+}
+
+.site-name,
+.issue {
+  margin: 0;
+}
+
+.site-name {
+  font-stretch: 125%;
+  font-weight: 700;
+}
+
+.issue {
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+
+.notice {
+  margin: 1.5rem 0 0;
+  padding: 0.625rem 0.875rem;
+  border-left: 3px solid var(--ink-2);
+  background: var(--rule);
+}
+
+/* Type: one family, wide for headings, narrow for figures. */
+
+h1,
+h2 {
+  font-weight: 800;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+h1 {
+  max-width: 17ch;
+  margin: 2.5rem 0 1.25rem;
+  font-size: clamp(2.125rem, 1.25rem + 3.8vw, 4rem);
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  margin: 0 0 1rem;
+  font-size: 1.75rem;
+  font-stretch: 112.5%;
+  letter-spacing: -0.01em;
+}
+
+.lead {
+  max-width: 38rem;
+  margin: 0 0 1.75rem;
+  color: var(--ink-2);
+  font-size: 1.1875rem;
+  line-height: 1.5;
+}
+
+.prose {
+  max-width: 40rem;
+}
+
+p.prose,
+.prose p {
+  margin: 0 0 1rem;
+}
+
+main > section + section {
+  margin-top: 4.5rem;
+}
+
+/* Charts. */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1.5rem;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  list-style: none;
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.key {
+  flex: none;
+  width: 1.5rem;
+  height: 0.75rem;
+  overflow: visible;
+}
+
+.key line {
+  stroke-width: 2;
+}
+
+.key .measured {
+  stroke: var(--measured);
+  fill: var(--measured);
+}
+
+.key .forecast {
+  stroke: var(--forecast);
+  fill: var(--forecast);
+}
+
+/* The dashes of the forecast line in the chart. */
+.key line.forecast {
+  stroke-dasharray: 4 5;
+  stroke-linecap: round;
+}
+
+.key circle {
+  stroke: var(--paper);
+  stroke-width: 2;
+}
+
+.key .provisional {
+  fill: var(--paper);
+  stroke: var(--measured);
+}
+
+.key .band {
+  fill: var(--forecast);
+  fill-opacity: 0.2;
+}
+
+.key .third {
+  fill: var(--third);
+}
+
+.chart {
+  margin: 0 0 1rem;
+}
+
+/* The height of each plot, kept before it is drawn. */
+#forecast-plot {
+  min-height: 300px;
+}
+
+.plot svg {
+  display: block;
+  font-stretch: 87.5%;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The tip's text takes the color of the text, not of the axes. */
+.plot [aria-label="tip"] {
+  color: var(--ink);
+}
+
+.chart figcaption {
+  max-width: 40rem;
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+/* Shown when there is more than one publication to choose from. */
+.archive:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  font-size: 0.9375rem;
+}
+
+select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+  color: inherit;
+  background: var(--paper);
+  font: inherit;
+}
+
+/* Tables behind each chart. */
+
+details {
+  margin-top: 1rem;
+}
+
+summary {
+  width: fit-content;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+summary:hover {
+  color: var(--ink);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  margin-top: 0.75rem;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  font-stretch: 87.5%;
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  padding: 0.375rem 0 0.375rem 1.5rem;
+  border-bottom: 1px solid var(--rule);
+  text-align: right;
+  white-space: nowrap;
+}
+
+th:first-child {
+  padding-left: 0;
+  text-align: left;
+}
+
+thead th {
+  color: var(--ink-2);
+  font-weight: 600;
+  vertical-align: bottom;
+  white-space: normal;
+}
+
+tbody th {
+  font-weight: 400;
+}
+
+/* The measured energy may be followed by a word: aligned left, its figures stay in line. */
+#forecast-table :is(th, td):last-child {
+  text-align: left;
+}
+
+.sources {
+  padding-left: 1.25rem;
+}
+
+.sources li + li {
+  margin-top: 0.5rem;
+}
+
+.colophon {
+  margin-top: 5rem;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.colophon .wrap {
+  padding-block: 1.5rem 2.5rem;
+}
