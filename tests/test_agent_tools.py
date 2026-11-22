@@ -21,8 +21,7 @@ def test_tools_are_those_of_the_frozen_questions(by_name: dict[str, Any]) -> Non
     with (Path(__file__).parents[1] / "evals" / "questions.toml").open("rb") as file:
         declared = set(tomllib.load(file)["tools"])
 
-    # The scenario tool comes with the scenarios.
-    assert set(by_name) == declared - {"scenario"}
+    assert set(by_name) == declared
 
 
 def test_forecast_starts_with_the_current_month(by_name: dict[str, Any]) -> None:
@@ -73,3 +72,15 @@ def test_revision_fact_carries_the_measured_revision(by_name: dict[str, Any]) ->
 
     assert content["revision_gw"] == pytest.approx(0.758)
     assert content["source"] == "docs/methodology.md"
+
+
+def test_scenario_compares_with_the_reference(by_name: dict[str, Any]) -> None:
+    content = call(by_name, "scenario", trajectory="rapid", winter="cold")
+
+    assert content["year"] == 2027
+    assert content["change"]["annual_energy"] == pytest.approx(
+        content["annual_energy"] - content["reference"]["annual_energy"], abs=1e-3
+    )
+    assert content["winter_energy"] > content["reference"]["winter_energy"]
+    assert content["replays_the_winter_months_of"] in range(2012, 2026)
+    assert "2020" in call(by_name, "scenario", year=2020)["error"]

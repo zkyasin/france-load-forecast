@@ -19,7 +19,7 @@ month_gap = "Gap of a month to the forecast made at its start and to the same mo
 annual_energy = "Gross and climate-corrected energy of whole years, ours and RTE's"
 thermosensitivity = "Load increase for 1 °C less, in winter and by temperature"
 accuracy = "Backtest errors by horizon and coverage of the P10-P90 band"
-scenario = "Monthly energy and winter peak under a named scenario"
+scenario = "Energy of a year ahead under a BP2025 trajectory and a cold or mild winter"
 fact = "Dated and sourced facts on the data and the method"
 
 [[questions]]
@@ -157,8 +157,8 @@ id = "scenario-cold-winter"
 category = "scenario"
 text = "Que se passerait-il lors d'un hiver froid comme il en arrive un sur dix ?"
 tool = "scenario"
-arguments = { name = "cold-winter" }
-figures = ["winter_energy", "winter_peak"]
+arguments = { winter = "cold" }
+figures = ["winter_energy", "reference.winter_energy"]
 answer = """
 L'énergie de décembre à février et la pointe d'hiver du scénario, comparées à la prévision \
 centrale."""
@@ -168,8 +168,8 @@ id = "scenario-electrification"
 category = "scenario"
 text = "Quel serait l'effet d'une électrification rapide sur la consommation de l'an prochain ?"
 tool = "scenario"
-arguments = { name = "rapid-electrification" }
-figures = ["annual_energy"]
+arguments = { trajectory = "rapid" }
+figures = ["annual_energy", "reference.annual_energy"]
 answer = "L'énergie annuelle du scénario, comparée à la prévision centrale, avec son hypothèse."
 
 [[questions]]
