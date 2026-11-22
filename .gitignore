@@ -7,3 +7,8 @@ __pycache__/
 /data/
 .env
 .DS_Store
+
+# Page
+node_modules/
+/web/dist/
+/web/public/data/

@@ -18,3 +18,11 @@ uv run ruff format --check
 uv run mypy
 uv run pytest
 ```
+
+and, for the page, in `web/`:
+
+```sh
+npm run check
+npm test
+npm run build
+```
