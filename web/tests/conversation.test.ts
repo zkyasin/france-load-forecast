@@ -6,7 +6,9 @@ import {
   focus,
   followUps,
   layout,
+  leftText,
   moodOf,
+  previousOf,
   readExchanges,
   sections,
   stepText,
@@ -149,4 +151,28 @@ test("an answer is drawn on the month it read, compared as the question asks", (
   expect(viewOf("Et par rapport à l'an dernier ?", "2026-08")).toBe("against_year_before");
   expect(focus(read(["forecast", {}]), "Et l'an prochain ?")).toBeNull();
   expect(focus(reply, "Et janvier ?")).toBeNull();
+});
+
+test("the next question carries the exchange before it, if it got an answer", () => {
+  const answered = { question: "Et avril ?", reply, error: null };
+
+  expect(previousOf([answered])).toEqual({ question: "Et avril ?", answer: reply.answer });
+  expect(previousOf([answered, { question: "Et mai ?", reply: null, error: "Réessayez." }])).toBe(
+    undefined,
+  );
+  expect(previousOf([])).toBe(undefined);
+  const long = { ...answered, reply: { ...reply, answer: "x".repeat(3000) } };
+  expect(previousOf([long])?.answer).toHaveLength(2000);
+});
+
+test("the visitor hears of the questions left only once few are", () => {
+  expect(leftText({ hour: 4, day: 19 })).toBe("");
+  expect(leftText({ hour: 2, day: 19 })).toBe("Il vous reste 2 questions cette heure-ci.");
+  expect(leftText({ hour: 1, day: 19 })).toBe("Il vous reste 1 question cette heure-ci.");
+  expect(leftText({ hour: 3, day: 3 })).toBe("Il vous reste 3 questions aujourd'hui.");
+  expect(leftText({ hour: 0, day: 5 })).toBe(
+    "C'était votre dernière question pour cette heure-ci.",
+  );
+  expect(leftText({ hour: 0, day: 0 })).toBe("C'était votre dernière question pour aujourd'hui.");
+  expect(leftText(undefined)).toBe("");
 });

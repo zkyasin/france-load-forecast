@@ -1,6 +1,6 @@
 /** What the question panel says around the answers of the API: none of it calls the model. */
 
-import { AskError, type Call, type Reply } from "./ask";
+import { AskError, type Call, type Left, type Previous, type Reply } from "./ask";
 import type { Forecast, Gaps } from "./data";
 import { monthName, of } from "./format";
 import type { View } from "./gaps";
@@ -250,6 +250,26 @@ export interface Exchange {
 
 // The panel keeps the last exchanges of the visit.
 export const KEPT = 20;
+// The API reads at most this much of the answer before a question.
+const PREVIOUS_CHARS = 2_000;
+
+/** The exchange before the next question, when the last one got an answer. */
+export function previousOf(exchanges: Exchange[]): Previous | undefined {
+  const last = exchanges.at(-1);
+  if (!last?.reply) return undefined;
+  return { question: last.question, answer: last.reply.answer.slice(0, PREVIOUS_CHARS) };
+}
+
+/** What the visitor is told of the questions left, once few are. */
+export function leftText(left: Left | undefined): string {
+  if (left === undefined) return "";
+  const questions = (count: number) => `${count} question${count > 1 ? "s" : ""}`;
+  if (left.day === 0) return "C'était votre dernière question pour aujourd'hui.";
+  if (left.hour === 0) return "C'était votre dernière question pour cette heure-ci.";
+  if (left.hour <= 2) return `Il vous reste ${questions(left.hour)} cette heure-ci.`;
+  if (left.day <= 3) return `Il vous reste ${questions(left.day)} aujourd'hui.`;
+  return "";
+}
 
 const isReply = (value: unknown): value is Reply => {
   const reply = value as Partial<Reply> | null;

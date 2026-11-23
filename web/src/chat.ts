@@ -9,8 +9,10 @@ import {
   followUps,
   KEPT,
   layout,
+  leftText,
   moodOf,
   type Piece,
+  previousOf,
   readExchanges,
   type Suggestion,
   sections,
@@ -53,6 +55,7 @@ const SKELETON = `
       <button class="chat-close" type="button" aria-label="Fermer les questions">×</button>
     </header>
     <div class="chat-thread" aria-live="polite"></div>
+    <p class="chat-left" aria-live="polite" hidden></p>
     <form class="chat-form">
       <label class="chat-label" for="chat-question">Votre question</label>
       <textarea id="chat-question" rows="1" maxlength="${LIMIT}"
@@ -163,6 +166,7 @@ export function render(bundle: Bundle): void {
   const form = part<HTMLFormElement>(".chat-form");
   const field = part<HTMLTextAreaElement>("#chat-question");
   const counter = part(".chat-count");
+  const left = part(".chat-left");
   const send = part<HTMLButtonElement>(".chat-send");
 
   const pylon = createPylon({ view: "corner", towards: -1 });
@@ -386,6 +390,7 @@ export function render(bundle: Bundle): void {
     try {
       const reply = await ask(question, {
         signal: pending.signal,
+        previous: previousOf(exchanges),
         onStep: (call) => {
           steps.append(element("li", "", `Lit ${stepText(call)}`));
           thread.scrollTop = thread.scrollHeight;
@@ -397,6 +402,8 @@ export function render(bundle: Bundle): void {
       });
       kept.reply = reply;
       waiting.remove();
+      left.textContent = leftText(reply.left);
+      left.hidden = left.textContent === "";
       answer(reply, !reduce.matches, question);
       feel(verdict(reply).mood, 2600);
     } catch (error) {
