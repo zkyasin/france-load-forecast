@@ -1,6 +1,6 @@
 /** What the question panel says around the answers of the API: none of it calls the model. */
 
-import { AskError, type Reply } from "./ask";
+import { AskError, type Call, type Reply } from "./ask";
 import type { Forecast, Gaps } from "./data";
 import { monthName, of } from "./format";
 import type { Mood } from "./pylon";
@@ -121,6 +121,59 @@ export function layout(answer: string): { lead: Piece[]; paragraphs: Piece[][] }
   const [lead = "", ...rest] = first.split(SENTENCE);
   const paragraphs = [rest.join(" "), ...others].filter(Boolean);
   return { lead: pieces(lead), paragraphs: paragraphs.map(pieces) };
+}
+
+const TOPICS: Record<string, string> = {
+  method: "la méthode",
+  sources: "les sources des données",
+  perimeter: "le périmètre des données",
+  revision: "la révision des données en temps réel",
+  temperature: "la publication des températures",
+};
+const TRAJECTORIES: Record<string, string> = {
+  slow: "une décarbonation lente",
+  rapid: "une décarbonation rapide",
+};
+const WINTERS: Record<string, string> = { cold: "un hiver froid", mild: "un hiver doux" };
+
+export const isMonth = (value: unknown): value is string =>
+  typeof value === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(value);
+const word = (value: unknown): string => (typeof value === "string" ? value : "");
+
+/** What the agent reads with `call`, in a few words: "les écarts d'avril 2026". */
+export function stepText({ tool, args }: Call): string {
+  switch (tool) {
+    case "forecast":
+      return isMonth(args.month)
+        ? `la prévision ${of(monthName(args.month))}`
+        : "la prévision des mois à venir";
+    case "month_gap":
+      return isMonth(args.month)
+        ? `les écarts ${of(monthName(args.month))}`
+        : "les écarts d'un mois";
+    case "annual_energy": {
+      const { first, last } = args;
+      if (!Number.isInteger(first) || !Number.isInteger(last)) return "l'énergie des années";
+      return first === last ? `l'énergie de ${first}` : `l'énergie de ${first} à ${last}`;
+    }
+    case "thermosensitivity":
+      return "la réponse à la température";
+    case "accuracy":
+      return "la fiabilité des prévisions passées";
+    case "fact":
+      return TOPICS[word(args.topic)] ?? "la méthode";
+    case "scenario": {
+      const cases = [TRAJECTORIES[word(args.trajectory)], WINTERS[word(args.winter)]].filter(
+        Boolean,
+      );
+      const year = Number.isInteger(args.year) ? ` en ${args.year}` : "";
+      return cases.length > 0
+        ? `le scénario avec ${cases.join(" et ")}${year}`
+        : `les scénarios${year}`;
+    }
+    default:
+      return "les données publiées";
+  }
 }
 
 // The section of the page that shows what each tool reads.

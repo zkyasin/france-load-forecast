@@ -8,6 +8,7 @@ import {
   moodOf,
   readExchanges,
   sections,
+  stepText,
   suggestions,
   verdict,
 } from "../src/conversation";
@@ -106,4 +107,20 @@ test("only well-formed exchanges are read back from the session", () => {
     error: "x",
   }));
   expect(readExchanges(JSON.stringify(many))).toHaveLength(20);
+});
+
+test("each step says what the agent reads", () => {
+  const step = (tool: string, args: Record<string, unknown> = {}) => stepText({ tool, args });
+
+  expect(step("forecast", { month: "2027-01" })).toBe("la prévision de janvier 2027");
+  expect(step("forecast")).toBe("la prévision des mois à venir");
+  expect(step("month_gap", { month: "2026-04" })).toBe("les écarts d'avril 2026");
+  expect(step("annual_energy", { first: 2019, last: 2020 })).toBe("l'énergie de 2019 à 2020");
+  expect(step("annual_energy", { first: 2025, last: 2025 })).toBe("l'énergie de 2025");
+  expect(step("fact", { topic: "revision" })).toBe("la révision des données en temps réel");
+  expect(step("scenario", { trajectory: "rapid", winter: "cold", year: 2027 })).toBe(
+    "le scénario avec une décarbonation rapide et un hiver froid en 2027",
+  );
+  expect(step("scenario")).toBe("les scénarios");
+  expect(step("unknown")).toBe("les données publiées");
 });

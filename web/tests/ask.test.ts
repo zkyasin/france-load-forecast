@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { AskError, ask, caption, failure, type Reply } from "../src/ask";
+import { AskError, ask, type Call, caption, failure, type Reply, readEvents } from "../src/ask";
 
 const reply: Reply = {
   answer: "Environ 49,2 TWh en P50.",
@@ -25,19 +25,98 @@ test("a verified answer names the date of its data and what the agent read", () 
   expect(caption({ ...reply, verified: false })).toMatch(/^Un nombre de la réponse n'avait pas/);
 });
 
-test("the question is posted to the API and its reply returned", async () => {
+/** A fetch that streams `events` as server-sent events, in chunks of `size` characters. */
+function streaming(events: [string, unknown][], size = 7): typeof fetch {
+  const text = events.map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  const whole = text.join("");
+  return async () =>
+    new Response(
+      new ReadableStream({
+        start(controller) {
+          const bytes = new TextEncoder().encode(whole);
+          for (let at = 0; at < bytes.length; at += size) {
+            controller.enqueue(bytes.slice(at, at + size));
+          }
+          controller.close();
+        },
+      }),
+      { headers: { "Content-Type": "text/event-stream" } },
+    );
+}
+
+test("the question and the exchange before it are posted to the stream of the API", async () => {
   const requests: Request[] = [];
+  const previous = { question: "Et avril ?", answer: "Avril a fini sous la prévision." };
 
   const answer = await ask("Et janvier ?", {
     api: "https://api.test",
     fetcher: answering(200, reply, requests),
+    previous,
   });
 
   expect(answer).toEqual(reply);
   const [request] = requests;
-  expect(request?.url).toBe("https://api.test/ask");
+  expect(request?.url).toBe("https://api.test/ask/stream");
   expect(request?.method).toBe("POST");
-  expect(await request?.json()).toEqual({ question: "Et janvier ?" });
+  expect(await request?.json()).toEqual({ question: "Et janvier ?", previous });
+});
+
+test("each step comes before the answer, whatever the chunks of the stream", async () => {
+  const steps: Call[] = [];
+  const restarts: number[] = [];
+  const events: [string, unknown][] = [
+    ["step", { tool: "forecast", args: {} }],
+    ["retry", {}],
+    ["step", { tool: "month_gap", args: { month: "2026-04" } }],
+    ["answer", reply],
+  ];
+
+  const answer = await ask("Et avril ?", {
+    api: "https://api.test",
+    fetcher: streaming(events),
+    onStep: (call) => steps.push(call),
+    onRetry: () => restarts.push(steps.length),
+  });
+
+  expect(answer).toEqual(reply);
+  expect(steps).toEqual([
+    { tool: "forecast", args: {} },
+    { tool: "month_gap", args: { month: "2026-04" } },
+  ]);
+  expect(restarts).toEqual([1]);
+});
+
+test("a stream that ends on an error is a refusal of the API", async () => {
+  const detail = "Le modèle ne répond pas pour le moment. Réessayez plus tard.";
+
+  await expect(
+    ask("Et avril ?", { api: "https://api.test", fetcher: streaming([["error", { detail }]]) }),
+  ).rejects.toEqual(new AskError(503, detail));
+});
+
+test("an API without a stream is asked in one piece", async () => {
+  const requests: Request[] = [];
+  const older: typeof fetch = async (input, init) => {
+    const request = new Request(input, init);
+    requests.push(request);
+    const found = request.url.endsWith("/ask");
+    return new Response(JSON.stringify(found ? reply : { detail: "Not Found" }), {
+      status: found ? 200 : 404,
+    });
+  };
+
+  expect(await ask("Et janvier ?", { api: "https://api.test", fetcher: older })).toEqual(reply);
+  expect(requests.map((request) => request.url)).toEqual([
+    "https://api.test/ask/stream",
+    "https://api.test/ask",
+  ]);
+});
+
+test("events are read whole, and the rest waits for the next chunk", () => {
+  expect(readEvents('event: step\ndata: {"tool": "accuracy"}\n\nevent: answ')).toEqual({
+    events: [{ event: "step", data: '{"tool": "accuracy"}' }],
+    rest: "event: answ",
+  });
 });
 
 test("a refused question gives the status and the message of the API", async () => {

@@ -12,6 +12,7 @@ import {
   readExchanges,
   type Suggestion,
   sections,
+  stepText,
   suggestions,
   verdict,
 } from "./conversation";
@@ -353,15 +354,29 @@ export function render(bundle: Bundle): void {
     for (const box of thread.querySelectorAll(".chat-chips")) box.remove();
     const kept: Exchange = { question, reply: null, error: null };
     show(element("p", "chat-question", question));
-    const waiting = show(element("p", "chat-thinking", "Le pylône lit les données publiées"));
+    // What the agent reads, step by step, as the API streams it.
+    const waiting = show(element("div", "chat-steps"));
+    const status = element("p", "chat-thinking", "Le pylône lit les données publiées");
+    const steps = element("ul", "chat-step-list");
+    waiting.append(status, steps);
     const slow = window.setTimeout(() => {
-      waiting.textContent = "Encore quelques secondes";
+      status.textContent = "Encore quelques secondes";
     }, 8000);
     feel("think");
     pending = new AbortController();
     busy(true);
     try {
-      const reply = await ask(question, { signal: pending.signal });
+      const reply = await ask(question, {
+        signal: pending.signal,
+        onStep: (call) => {
+          steps.append(element("li", "", `Lit ${stepText(call)}`));
+          thread.scrollTop = thread.scrollHeight;
+        },
+        onRetry: () => {
+          steps.replaceChildren();
+          status.textContent = "Un autre modèle reprend la question";
+        },
+      });
       kept.reply = reply;
       waiting.remove();
       answer(reply, !reduce.matches);

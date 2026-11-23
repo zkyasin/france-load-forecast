@@ -280,6 +280,32 @@
   color: var(--muted);
 }
 
+.chat-steps {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.chat-step-list {
+  display: grid;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  list-style: none;
+}
+
+.chat-step-list li::before {
+  margin-right: 0.375rem;
+  color: var(--third);
+  content: "✓";
+}
+
+.chat-step-list li:last-child::before {
+  color: var(--forecast);
+  content: "•";
+}
+
 .chat-thinking::after {
   display: inline-block;
   width: 1.2em;
