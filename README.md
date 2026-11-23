@@ -84,9 +84,11 @@ The page, in French, is at <https://zkyasin.github.io/france-load-forecast/>. It
   into weather, calendar and other effects;
 - the note of the month, written by the agent;
 - in the bottom-right corner, a "tête de chat" pylon that opens a panel of questions to the
-  agent: suggestions drawn from the latest data, answers with their source and the sections of
-  the page that show them, and follow-up questions. It appears once the question API is
-  deployed and its address is set as the repository variable `API_URL`;
+  agent: suggestions drawn from the latest data, what the agent reads as it reads it, answers
+  with their source, a chart of the month they read and the sections of the page that show
+  them, follow-up questions that may build on the answer before, and the questions left once
+  few are. It appears once the question API is deployed and its address is set as the
+  repository variable `API_URL`;
 - the load added by one degree less, by temperature;
 - the energy of each year since 2014, measured and corrected for the weather;
 - the BP2025 scenarios to 2031, for a trajectory and a winter chosen by the reader;
@@ -141,9 +143,12 @@ not give.
 ## Question API
 
 [`api.py`](src/france_load_forecast/api.py) serves the agent to the page. `POST /ask` takes
-`{"question": "..."}` and returns the answer, the tools the agent called and the date of the data,
-or the agent's refusal when a number of the answer has no source. An answer that read no data is
-replaced by a sentence saying that the question is out of scope. The API reads the last bundle
+`{"question": "..."}` and returns the answer, the tools the agent called with their arguments, the
+date of the data and the questions the visitor has left, or the agent's refusal when a number of
+the answer has no source. An answer that read no data is replaced by a sentence saying that the
+question is out of scope. A question may come with `previous`, the question and the answer just
+before it, which the agent reads as context but never as a source of numbers. `POST /ask/stream`
+gives the same reply as server-sent events, after a `step` event for each tool the agent calls. The API reads the last bundle
 from the page and reads it again every hour. The limits of [`config/api.toml`](config/api.toml)
 are 60 questions a day in all, and 5 an hour and 20 a day per visitor. They are kept in memory,
 so they start again when Cloud Run stops the idle instance; the free plan of Groq bounds the
