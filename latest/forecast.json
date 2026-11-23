@@ -2,14 +2,14 @@
   "published": "2026-11-23",
   "model_id": "baseline",
   "current_month": "2026-11",
-  "total_p50": 446.21,
+  "total_p50": 446.157,
   "months": [
     {
       "month": "2026-11",
-      "p10": 39.816,
-      "p50": 40.361,
-      "p90": 40.992,
-      "measured": 28.837,
+      "p10": 39.832,
+      "p50": 40.308,
+      "p90": 40.858,
+      "measured": 30.254,
       "horizon": 1,
       "provisional": true
     },
