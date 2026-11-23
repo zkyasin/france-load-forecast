@@ -176,16 +176,21 @@ def decompose(data_dir: Path, config: Path, months: int) -> int:
         print(realtime_note(con, history))
     recent = decomposition.recent_months(history, months)
     latest = model.fit_recent(history, spec)
+    to_forecast, forecast_temperature = decomposition.against_forecast(history, spec, recent)
     views = {
-        "the forecast made at the start of the month": decomposition.against_forecast(
-            history, spec, recent
-        ),
+        "the forecast made at the start of the month": to_forecast,
         "the same month a year earlier": decomposition.against_year_before(latest, history, recent),
     }
     for reference, table in views.items():
         table.index = pd.DatetimeIndex(table.index).strftime("%Y-%m")
         print(f"monthly energy in TWh, against {reference}")
         print(table.to_string(float_format=lambda value: f"{value:.2f}"))
+    temperatures = pd.DataFrame(
+        {"month": history["temperature_c"].resample("MS").mean(), "forecast": forecast_temperature}
+    ).loc[recent]
+    temperatures.index = pd.DatetimeIndex(temperatures.index).strftime("%Y-%m")
+    print("mean temperature in °C, of the month and of the weather the forecast assumed")
+    print(temperatures.to_string(float_format=lambda value: f"{value:.1f}"))
     return 0
 
 

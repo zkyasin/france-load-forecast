@@ -63,7 +63,7 @@ def test_gaps_cover_the_last_twelve_months(bundle: dict[str, dict[str, Any]]) ->
 
     assert [month["month"] for month in months] == [f"2024-{m:02d}" for m in range(1, 13)]
     assert [month["provisional"] for month in months] == [False] * 11 + [True]
-    assert set(months[0]["temperature"]) == {"mean", "reference", "year_before"}
+    assert set(months[0]["temperature"]) == {"mean", "reference", "year_before", "forecast"}
     for month in months:
         for view in ("against_forecast", "against_year_before"):
             terms = sum(value for name, value in month[view].items() if name not in TOTALS)

@@ -8,7 +8,8 @@ the forecast assumed, valued with the coefficients of the forecast: the actual w
 weather paths for the climate, nothing for the calendar, which was known. `structural` is the gap
 between the level and seasonal states estimated with all the days known today and those projected
 at the origin. `residual` holds the rest: deviations that last a few days and the update of the
-coefficients by the days after the origin.
+coefficients by the days after the origin. P50 is the median across weather paths, so the weather
+the forecast assumed is the past weather of its median path.
 
 Against the same month a year earlier, with a model covering both months: the change in the
 effect of each component, in the structural states and in the residual. 29 February only exists
@@ -59,33 +60,42 @@ def _projection(model: DailyModel, future: pd.DataFrame) -> pd.DataFrame:
     return states.loc[future.index]
 
 
-def _median_path(paths: pd.DataFrame) -> pd.Series:
-    """Terms of the median path, or the mean of the two middle ones, so that they add up to P50."""
-    ranked = paths.loc[paths.sum(axis=1).sort_values().index]
+def _median_paths(paths: pd.DataFrame) -> pd.Index:
+    """Labels of the median path by energy, or of the two middle ones: the mean of their terms
+    adds up to P50."""
+    ranked = paths.sum(axis=1).sort_values().index
     count = len(ranked)
-    return ranked.iloc[(count - 1) // 2 : count // 2 + 1].mean()
+    return ranked[(count - 1) // 2 : count // 2 + 1]
 
 
 def against_forecast(
     history: pd.DataFrame, spec: ModelSpec, months: pd.DatetimeIndex
-) -> pd.DataFrame:
-    """Gap between the energy of each month and the forecast made at its start, split into terms.
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Gap between the energy of each month and the forecast made at its start, split into terms,
+    and the mean temperature of the weather that the forecast assumed, in °C.
 
     The forecast is the one of the backtest, one month ahead.
     """
     complete_years = forecast.complete_years(pd.DatetimeIndex(history.index))
-    actual_terms, planned_terms = {}, {}
+    actual_terms, planned_terms, planned_temperature = {}, {}, {}
     for origin, at_origin in backtest.models_at(history, spec, months):
         days = pd.date_range(origin, periods=origin.days_in_month, freq="D")
         past = history[history.index < origin]
         years = backtest.weather_years(complete_years, origin)
         scenarios = forecast.scenarios(past, history, years, days, spec.smoothing)
         states = _projection(at_origin, scenarios[years[0]])
-        paths = {
-            year: _monthly(contributions(at_origin, future).join(states)).iloc[0]
-            for year, future in scenarios.items()
-        }
-        planned_terms[origin] = _median_path(pd.DataFrame.from_dict(paths, orient="index"))
+        paths = pd.DataFrame.from_dict(
+            {
+                year: _monthly(contributions(at_origin, future).join(states)).iloc[0]
+                for year, future in scenarios.items()
+            },
+            orient="index",
+        )
+        median = _median_paths(paths)
+        planned_terms[origin] = paths.loc[median].mean()
+        planned_temperature[origin] = np.mean(
+            [scenarios[year]["temperature_c"].mean() for year in median]
+        )
 
         observed = history.loc[days]
         realized = extend(at_origin, history)
@@ -93,10 +103,11 @@ def against_forecast(
         actual["structural"] = (realized.level + realized.seasonal)[days]
         actual["residual"] = observed["load_gw"] - actual.sum(axis=1)
         actual_terms[origin] = _monthly(actual).iloc[0]
-    return _gaps(
+    gaps = _gaps(
         pd.DataFrame.from_dict(actual_terms, orient="index"),
         pd.DataFrame.from_dict(planned_terms, orient="index"),
     )
+    return gaps, pd.Series(planned_temperature, name="temperature_c")
 
 
 def against_year_before(

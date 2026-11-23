@@ -92,9 +92,13 @@ class GapView(BaseModel):
 
 
 class Temperatures(Strict):
+    """Mean temperatures of the month, of its reference, of the same month a year earlier and of
+    the past weather that the forecast made at its start assumed."""
+
     mean: Celsius
     reference: Celsius
     year_before: Celsius
+    forecast: Celsius
 
 
 class GapMonth(Strict):
