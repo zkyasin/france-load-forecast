@@ -131,8 +131,9 @@ uv run flf note 2026-09
 `ask` prints the tool calls and the answer. `note` writes `notes/2026-09.md`: the energy of the
 month and its gaps term by term, then a reading written by the agent, which may only read the gaps
 of the month. It also writes `notes/2026-09.json` for the page. Both commands exit with status 1
-if a number has no source. [`evals/questions.toml`](evals/questions.toml) holds frozen questions
-and their expected answers.
+if a number has no source. [`evals/`](evals) holds 40 frozen questions with their expected
+answers, and `flf eval` scores the answers of a model on them, without a judge: the
+[results](evals/results.md) compare the local model with the hosted ones.
 
 A note reaches the page through a pull request: its reading is reviewed, then the page shows the
 latest note from its next deployment. Before writing a note, `flf note` checks every figure of its

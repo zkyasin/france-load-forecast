@@ -16,11 +16,20 @@ def evals() -> dict[str, Any]:
         return tomllib.load(file)
 
 
-def test_twenty_questions_with_unique_ids(evals: dict[str, Any]) -> None:
+def test_forty_questions_with_unique_ids(evals: dict[str, Any]) -> None:
     ids = [question["id"] for question in evals["questions"]]
 
-    assert len(ids) == 20
+    assert len(ids) == 40
     assert len(set(ids)) == len(ids)
+
+
+def test_a_follow_up_gives_the_exchange_before_it(evals: dict[str, Any]) -> None:
+    follow_ups = [question for question in evals["questions"] if "previous" in question]
+
+    assert follow_ups
+    for question in follow_ups:
+        assert set(question["previous"]) == {"question", "answer"}, question["id"]
+        assert len(question["previous"]["question"]) <= MAX_LENGTH, question["id"]
 
 
 def test_questions_fit_the_page(evals: dict[str, Any]) -> None:
@@ -37,7 +46,7 @@ def test_questions_in_scope_name_a_declared_tool(evals: dict[str, Any]) -> None:
         assert question["tool"] in evals["tools"], question["id"]
         assert isinstance(question["arguments"], dict), question["id"]
         assert isinstance(question["figures"], list), question["id"]
-    assert sum(bool(question["figures"]) for question in in_scope) >= 14
+    assert sum(bool(question["figures"]) for question in in_scope) >= 25
 
 
 def test_questions_out_of_scope_call_no_tool(evals: dict[str, Any]) -> None:
