@@ -184,18 +184,23 @@ def answering(
     words: int = 120,
     only: Collection[str] | None = None,
     cite: bool = True,
+    previous: tuple[str, str] | None = None,
 ) -> Iterator[Step | Answer]:
     """Answer `question` with the tools, or with those named in `only`, and check every number
     of the answer. Yields each tool call as the model makes it, then the answer, last.
 
-    With `cite` false, the answer need not give the date of the data.
+    With `cite` false, the answer need not give the date of the data. `previous` is the question
+    and the answer just before: the model reads them, but their numbers are no source.
     """
     system = instructions(bundle, words, cite)
     tools = [tool for tool in make_tools(bundle, facts) if only is None or tool.name in only]
     # Besides the tool results, which all carry the data dates, an answer may name the years of
     # the question.
     known = YEAR.findall(question)
-    conversation: list[AnyMessage | dict[str, Any]] = [HumanMessage(question)]
+    conversation: list[AnyMessage | dict[str, Any]] = []
+    if previous is not None:
+        conversation += [HumanMessage(previous[0]), AIMessage(previous[1])]
+    conversation.append(HumanMessage(question))
     ran: list[dict[str, Any]] = []
     text, problem = "", None
     for _ in range(2):
@@ -248,7 +253,8 @@ def ask(
     words: int = 120,
     only: Collection[str] | None = None,
     cite: bool = True,
+    previous: tuple[str, str] | None = None,
 ) -> Answer:
     """The checked answer of `answering`, once the agent is done."""
-    steps = answering(question, bundle, facts, model, config, words, only, cite)
+    steps = answering(question, bundle, facts, model, config, words, only, cite, previous)
     return [item for item in steps if isinstance(item, Answer)][-1]

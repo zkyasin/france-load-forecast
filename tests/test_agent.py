@@ -3,7 +3,10 @@ from dataclasses import replace
 from typing import Any
 
 import pytest
+from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_ollama import ChatOllama
+from pydantic import Field
 
 from france_load_forecast.agent import agent, tools
 
@@ -124,6 +127,19 @@ def test_refusals_need_no_tool(
     assert answer.tool_calls == []
 
 
+class Recording(GenericFakeChatModel):
+    """A scripted model that keeps the messages of each call."""
+
+    calls: list[list[BaseMessage]] = Field(default_factory=list)
+
+    def bind_tools(self, tools: Any, **kwargs: Any) -> "Recording":
+        return self
+
+    def _generate(self, messages: list[BaseMessage], *args: Any, **kwargs: Any) -> Any:
+        self.calls.append(list(messages))
+        return super()._generate(messages, *args, **kwargs)
+
+
 def test_each_tool_call_is_reported_before_the_answer(
     script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
 ) -> None:
@@ -142,6 +158,21 @@ def test_each_tool_call_is_reported_before_the_answer(
     assert isinstance(items[2], agent.Answer)
     assert items[2].verified
     assert len(items) == 3
+
+
+def test_the_previous_exchange_is_read_but_is_no_source(
+    bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    replies = ["Toujours 2,58 TWh sous la prévision.", "Toujours 2,58 TWh sous la prévision."]
+    model = Recording(messages=iter([AIMessage(reply) for reply in replies]))
+    previous = ("Et avril 2026 ?", "Avril 2026 a fini 2,58 TWh sous la prévision.")
+
+    answer = agent.ask("Et en mai ?", bundle, facts, model, agent_config, previous=previous)
+
+    first = model.calls[0]
+    assert [type(m) for m in first[-3:]] == [HumanMessage, AIMessage, HumanMessage]
+    assert [m.text for m in first[-3:]] == [*previous, "Et en mai ?"]
+    assert answer.problem == "numbers without a source: 2,58"
 
 
 def test_configured_model_is_the_local_one(agent_config: agent.AgentConfig) -> None:
