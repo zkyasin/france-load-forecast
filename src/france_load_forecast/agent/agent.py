@@ -44,8 +44,11 @@ or mild winter;
 of real-time data and when temperatures are published.
 - Get every figure from the tools, and quote it as the tools give it, rounded to one or two \
 decimals, with its unit. Do not compute new numbers such as sums, differences or shares.
-- Give each term of a gap in TWh, and explain the climate term with the temperatures the tools \
-give: never guess the weather.
+- Give each term of a gap in TWh: a positive term raised consumption, a negative one lowered it. \
+Against the year before, give the temperatures of both months with the climate term. Against the \
+forecast, the climate term compares the weather of the month with the past years that the \
+month with the past years that the forecast replayed: do not explain it with the reference \
+temperature. Never guess the weather.
 - P10 and P90 bound the band of the forecast: they are not scenarios. For a cold or mild winter, \
 or a faster or slower electrification, call scenario.
 - A month marked provisional relies on real-time data: say so.
@@ -68,6 +71,10 @@ RETRY = (
 RETRY_EMPTY = "Answer the question, in French."
 RETRY_LINK = "Rewrite the answer without links."
 
+# Per call of a hosted model. An answer takes up to five calls, which stays under the 60 s of a
+# request on Cloud Run.
+HOSTED_TIMEOUT_SECONDS = 10
+
 # Shown instead of an answer that failed the check.
 REFUSAL = "Je ne peux pas répondre à cette question avec des chiffres vérifiés."
 
@@ -85,6 +92,16 @@ class AgentConfig:
     max_question_chars: int
 
 
+def plain(text: str) -> str:
+    """A text of the agent as plain French text: without the asterisks of Markdown emphasis, with
+    decimal commas, a true minus sign where the model wrote a dash, and a non-breaking space before
+    units, so that no line breaks inside a value."""
+    text = text.replace("*", "")
+    text = re.sub(r"(?<=\d)\.(?=\d)", ",", text)
+    text = re.sub(r"(?<!\w)[-\u2013](?=\d)", "\u2212", text)
+    return re.sub(r"(?<=\d) (?=TWh|GWh|GW|MW|°C|%)", "\u00a0", text)
+
+
 def load_config(path: Path) -> AgentConfig:
     with path.open("rb") as file:
         return AgentConfig(**tomllib.load(file))
@@ -98,8 +115,14 @@ def chat_model(config: AgentConfig) -> BaseChatModel:
             config.model, temperature=config.temperature, num_predict=config.max_output_tokens
         )
     else:
+        # A hosted model that stalls or is rate-limited fails at once rather than retrying, so
+        # that the next model can answer within the time of a request.
         model = init_chat_model(
-            config.model, temperature=config.temperature, max_tokens=config.max_output_tokens
+            config.model,
+            temperature=config.temperature,
+            max_tokens=config.max_output_tokens,
+            timeout=HOSTED_TIMEOUT_SECONDS,
+            max_retries=0,
         )
     if not isinstance(model, BaseChatModel):
         raise TypeError(f"{config.model} is not a chat model")

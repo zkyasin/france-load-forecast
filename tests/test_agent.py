@@ -1,6 +1,8 @@
 from collections.abc import Callable
+from dataclasses import replace
 from typing import Any
 
+import pytest
 from langchain_ollama import ChatOllama
 
 from france_load_forecast.agent import agent, tools
@@ -127,3 +129,14 @@ def test_configured_model_is_the_local_one(agent_config: agent.AgentConfig) -> N
 
     assert isinstance(model, ChatOllama)
     assert model.num_predict == agent_config.max_output_tokens
+
+
+def test_a_hosted_model_fails_fast_instead_of_retrying(
+    agent_config: agent.AgentConfig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GROQ_API_KEY", "not-a-key")
+
+    model = agent.chat_model(replace(agent_config, model="groq:openai/gpt-oss-120b"))
+
+    assert getattr(model, "request_timeout", None) == agent.HOSTED_TIMEOUT_SECONDS
+    assert getattr(model, "max_retries", None) == 0
