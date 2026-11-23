@@ -109,23 +109,31 @@ def realtime_note(con: duckdb.DuckDBPyConnection, history: pd.DataFrame) -> str:
     )
 
 
-def read_backtest(data_dir: Path) -> pd.DataFrame | None:
-    """The backtest results, or None after a message if they are missing."""
-    path = data_dir / "backtest.csv"
+# What a month of each target of the model is, and its unit.
+MONTHLY_NAMES = {"load_gw": ("monthly energy", "TWh"), "peak_gw": ("monthly peak", "GW")}
+
+
+def backtest_path(data_dir: Path, spec: model.ModelSpec) -> Path:
+    return data_dir / f"backtest-{spec.model_id}.csv"
+
+
+def read_backtest(data_dir: Path, spec: model.ModelSpec) -> pd.DataFrame | None:
+    """The backtest results of a model, or None after a message if they are missing."""
+    path = backtest_path(data_dir, spec)
     if not path.exists():
-        print(f"{path} is missing: run `flf backtest` first", file=sys.stderr)
+        print(f"{path} is missing: run `flf backtest` with the same config first", file=sys.stderr)
         return None
     return pd.read_csv(path, parse_dates=["origin", "month"])
 
 
 def run_forecast(data_dir: Path, config: Path) -> int:
-    """Forecast monthly energy over the current month and the 11 after, with a P10-P90 band
-    calibrated on the backtest errors. Days already measured replace the forecast."""
-    past_forecasts = read_backtest(data_dir)
+    """Forecast monthly energy, or peak, over the current month and the 11 after, with a P10-P90
+    band calibrated on the backtest errors. Days already measured replace the forecast."""
+    spec = model.load_spec(config)
+    past_forecasts = read_backtest(data_dir, spec)
     if past_forecasts is None:
         return 1
 
-    spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
         observed = model.load_after(con, history.index[-1], spec.target)
@@ -136,16 +144,18 @@ def run_forecast(data_dir: Path, config: Path) -> int:
     start = pd.Timestamp(summary.index[0])
     last_measured = observed.index[-1] if not observed.empty else history.index[-1]
     years = forecast.complete_years(pd.DatetimeIndex(history.index))
+    name, unit = MONTHLY_NAMES[spec.target]
     print(
-        f"monthly energy in TWh: model up to {start - pd.Timedelta(days=1):%Y-%m-%d},"
+        f"{name} in {unit}: model up to {start - pd.Timedelta(days=1):%Y-%m-%d},"
         f" measured load up to {last_measured:%Y-%m-%d}"
     )
     print(note)
     print(f"P50 over {len(years)} weather years, P10-P90 from backtest errors before {start:%Y-%m}")
     summary.index = pd.DatetimeIndex(summary.index).strftime("%Y-%m")
     print(summary.drop(columns="horizon").to_string(float_format=lambda value: f"{value:.1f}"))
-    ahead = summary.iloc[-12:]
-    print(f"total P50 from {ahead.index[0]}: {ahead['p50'].sum():.1f} TWh")
+    if spec.target == "load_gw":
+        ahead = summary.iloc[-12:]
+        print(f"total P50 from {ahead.index[0]}: {ahead['p50'].sum():.1f} TWh")
     return 0
 
 
@@ -157,11 +167,12 @@ def run_backtest(data_dir: Path, config: Path, first: str) -> int:
     # Past forecasts are scored against consolidated data only.
     history = frame[frame["source"] == "consolidated"]
     results = backtest.run(history, spec, backtest.monthly_origins(history, first))
-    results.to_csv(data_dir / "backtest.csv", index=False)
+    results.to_csv(backtest_path(data_dir, spec), index=False)
 
     recent = results[results["origin"] >= backtest.RECENT_ORIGINS]
+    name, _ = MONTHLY_NAMES[spec.target]
     for label, part in (("all origins", results), ("origins since 2023", recent)):
-        print(f"mean absolute percentage error of monthly energy, {label}")
+        print(f"mean absolute percentage error of {name}, {label}")
         print(backtest.accuracy(part).to_string(float_format=lambda value: f"{value:.2f}"))
     for first_origin in (conformal.FIRST_BAND_ORIGIN, backtest.RECENT_ORIGINS):
         coverage = conformal.online_coverage(results, first_origin)
@@ -199,11 +210,11 @@ def decompose(data_dir: Path, config: Path, months: int) -> int:
 
 def run_publish(data_dir: Path, config: Path, scenario_config: Path, out: Path) -> int:
     """Write the weekly bundle of JSON files."""
-    past_forecasts = read_backtest(data_dir)
+    spec = model.load_spec(config)
+    past_forecasts = read_backtest(data_dir, spec)
     if past_forecasts is None:
         return 1
 
-    spec = model.load_spec(config)
     scenario_spec = scenarios.load_spec(scenario_config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
@@ -371,7 +382,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="compare the climate-corrected consumption with RTE's corrected series",
     )
     commands.add_parser(
-        "forecast", parents=[model_options], help="forecast monthly energy over 12 months"
+        "forecast", parents=[model_options], help="forecast monthly energy or peak over 12 months"
     )
     backtest_parser = commands.add_parser(
         "backtest", parents=[model_options], help="score forecasts made from past months"

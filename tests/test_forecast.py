@@ -70,3 +70,28 @@ def test_normal_climate_lies_between_a_cold_and_a_warm_year(
     january = pd.Timestamp("2025-01-01")
     assert paths.at[january, 2022] > normal[january] > paths.at[january, 2023]
     assert normal.index.equals(paths.index)
+
+
+def test_monthly_peak_is_the_highest_day() -> None:
+    daily = pd.Series([70.0, 82.5, 75.0], index=pd.date_range("2027-01-30", periods=3))
+
+    assert forecast.monthly_peak(daily).tolist() == [82.5, 75.0]
+
+
+def test_every_target_adds_up_over_a_month() -> None:
+    assert set(forecast.MONTHLY) == set(model.TARGETS)
+
+
+def test_a_peak_path_keeps_the_highest_day(
+    synthetic_peak_model: model.DailyModel, synthetic_frame: pd.DataFrame
+) -> None:
+    record = pd.Series(100.0, index=[pd.Timestamp("2025-01-15")])
+
+    paths = forecast.paths(
+        synthetic_peak_model, synthetic_frame, synthetic_frame, [2022, 2023], observed=record
+    )
+
+    np.testing.assert_allclose(paths.loc["2025-01-01"], 100.0)
+    # Without any cold day, the summer peak stays near the 15 % above a mean load of about 50 GW.
+    july = paths.loc["2025-07-01"].to_numpy()
+    assert ((july > 55) & (july < 65)).all()

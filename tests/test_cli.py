@@ -28,9 +28,15 @@ def test_ingest_builds_the_warehouse(
     assert "load_realtime" in capsys.readouterr().out
 
 
-def test_forecast_needs_the_backtest(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_forecast_needs_the_backtest_of_its_model(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    peak = Path(__file__).parents[1] / "config" / "peak.toml"
+
     assert cli.main(["forecast", "--data-dir", str(tmp_path)]) == 1
-    assert "flf backtest" in capsys.readouterr().err
+    assert "backtest-baseline.csv is missing" in capsys.readouterr().err
+    assert cli.main(["forecast", "--data-dir", str(tmp_path), "--config", str(peak)]) == 1
+    assert "backtest-peak.csv is missing" in capsys.readouterr().err
 
 
 def test_note_needs_a_month_of_the_bundle(

@@ -52,6 +52,12 @@ def test_spec_reads_the_repository_config() -> None:
     assert 0 < spec.smoothing <= 1
 
 
+def test_peak_spec_reads_its_config() -> None:
+    spec = model.load_spec(Path(__file__).parents[1] / "config" / "peak.toml")
+
+    assert (spec.model_id, spec.target) == ("peak", "peak_gw")
+
+
 def test_spec_refuses_an_unknown_target(tmp_path: Path) -> None:
     config = (Path(__file__).parents[1] / "config" / "model.toml").read_text(encoding="utf-8")
     path = tmp_path / "model.toml"
