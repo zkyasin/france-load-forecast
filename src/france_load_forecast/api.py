@@ -139,6 +139,19 @@ class Limits:
             self.today += 1
             return None
 
+    def left(self, visitor: str) -> "Left":
+        """How many more questions `visitor` may ask this hour and today."""
+        now = self.clock()
+        with self.lock:
+            asked = self.asked.get(visitor, deque())
+            last_hour = sum(1 for moment in asked if moment > now - HOUR)
+            today = min(
+                self.settings.questions_per_visitor_per_day - len(asked),
+                self.settings.questions_per_day - self.today,
+            )
+            hour = self.settings.questions_per_visitor_per_hour - last_hour
+            return Left(hour=max(0, min(hour, today)), day=max(0, today))
+
 
 def visitor(request: Request) -> str:
     """Who asks. Cloud Run appends the address of the visitor to X-Forwarded-For, after any value
@@ -185,13 +198,27 @@ class Question(BaseModel):
     question: str
 
 
+class Call(BaseModel):
+    tool: str
+    args: dict[str, Any]
+
+
+class Left(BaseModel):
+    """Questions a visitor may still ask, this hour and today."""
+
+    hour: int
+    day: int
+
+
 class Reply(BaseModel):
     answer: str
     verified: bool
-    # The tools the agent called, in order.
+    # The tools the agent called, in order, and the same calls with their arguments.
     tools: list[str]
+    calls: list[Call]
     # Date of the bundle the answer comes from.
     published: str
+    left: Left
 
 
 def create_app(
@@ -232,7 +259,8 @@ def create_app(
             question = ""
         if not question or len(question) > config.max_question_chars:
             raise HTTPException(422, malformed)
-        refused = limits.refuse(visitor(request))
+        who = visitor(request)
+        refused = limits.refuse(who)
         if refused:
             raise HTTPException(429, refused)
         try:
@@ -259,7 +287,9 @@ def create_app(
                 answer=text,
                 verified=answer.verified,
                 tools=[call["name"] for call in answer.tool_calls],
+                calls=[Call(tool=call["name"], args=call["args"]) for call in answer.tool_calls],
                 published=current["meta"]["published"],
+                left=limits.left(who),
             )
         raise HTTPException(503, "Le modèle ne répond pas pour le moment. Réessayez plus tard.")
 

@@ -69,8 +69,23 @@ def test_answer_gives_its_tools_and_the_date_of_its_data(
         "answer": agent.plain(ANSWER),
         "verified": True,
         "tools": ["month_gap"],
+        "calls": [{"tool": "month_gap", "args": {"month": "2026-02"}}],
         "published": "2026-11-22",
+        "left": {"hour": 4, "day": 19},
     }
+
+
+def test_a_visitor_is_told_how_many_questions_are_left(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(*[("month_gap", {"month": "2026-02"}), ANSWER] * 3)
+    test = client(bundle, facts, agent_config, {"model": model}, questions_per_day=2)
+
+    _, first = ask(test)
+    _, second = ask(test, address="2.2.2.2")
+
+    assert first["left"] == {"hour": 1, "day": 1}
+    assert second["left"] == {"hour": 0, "day": 0}
 
 
 def test_answer_with_a_number_without_source_is_refused(
