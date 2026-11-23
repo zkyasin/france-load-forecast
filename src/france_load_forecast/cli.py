@@ -128,7 +128,7 @@ def run_forecast(data_dir: Path, config: Path) -> int:
     spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
-        observed = model.load_after(con, history.index[-1])
+        observed = model.load_after(con, history.index[-1], spec.target)
         note = realtime_note(con, history)
     fitted = model.fit_recent(history, spec)
     summary = outlook.table(fitted, history, observed, past_forecasts)
@@ -207,7 +207,7 @@ def run_publish(data_dir: Path, config: Path, scenario_config: Path, out: Path) 
     scenario_spec = scenarios.load_spec(scenario_config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
-        observed = model.load_after(con, history.index[-1])
+        observed = model.load_after(con, history.index[-1], spec.target)
         rte = correction.rte_monthly(con)
         revision = warehouse.mean_revision(con)
     published = datetime.now(UTC).date()

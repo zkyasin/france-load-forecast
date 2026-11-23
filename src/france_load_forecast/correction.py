@@ -7,12 +7,13 @@ from france_load_forecast.model import DailyModel, component_effect
 
 
 def corrected_load(model: DailyModel, frame: pd.DataFrame) -> pd.Series:
-    """Daily load had the smoothed temperature been the reference one, in GW."""
+    """Daily load, mean or peak as the model explains, had the smoothed temperature been the
+    reference one, in GW."""
     actual = component_effect(model, "climate", frame)
     reference = component_effect(
         model, "climate", frame.assign(temperature_smooth=frame["reference_smooth"])
     )
-    return frame["load_gw"] - actual + reference
+    return frame[model.spec.target] - actual + reference
 
 
 def monthly_energy(daily_gw: pd.Series) -> pd.Series:

@@ -24,10 +24,14 @@ from statsmodels.tsa.statespace.structural import (
 
 from france_load_forecast.calendar import calendar_features
 
+# Daily series a model can explain, in GW: the mean load of the day, or its highest value.
+TARGETS = ("load_gw", "peak_gw")
+
 
 @dataclass(frozen=True)
 class ModelSpec:
     model_id: str
+    target: str
     smoothing: float
     seasonal_harmonics: int
     window_years: int
@@ -37,8 +41,11 @@ class ModelSpec:
 def load_spec(path: Path) -> ModelSpec:
     with path.open("rb") as file:
         config = tomllib.load(file)
+    if config["target"] not in TARGETS:
+        raise ValueError(f"{path}: target must be one of {', '.join(TARGETS)}")
     return ModelSpec(
         model_id=config["model_id"],
+        target=config["target"],
         smoothing=config["smoothing"],
         seasonal_harmonics=config["seasonal_harmonics"],
         window_years=config["window_years"],
@@ -47,7 +54,8 @@ def load_spec(path: Path) -> ModelSpec:
 
 
 def daily_frame(con: duckdb.DuckDBPyConnection, smoothing: float) -> pd.DataFrame:
-    """Daily load with temperatures and calendar features, on the days with a temperature.
+    """Daily mean load and peak with temperatures and calendar features, on the days with a
+    temperature.
 
     Days after the last consolidated one come from real-time data raised by the measured
     revision. Their `source` is "realtime" instead of "consolidated".
@@ -55,7 +63,7 @@ def daily_frame(con: duckdb.DuckDBPyConnection, smoothing: float) -> pd.DataFram
     frame = (
         con.execute(
             """
-            SELECT date, load_gw, source, temperature_c, reference_c
+            SELECT date, load_gw, peak_gw, source, temperature_c, reference_c
             FROM load_daily JOIN temperature USING (date)
             ORDER BY date
             """
@@ -74,13 +82,13 @@ def daily_frame(con: duckdb.DuckDBPyConnection, smoothing: float) -> pd.DataFram
     return frame.join(calendar_features(frame.index))
 
 
-def load_after(con: duckdb.DuckDBPyConnection, day: pd.Timestamp) -> pd.Series:
-    """Daily load measured after `day`, in GW: the real-time days still waiting for a
-    temperature when `day` is the last day of the daily frame."""
+def load_after(con: duckdb.DuckDBPyConnection, day: pd.Timestamp, target: str) -> pd.Series:
+    """Daily mean load or peak measured after `day`, in GW, as `target` says: the real-time days
+    still waiting for a temperature when `day` is the last day of the daily frame."""
     frame = con.execute(
-        "SELECT date, load_gw FROM load_daily WHERE date > ? ORDER BY date", [day.date()]
+        "SELECT date, load_gw, peak_gw FROM load_daily WHERE date > ? ORDER BY date", [day.date()]
     ).df()
-    return pd.Series(frame["load_gw"].to_numpy(), index=pd.DatetimeIndex(frame["date"]))
+    return pd.Series(frame[target].to_numpy(), index=pd.DatetimeIndex(frame["date"]))
 
 
 @dataclass(frozen=True)
@@ -127,7 +135,7 @@ def fit(frame: pd.DataFrame, spec: ModelSpec) -> DailyModel:
     # Columns that never vary in the sample, such as lockdowns before 2020, cannot be estimated.
     exog = exog.loc[:, exog.std() > 0]
     model = UnobservedComponents(
-        frame["load_gw"],
+        frame[spec.target],
         level=True,
         stochastic_level=True,
         irregular=False,
@@ -162,7 +170,7 @@ def extend(model: DailyModel, frame: pd.DataFrame) -> DailyModel:
     new = frame[frame.index > model.results.fittedvalues.index[-1]]
     if new.empty:
         return model
-    results = model.results.append(new["load_gw"], exog=exog(model, new))
+    results = model.results.append(new[model.spec.target], exog=exog(model, new))
     return replace(model, results=results)
 
 
