@@ -2,8 +2,11 @@
 
 import argparse
 import json
+import re
 import sys
+import time
 from collections.abc import Sequence
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -25,7 +28,7 @@ from france_load_forecast import (
     scenarios,
     warehouse,
 )
-from france_load_forecast.agent import agent, note, tools
+from france_load_forecast.agent import agent, evaluate, note, tools
 
 
 def ingest(data_dir: Path) -> int:
@@ -291,6 +294,63 @@ def run_note(month: str, bundle_dir: Path, agent_config: Path, facts: Path, out:
     return 0
 
 
+# A provider that refuses this many questions in a row, past its daily limit for instance, is
+# left for later.
+STOP_AFTER_ERRORS = 3
+
+
+def run_eval(
+    models: list[str],
+    only: str | None,
+    paths: dict[str, Path],
+    pause: float,
+) -> int:
+    """Ask the frozen questions to each model, keep its runs, and write the report of every
+    model run so far on the same data."""
+    loaded = load_agent(paths["bundle"], paths["agent_config"], paths["facts"])
+    if loaded is None:
+        return 1
+    bundle, fact_texts, config = loaded
+    questions = evaluate.load_questions(paths["questions"])
+    asked = [q for q in questions if only is None or q.id in only.split(",")]
+    for name in models:
+        path = paths["runs"] / f"{re.sub(r'[^a-z0-9]+', '-', name.lower())}.jsonl"
+        runs = {run.id: run for run in evaluate.read_runs(path)}
+        model = agent.chat_model(replace(config, model=name), patient=True)
+        todo = evaluate.pending(asked, runs.values())
+        failures = 0
+        for i, question in enumerate(todo):
+            if i > 0 and pause > 0:
+                time.sleep(pause)
+            run = evaluate.ask(question, bundle, fact_texts, model, config, name)
+            runs[question.id] = run
+            # Kept after each question, so that a stopped run starts again where it stopped.
+            evaluate.write_runs(path, runs.values())
+            outcome = run.error or ("verified" if run.verified else run.problem)
+            print(f"{name} {question.id}: {outcome}, {run.seconds} s")
+            failures = failures + 1 if run.error else 0
+            if failures == STOP_AFTER_ERRORS:
+                print(f"{name} stopped after {failures} errors in a row: run it again later")
+                break
+    results = {}
+    for path in sorted(paths["runs"].glob("*.jsonl")):
+        runs_of = [
+            r for r in evaluate.read_runs(path) if r.published == bundle["meta"]["published"]
+        ]
+        if not runs_of:
+            print(f"{path}: no run on the data of {bundle['meta']['published']}", file=sys.stderr)
+            continue
+        by_id = {q.id: q for q in questions}
+        scores = [
+            evaluate.score(by_id[r.id], r, bundle, fact_texts) for r in runs_of if r.id in by_id
+        ]
+        results[runs_of[0].model] = (runs_of, scores)
+    text = evaluate.report(questions, results)
+    paths["report"].write_text(text, encoding="utf-8")
+    print(text.split("\n## ")[0])
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--data-dir", type=Path, default=Path("data"))
@@ -345,6 +405,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     note_parser.add_argument("month", help="month as YYYY-MM")
     note_parser.add_argument("--out", type=Path, default=Path("notes"))
+    eval_parser = commands.add_parser(
+        "eval", parents=[agent_options], help="ask the frozen questions to models and score them"
+    )
+    eval_parser.add_argument(
+        "--model", action="append", required=True, help='"provider:model", repeated to compare'
+    )
+    eval_parser.add_argument("--only", help="ids of the questions to ask, separated by commas")
+    eval_parser.add_argument("--questions", type=Path, default=Path("evals/questions.toml"))
+    eval_parser.add_argument("--runs", type=Path, default=Path("evals/runs"))
+    eval_parser.add_argument("--report", type=Path, default=Path("evals/results.md"))
+    eval_parser.add_argument(
+        "--pause", type=float, default=0.0, help="seconds between questions, under a rate limit"
+    )
+    # The bundle of 22 November 2026, frozen with the tests, so that every model reads the same
+    # data as the reference answers.
+    eval_parser.set_defaults(bundle=Path("tests/fixtures/bundle"))
     args = parser.parse_args(argv)
 
     if args.command == "ingest":
@@ -367,4 +443,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_ask(args.question, args.bundle, args.agent_config, args.facts)
     if args.command == "note":
         return run_note(args.month, args.bundle, args.agent_config, args.facts, args.out)
+    if args.command == "eval":
+        paths = {
+            "bundle": args.bundle,
+            "agent_config": args.agent_config,
+            "facts": args.facts,
+            "questions": args.questions,
+            "runs": args.runs,
+            "report": args.report,
+        }
+        return run_eval(args.model, args.only, paths, args.pause)
     parser.error(f"unknown command {args.command}")

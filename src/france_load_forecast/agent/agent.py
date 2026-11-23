@@ -75,6 +75,9 @@ RETRY_LINK = "Rewrite the answer without links."
 # Per call of a hosted model. An answer takes up to five calls, which stays under the 60 s of a
 # request on Cloud Run.
 HOSTED_TIMEOUT_SECONDS = 10
+# The evaluation waits out rate limits: more time per call, and retries after each refusal.
+PATIENT_TIMEOUT_SECONDS = 120
+PATIENT_RETRIES = 6
 
 # Shown instead of an answer that failed the check.
 REFUSAL = "Je ne peux pas répondre à cette question avec des chiffres vérifiés."
@@ -142,8 +145,9 @@ def load_config(path: Path) -> AgentConfig:
         return AgentConfig(**tomllib.load(file))
 
 
-def chat_model(config: AgentConfig) -> BaseChatModel:
-    """The LLM named in the configuration."""
+def chat_model(config: AgentConfig, patient: bool = False) -> BaseChatModel:
+    """The LLM named in the configuration. A patient one, for the evaluation, waits out the rate
+    limits of a hosted model instead of failing at once."""
     # Ollama names its output limit differently from hosted providers.
     if config.model.startswith("ollama:"):
         model = init_chat_model(
@@ -156,8 +160,8 @@ def chat_model(config: AgentConfig) -> BaseChatModel:
             config.model,
             temperature=config.temperature,
             max_tokens=config.max_output_tokens,
-            timeout=HOSTED_TIMEOUT_SECONDS,
-            max_retries=0,
+            timeout=PATIENT_TIMEOUT_SECONDS if patient else HOSTED_TIMEOUT_SECONDS,
+            max_retries=PATIENT_RETRIES if patient else 0,
         )
     if not isinstance(model, BaseChatModel):
         raise TypeError(f"{config.model} is not a chat model")
