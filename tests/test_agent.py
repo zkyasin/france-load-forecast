@@ -124,6 +124,26 @@ def test_refusals_need_no_tool(
     assert answer.tool_calls == []
 
 
+def test_each_tool_call_is_reported_before_the_answer(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(
+        ("month_gap", {"month": "2026-02"}),
+        ("thermosensitivity", {}),
+        "Février 2026 a fini 1,28 TWh sous la prévision.",
+    )
+
+    items = list(agent.answering(QUESTION, bundle, facts, model, agent_config))
+
+    assert items[:2] == [
+        agent.Step("month_gap", {"month": "2026-02"}),
+        agent.Step("thermosensitivity", {}),
+    ]
+    assert isinstance(items[2], agent.Answer)
+    assert items[2].verified
+    assert len(items) == 3
+
+
 def test_configured_model_is_the_local_one(agent_config: agent.AgentConfig) -> None:
     model = agent.chat_model(agent_config)
 
