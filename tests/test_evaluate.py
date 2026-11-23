@@ -17,6 +17,14 @@ JANUARY = evaluate.Question(
     arguments={"month": "2027-01"},
     figures=("p10", "p50", "p90"),
 )
+DROP = evaluate.Question(
+    id="history-2020",
+    category="history",
+    text="De combien la consommation a-t-elle baissé en 2020 ?",
+    tool="annual_energy",
+    arguments={"first": 2020, "last": 2020},
+    figures=("change.gross|change.gross_pct",),
+)
 PRICE = evaluate.Question(
     id="off-topic-price",
     category="off-topic",
@@ -67,11 +75,36 @@ def test_the_right_call_with_every_figure_passes(
     assert evaluate.score(JANUARY, run(BAND, CALL), bundle, facts).passed
 
 
+def test_a_wider_call_whose_result_holds_the_figures_is_right(
+    bundle: tools.Bundle, facts: dict[str, Any]
+) -> None:
+    every_month = [{"name": "forecast", "args": {"month": None}}]
+
+    assert evaluate.score(JANUARY, run(BAND, every_month), bundle, facts).passed
+
+
+@pytest.mark.parametrize(
+    ("answer", "passed"),
+    [
+        ("Une baisse de 23,9 TWh.", True),
+        ("Une baisse de 5,1 %.", True),
+        ("446,6 TWh en 2020.", False),
+    ],
+)
+def test_a_figure_can_be_stated_in_either_of_its_forms(
+    answer: str, passed: bool, bundle: tools.Bundle, facts: dict[str, Any]
+) -> None:
+    both_years = [{"name": "annual_energy", "args": {"first": 2019, "last": 2020}}]
+
+    assert evaluate.score(DROP, run(answer, both_years), bundle, facts).passed is passed
+
+
 @pytest.mark.parametrize(
     ("answer", "calls", "verified", "reason"),
     [
         ("Janvier 2027 : 49,2 TWh en P50.", CALL, True, "figures"),
         (BAND, [{"name": "forecast", "args": {"month": "2027-02"}}], True, "tool"),
+        (BAND, [{"name": "forecast", "args": {"month": 2027}}], True, "tool"),
         (BAND, CALL, False, "refused"),
     ],
 )
@@ -148,7 +181,8 @@ def test_every_expected_figure_is_in_the_result_of_its_tool(
         expected = evaluate.arguments(question, bundle)
         result = json.loads(by_name[str(question.tool)].invoke(expected))
         for figure in question.figures:
-            assert evaluate.dig(result, figure), (question.id, figure)
+            for name in figure.split("|"):
+                assert evaluate.dig(result, name), (question.id, name)
 
 
 def test_the_command_asks_scores_and_reports(

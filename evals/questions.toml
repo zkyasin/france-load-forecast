@@ -1,10 +1,11 @@
 # Frozen questions for the agent, written before it.
 #
-# For a question in scope, the agent must call `tool` with `arguments`, then state each of
-# `figures` as the tool returns it and cite the sources. A figure is a field of the tool result;
-# a dotted name reaches into a nested field. A stated number matches a figure within 1 % or
-# 0.05, whichever is larger, so that rounding to one decimal passes. "{current_month}" stands for
-# the current month of the data release.
+# For a question in scope, the agent must call `tool` with `arguments`, or with others whose
+# result holds the figures, then state each of `figures` as the tool returns it and cite the
+# sources. A figure is a field of the tool result; a dotted name reaches into a nested field, and
+# "a|b" is stated when either is. A stated number matches a figure within 1 % or 0.05, whichever
+# is larger, so that rounding to one decimal passes. "{current_month}" stands for the current
+# month of the data release.
 #
 # A question with `refuse = true` is out of scope: the answer must say so, call no tool and state
 # no figure.
@@ -130,9 +131,10 @@ id = "history-2020"
 category = "history"
 text = "De combien la consommation a-t-elle baissé en 2020 ?"
 tool = "annual_energy"
-arguments = { first = 2019, last = 2020 }
-figures = ["gross"]
-answer = "De 470,5 TWh en 2019 à 446,6 TWh en 2020, soit -5,1 %."
+arguments = { first = 2020, last = 2020 }
+# The drop, in TWh or in percent.
+figures = ["change.gross|change.gross_pct"]
+answer = "De 23,9 TWh, soit -5,1 % : 446,6 TWh en 2020."
 
 [[questions]]
 id = "model-thermosensitivity"
