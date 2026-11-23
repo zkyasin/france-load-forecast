@@ -1,10 +1,9 @@
-/** The question box: a visitor asks the agent, which answers from the published data. */
+/** The question API: a visitor asks the agent, which answers from the published data. */
 
-import { byId } from "./chart";
 import { dayName } from "./format";
 
-// The question API, set when the page is built. Without it, the box stays out of the page.
-const API = import.meta.env.VITE_API_URL ?? "";
+// The question API, set when the page is built. Without it, the page has no question panel.
+export const API = import.meta.env.VITE_API_URL ?? "";
 
 // The API answers in a few seconds; past this, the visitor is told to try again.
 const TIMEOUT_MS = 90_000;
@@ -15,6 +14,17 @@ export interface Reply {
   verified: boolean;
   tools: string[];
   published: string;
+}
+
+/** A question the API turned down, with its HTTP status and its message. */
+export class AskError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "AskError";
+    this.status = status;
+  }
 }
 
 const TOOLS: Record<string, string> = {
@@ -48,6 +58,7 @@ export function caption(reply: Reply): string {
 
 /** What to tell the visitor when the question gets no answer. */
 export function failure(error: unknown): string {
+  if (error instanceof DOMException && error.name === "AbortError") return "Question annulée.";
   if (error instanceof DOMException && error.name === "TimeoutError") {
     return "La réponse prend trop de temps. Réessayez plus tard.";
   }
@@ -56,68 +67,30 @@ export function failure(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** The answer of the API to `question`; its message when it refuses the question. */
-export async function ask(question: string, api = API, fetcher = fetch): Promise<Reply> {
+export interface AskOptions {
+  api?: string;
+  fetcher?: typeof fetch;
+  // Cancels the question, as the visitor's Stop button does.
+  signal?: AbortSignal;
+}
+
+/** The answer of the API to `question`; an AskError with its message when it turns it down. */
+export async function ask(question: string, options: AskOptions = {}): Promise<Reply> {
+  const { api = API, fetcher = fetch, signal } = options;
+  const timeout = AbortSignal.timeout(TIMEOUT_MS);
   const response = await fetcher(`${api}/ask`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: signal === undefined ? timeout : AbortSignal.any([signal, timeout]),
   });
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const detail = (body as { detail?: unknown } | null)?.detail;
-    throw new Error(
+    throw new AskError(
+      response.status,
       typeof detail === "string" ? detail : "Le service de questions a rencontré une erreur.",
     );
   }
   return body as Reply;
-}
-
-function paragraphs(box: HTMLElement, text: string): void {
-  box.replaceChildren(
-    ...text.split(/\n\s*\n/).map((part) => {
-      const paragraph = document.createElement("p");
-      paragraph.textContent = part.trim();
-      return paragraph;
-    }),
-  );
-}
-
-export function render(): void {
-  if (!API) {
-    byId("ask").hidden = true;
-    const link = document.querySelector('.masthead a[href="#ask-title"]');
-    if (link?.parentElement) link.parentElement.hidden = true;
-    return;
-  }
-  const form = byId<HTMLFormElement>("ask-form");
-  const field = byId<HTMLTextAreaElement>("ask-question");
-  const send = byId<HTMLButtonElement>("ask-send");
-  const answer = byId("ask-answer");
-  const origin = byId("ask-origin");
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const question = field.value.trim();
-    if (!question) return;
-    send.disabled = true;
-    answer.textContent = "Réponse en cours…";
-    origin.textContent = "";
-    try {
-      const reply = await ask(question);
-      paragraphs(answer, reply.answer);
-      origin.textContent = caption(reply);
-    } catch (error) {
-      answer.textContent = failure(error);
-    } finally {
-      send.disabled = false;
-    }
-  });
-  // An example fills the field; the visitor sends it, as each question counts.
-  for (const example of document.querySelectorAll<HTMLButtonElement>("#ask [data-question]")) {
-    example.addEventListener("click", () => {
-      field.value = example.dataset.question ?? "";
-      field.focus();
-    });
-  }
 }

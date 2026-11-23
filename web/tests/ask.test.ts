@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { ask, caption, failure, type Reply } from "../src/ask";
+import { AskError, ask, caption, failure, type Reply } from "../src/ask";
 
 const reply: Reply = {
   answer: "Environ 49,2 TWh en P50.",
@@ -28,7 +28,10 @@ test("a verified answer names the date of its data and what the agent read", () 
 test("the question is posted to the API and its reply returned", async () => {
   const requests: Request[] = [];
 
-  const answer = await ask("Et janvier ?", "https://api.test", answering(200, reply, requests));
+  const answer = await ask("Et janvier ?", {
+    api: "https://api.test",
+    fetcher: answering(200, reply, requests),
+  });
 
   expect(answer).toEqual(reply);
   const [request] = requests;
@@ -37,15 +40,34 @@ test("the question is posted to the API and its reply returned", async () => {
   expect(await request?.json()).toEqual({ question: "Et janvier ?" });
 });
 
-test("a refused question gives the message of the API", async () => {
+test("a refused question gives the status and the message of the API", async () => {
   const detail = "Vous avez posé beaucoup de questions. Réessayez plus tard.";
+  const asking = (status: number, body: unknown) =>
+    ask("Et janvier ?", { api: "https://api.test", fetcher: answering(status, body) });
 
-  await expect(ask("Et janvier ?", "https://api.test", answering(429, { detail }))).rejects.toThrow(
-    detail,
-  );
-  await expect(ask("Et janvier ?", "https://api.test", answering(500, "oops"))).rejects.toThrow(
+  await expect(asking(429, { detail })).rejects.toEqual(new AskError(429, detail));
+  await expect(asking(429, { detail })).rejects.toMatchObject({ status: 429 });
+  await expect(asking(500, "oops")).rejects.toThrow(
     "Le service de questions a rencontré une erreur.",
   );
+});
+
+test("a question can be cancelled", async () => {
+  const stop = new AbortController();
+  const waiting: typeof fetch = (_, init) =>
+    new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+    });
+
+  const asked = ask("Et janvier ?", {
+    api: "https://api.test",
+    fetcher: waiting,
+    signal: stop.signal,
+  });
+  stop.abort();
+
+  const error = await asked.catch((reason: unknown) => reason);
+  expect(failure(error)).toBe("Question annulée.");
 });
 
 test("a network failure and a timeout are told apart", () => {
