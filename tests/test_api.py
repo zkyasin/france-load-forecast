@@ -269,6 +269,40 @@ def test_an_answer_that_read_no_data_is_out_of_scope(
     assert body["tools"] == []
 
 
+def test_the_previous_exchange_reaches_the_agent(
+    bundle: tools.Bundle,
+    facts: dict[str, Any],
+    agent_config: agent.AgentConfig,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: list[Any] = []
+
+    def answer(*args: Any, previous: tuple[str, str] | None = None, **kwargs: Any) -> agent.Answer:
+        seen.append(previous)
+        return agent.Answer(ANSWER, [{"name": "forecast", "args": {}}], None)
+
+    monkeypatch.setattr(agent, "ask", answer)
+    test = client(bundle, facts, agent_config, {"model": down()})
+    # Accented text weighs two bytes a character: the body limit leaves room for it.
+    before = {"question": "Et avril 2026 ?", "answer": "é" * api.MAX_PREVIOUS_CHARS}
+
+    reply = test.post("/ask", json={"question": "Et en mai ?", "previous": before})
+
+    assert reply.status_code == 200
+    assert seen == [("Et avril 2026 ?", "é" * api.MAX_PREVIOUS_CHARS)]
+
+
+def test_a_previous_answer_too_long_is_refused(
+    bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    test = client(bundle, facts, agent_config, {"model": down()})
+    before = {"question": "Et avril ?", "answer": "x" * (api.MAX_PREVIOUS_CHARS + 1)}
+
+    reply = test.post("/ask", json={"question": "Et en mai ?", "previous": before})
+
+    assert reply.status_code == 422
+
+
 def test_a_body_too_large_is_refused_before_it_is_read(
     bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
 ) -> None:

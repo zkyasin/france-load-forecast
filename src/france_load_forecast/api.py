@@ -26,7 +26,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from langchain_core.language_models import BaseChatModel
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from france_load_forecast import bundle as schema
@@ -34,8 +34,10 @@ from france_load_forecast.agent import agent, tools
 
 DAY = 86_400
 HOUR = 3_600
-# Far above a question of 300 characters, even with every character escaped.
-MAX_BODY_BYTES = 4_096
+# Far above a question and the exchange before it, even with every character escaped.
+MAX_BODY_BYTES = 16_384
+# Bounds the exchange before a question, which the page sends back.
+MAX_PREVIOUS_CHARS = 2_000
 
 # Said instead of an answer that read no data: a question in scope always calls a tool, so the
 # text could only come from the model, as when a question asks it to change its rules.
@@ -194,8 +196,26 @@ class BodyLimit:
         await self.app(scope, counted, send)
 
 
+class Previous(BaseModel):
+    """The exchange just before a question, as the page sends it back."""
+
+    question: str = Field(max_length=MAX_PREVIOUS_CHARS)
+    answer: str = Field(max_length=MAX_PREVIOUS_CHARS)
+
+
 class Question(BaseModel):
     question: str
+    # Read by the agent as context, never as a source of numbers.
+    previous: Previous | None = None
+
+
+def _readable(text: str) -> str:
+    """`text` without its outer spaces, or nothing if UTF-8 cannot carry it."""
+    try:
+        text.encode("utf-8")
+    except UnicodeEncodeError:
+        return ""
+    return text.strip()
 
 
 class Call(BaseModel):
@@ -252,13 +272,13 @@ def create_app(
 
     @app.post("/ask")
     def ask(body: Question, request: Request) -> Reply:
-        question = body.question.strip()
-        try:
-            question.encode("utf-8")
-        except UnicodeEncodeError:
-            question = ""
+        question = _readable(body.question)
         if not question or len(question) > config.max_question_chars:
             raise HTTPException(422, malformed)
+        previous = None
+        if body.previous is not None:
+            before = (_readable(body.previous.question), _readable(body.previous.answer))
+            previous = before if all(before) else None
         who = visitor(request)
         refused = limits.refuse(who)
         if refused:
@@ -273,7 +293,9 @@ def create_app(
             # Whatever stops a model, a rate limit, a timeout or a malformed call, the next one
             # may answer. The question stays out of the logs.
             try:
-                answer = agent.ask(question, current, facts, models[name], config)
+                answer = agent.ask(
+                    question, current, facts, models[name], config, previous=previous
+                )
             except Exception as error:
                 log.warning("%s did not answer: %s", name, type(error).__name__)
                 continue
