@@ -43,9 +43,8 @@ the total of both gaps, a table of their terms and the date of the data: do not 
 Call month_gap for {month}, then write two short paragraphs of plain text, without asterisks or \
 Markdown, with one sentence per term, as « Le résidu a pesé <valeur> TWh. », where the value \
 has its sign as a symbol, + or -, and a decimal comma.
-The first paragraph is about the gap to the forecast made at the start of the month. Its climate \
-term compares the weather of the month with the past years that the forecast replayed, not with \
-the reference temperature, so give no temperature in this paragraph.
+The first paragraph is about the gap to the forecast made at the start of the month. Give the \
+temperature of the month and the one the forecast assumed in the sentence on the climate term.
 The second paragraph is about the gap to the same month a year earlier. Begin it with « Par \
 rapport à » and that month, and give the temperature of the month and that of the year before in \
 the sentence on the climate term.

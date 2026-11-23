@@ -82,14 +82,17 @@ def gaps_file(
     against_year_before: pd.DataFrame,
     provisional: pd.Index,
     temperatures: pd.DataFrame,
+    forecast_temperature: pd.Series,
 ) -> dict[str, Any]:
     """Both views of the gap of each recent month, term by term, with the mean temperature of
-    the month, its reference temperature and the temperature of the same month a year earlier."""
+    the month, its reference temperature, the temperature of the same month a year earlier and
+    that of the weather the forecast assumed."""
     weather = pd.DataFrame(
         {
             "mean": temperatures["temperature_c"],
             "reference": temperatures["reference_c"],
             "year_before": temperatures["temperature_c"].shift(freq=pd.DateOffset(years=1)),
+            "forecast": forecast_temperature,
         }
     ).reindex(against_forecast.index)
     return {
@@ -229,16 +232,18 @@ def build(
     realtime = history.index[history["source"] == "realtime"].append(observed.index)
     provisional = pd.DatetimeIndex(realtime).to_period("M").to_timestamp().unique()
     corrected = correction.corrected_load(model.fit(history, spec), history)
+    to_forecast, forecast_temperature = decomposition.against_forecast(history, spec, months)
     files = {
         "meta": meta_file(history, observed, revision),
         "forecast": forecast_file(
             outlook.table(latest, history, observed, past_forecasts), current, provisional
         ),
         "gaps": gaps_file(
-            decomposition.against_forecast(history, spec, months),
+            to_forecast,
             decomposition.against_year_before(latest, history, months),
             provisional,
             history[["temperature_c", "reference_c"]].resample("MS").mean(),
+            forecast_temperature,
         ),
         "history": history_file(
             load, provisional, correction.annual_comparison(history["load_gw"], corrected, rte)

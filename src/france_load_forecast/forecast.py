@@ -26,13 +26,16 @@ def scenarios(
     dates: pd.DatetimeIndex,
     smoothing: float,
 ) -> dict[int, pd.DataFrame]:
-    """Calendar features and smoothed temperature on `dates`, the days right after `history`, under
-    the weather of each of `years`."""
+    """Calendar features, temperature and smoothed temperature on `dates`, the days right after
+    `history`, under the weather of each of `years`."""
     years = list(years)
     temperatures = climate.members(history, weather, dates, years)
     smoothed = climate.smooth(temperatures, smoothing, history["temperature_smooth"].iloc[-1])
     calendar = calendar_features(dates)
-    return {year: calendar.assign(temperature_smooth=smoothed[year]) for year in years}
+    return {
+        year: calendar.assign(temperature_c=temperatures[year], temperature_smooth=smoothed[year])
+        for year in years
+    }
 
 
 def _horizon(history: pd.DataFrame, months: int) -> pd.DatetimeIndex:

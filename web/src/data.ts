@@ -85,8 +85,9 @@ export interface GapView {
 export interface GapMonth {
   month: string;
   provisional: boolean;
-  // Mean temperatures of the month, in °C.
-  temperature: { mean: number; reference: number; year_before: number };
+  // Mean temperatures, in °C, of the month, of its reference, of the same month a year earlier and
+  // of the past weather that the forecast made at its start assumed.
+  temperature: { mean: number; reference: number; year_before: number; forecast: number };
   against_forecast: GapView;
   against_year_before: GapView;
 }

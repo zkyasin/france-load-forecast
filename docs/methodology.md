@@ -127,7 +127,9 @@ Against the forecast, P50 one month ahead in the backtest:
   days after the origin.
 
 P50 is a median across weather paths, so its terms are those of the median path, or the mean of
-the two middle paths when their number is even.
+the two middle paths when their number is even. The weather the forecast assumed is the past
+weather of that path, so the page and the agent compare the mean temperature of the month with
+the mean temperature of that weather, not with the reference temperature.
 
 Against the same month a year earlier, with the model fitted on the last three years, each term is
 the change in the effect of a component, in the structural states or in the residual. 29 February

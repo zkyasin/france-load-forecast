@@ -49,7 +49,13 @@ def test_month_gap_names_the_month_a_year_earlier(by_name: dict[str, Any]) -> No
         "vs_year_before": pytest.approx(-3.439),
     }
     assert content["gap"]["vs_forecast"] == pytest.approx(-1.275)
-    assert content["temperature"]["mean"] > content["temperature"]["reference"]
+    assert content["temperature"]["actual"] > content["temperature"]["normal"]
+
+
+def test_month_gap_gives_the_temperature_the_forecast_assumed(by_name: dict[str, Any]) -> None:
+    temperature = call(by_name, "month_gap", month="2026-02")["temperature"]
+
+    assert temperature["forecast"] == pytest.approx(7.123)
 
 
 def test_unknown_months_and_years_get_an_error(by_name: dict[str, Any]) -> None:

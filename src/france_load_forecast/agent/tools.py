@@ -77,14 +77,16 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
         (vs_forecast) and from the same month a year earlier (vs_year_before), in TWh: the energy
         of each, both gaps, then each term of both gaps side by side. The terms are climate,
         calendar, lockdown, structural (level and seasonal states) and residual. Also the mean
-        temperature of the month, its reference (normal) temperature and the temperature of the
-        same month a year earlier, in °C. The climate term vs_year_before compares the weather of
-        the two months; vs_forecast, it compares the weather of the month with the past years
-        that the forecast replayed, not with the reference temperature."""
+        temperature, in °C, of the month (actual), of the past weather the forecast assumed
+        (forecast) and of the same month a year earlier (year_before), and the normal temperature
+        of the month (normal). The climate term vs_forecast compares the weather of the month with
+        the weather the forecast assumed; vs_year_before, with the weather of the same month a
+        year earlier."""
         for entry in bundle["gaps"]["months"]:
             if entry["month"] != month:
                 continue
             to_forecast, to_year_before = entry["against_forecast"], entry["against_year_before"]
+            temperature = entry["temperature"]
             year, number = month.split("-")
             content = {
                 "month": month,
@@ -102,7 +104,12 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
                     for term in to_forecast
                     if term not in TOTALS
                 },
-                "temperature": entry["temperature"],
+                "temperature": {
+                    "actual": temperature["mean"],
+                    "forecast": temperature["forecast"],
+                    "year_before": temperature["year_before"],
+                    "normal": temperature["reference"],
+                },
             }
             return _json(published | content)
         months = [entry["month"] for entry in bundle["gaps"]["months"]]
