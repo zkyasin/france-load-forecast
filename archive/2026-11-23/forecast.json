@@ -35,7 +35,7 @@
       "month": "2027-02",
       "p10": 39.021,
       "p50": 41.245,
-      "p90": 43.23,
+      "p90": 43.229,
       "measured": 0.0,
       "horizon": 4,
       "provisional": false
@@ -53,7 +53,7 @@
       "month": "2027-04",
       "p10": 33.73,
       "p50": 35.652,
-      "p90": 37.368,
+      "p90": 37.367,
       "measured": 0.0,
       "horizon": 6,
       "provisional": false
