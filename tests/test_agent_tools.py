@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 
+from france_load_forecast import conformal
 from france_load_forecast.agent import tools
 
 
@@ -38,6 +39,14 @@ def test_forecast_of_a_month_says_how_far_load_is_measured(by_name: dict[str, An
     assert content["measured_until"] == "2026-11-21"
     assert content["provisional"]
     assert content["p10"] < content["p50"] < content["p90"]
+
+
+def test_forecast_gives_the_level_of_its_band(by_name: dict[str, Any]) -> None:
+    low, high = conformal.QUANTILES
+
+    assert round(100 * (high - low)) == tools.BAND_LEVEL_PCT
+    assert call(by_name, "forecast")["band_level_pct"] == tools.BAND_LEVEL_PCT
+    assert call(by_name, "forecast", month="2027-01")["band_level_pct"] == tools.BAND_LEVEL_PCT
 
 
 def test_month_gap_names_the_month_a_year_earlier(by_name: dict[str, Any]) -> None:

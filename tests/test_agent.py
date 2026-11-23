@@ -29,6 +29,19 @@ def test_answer_quotes_the_tool_results(
     assert answer.text.startswith("Février 2026")
 
 
+def test_the_level_of_the_band_can_be_quoted(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(
+        ("forecast", {"month": "2027-01"}),
+        "Janvier 2027 : 49,2 TWh en P50, dans une bande à 80 % de 46,5 à 51,5 TWh.",
+    )
+
+    answer = agent.ask("Que prévoyez-vous pour janvier 2027 ?", bundle, facts, model, agent_config)
+
+    assert answer.verified
+
+
 def test_only_the_tools_named_can_run(
     script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
 ) -> None:

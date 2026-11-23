@@ -61,5 +61,5 @@ The online API asks gpt-oss-120b first and gpt-oss-20b when the first fails or i
 Scoring without a judge checks figures, not reasoning. Ministral compares 21 days of November
 with the forecast of the whole month and finds consumption below expectations, yet passes. A
 question without figures passes on the call alone: gpt-oss-20b says no more than gpt-oss-120b
-about 2040, but it asked the scenario tool first. And the verifier refuses "80 %" for the P10-P90
-band, which no tool states: the forecast tool could give the level of its band.
+about 2040, but it asked the scenario tool first. And the verifier refused "80 %" for the P10-P90
+band, which no tool stated then: the forecast tool now gives the level of its band.
