@@ -83,8 +83,10 @@ The page, in French, is at <https://zkyasin.github.io/france-load-forecast/>. It
 - the gaps of the last twelve months, against the year before or against the forecast, split
   into weather, calendar and other effects;
 - the note of the month, written by the agent;
-- a box to ask the agent a question, once the question API is deployed and its address is set
-  as the repository variable `API_URL`;
+- in the bottom-right corner, a "tête de chat" pylon that opens a panel of questions to the
+  agent: suggestions drawn from the latest data, answers with their source and the sections of
+  the page that show them, and follow-up questions. It appears once the question API is
+  deployed and its address is set as the repository variable `API_URL`;
 - the load added by one degree less, by temperature;
 - the energy of each year since 2014, measured and corrected for the weather;
 - the BP2025 scenarios to 2031, for a trajectory and a winter chosen by the reader;
