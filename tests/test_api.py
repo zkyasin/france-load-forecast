@@ -1,3 +1,4 @@
+import json
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
@@ -301,6 +302,69 @@ def test_a_previous_answer_too_long_is_refused(
     reply = test.post("/ask", json={"question": "Et en mai ?", "previous": before})
 
     assert reply.status_code == 422
+
+
+def events(test: TestClient, address: str = "1.1.1.1") -> list[tuple[str, Any]]:
+    """The server-sent events of the reply to QUESTION, in order."""
+    reply = test.post(
+        "/ask/stream", json={"question": QUESTION}, headers={"X-Forwarded-For": address}
+    )
+    assert reply.status_code == 200
+    assert reply.headers["content-type"].startswith("text/event-stream")
+    parsed = []
+    for block in reply.text.strip().split("\n\n"):
+        kind, data = block.split("\n")
+        parsed.append((kind.removeprefix("event: "), json.loads(data.removeprefix("data: "))))
+    return parsed
+
+
+def test_the_stream_gives_each_step_then_the_answer(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(("month_gap", {"month": "2026-02"}), ("thermosensitivity", {}), ANSWER)
+
+    stream = events(client(bundle, facts, agent_config, {"model": model}))
+
+    assert stream[:2] == [
+        ("step", {"tool": "month_gap", "args": {"month": "2026-02"}}),
+        ("step", {"tool": "thermosensitivity", "args": {}}),
+    ]
+    kind, body = stream[2]
+    assert (kind, body["answer"], body["verified"]) == ("answer", agent.plain(ANSWER), True)
+    assert len(stream) == 3
+
+
+def test_the_stream_starts_over_with_the_next_model(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    second = script(("month_gap", {"month": "2026-02"}), ANSWER)
+
+    stream = events(client(bundle, facts, agent_config, {"first": down(), "second": second}))
+
+    assert [kind for kind, _ in stream] == ["retry", "step", "answer"]
+
+
+def test_the_stream_says_when_no_model_answers(
+    bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    stream = events(client(bundle, facts, agent_config, {"model": down()}))
+
+    assert stream == [("error", {"detail": api.NO_MODEL})]
+
+
+def test_a_streamed_question_is_turned_down_before_it_streams(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(("month_gap", {"month": "2026-02"}), ANSWER)
+    test = client(bundle, facts, agent_config, {"model": model}, questions_per_visitor_per_hour=1)
+    events(test)
+
+    reply = test.post(
+        "/ask/stream", json={"question": QUESTION}, headers={"X-Forwarded-For": "1.1.1.1"}
+    )
+
+    assert reply.status_code == 429
+    assert reply.json()["detail"] == "Vous avez posé beaucoup de questions. Réessayez plus tard."
 
 
 def test_a_body_too_large_is_refused_before_it_is_read(
