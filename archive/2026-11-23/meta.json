@@ -2,7 +2,7 @@
   "published": "2026-11-23",
   "model_id": "baseline",
   "consolidated_until": "2026-08-31",
-  "temperature_until": "2026-09-30",
+  "temperature_until": "2026-10-31",
   "measured_until": "2026-11-22",
   "revision": {
     "gw": 0.758,

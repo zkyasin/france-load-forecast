@@ -899,16 +899,16 @@
       "gross": 462.345,
       "gross_rte": 462.697,
       "gross_gap_pct": -0.076,
-      "corrected": 468.613,
+      "corrected": 468.602,
       "corrected_rte": 470.207,
-      "corrected_gap_pct": -0.339
+      "corrected_gap_pct": -0.341
     },
     {
       "year": 2015,
       "gross": 473.147,
       "gross_rte": 474.05,
       "gross_gap_pct": -0.191,
-      "corrected": 471.408,
+      "corrected": 471.406,
       "corrected_rte": 472.31,
       "corrected_gap_pct": -0.191
     },
@@ -917,16 +917,16 @@
       "gross": 480.317,
       "gross_rte": 482.389,
       "gross_gap_pct": -0.43,
-      "corrected": 470.868,
+      "corrected": 470.863,
       "corrected_rte": 471.912,
-      "corrected_gap_pct": -0.221
+      "corrected_gap_pct": -0.222
     },
     {
       "year": 2017,
       "gross": 479.042,
       "gross_rte": 480.776,
       "gross_gap_pct": -0.361,
-      "corrected": 471.439,
+      "corrected": 471.437,
       "corrected_rte": 472.463,
       "corrected_gap_pct": -0.217
     },
@@ -935,25 +935,25 @@
       "gross": 475.518,
       "gross_rte": 477.184,
       "gross_gap_pct": -0.349,
-      "corrected": 470.621,
+      "corrected": 470.622,
       "corrected_rte": 472.524,
-      "corrected_gap_pct": -0.403
+      "corrected_gap_pct": -0.402
     },
     {
       "year": 2019,
       "gross": 470.475,
       "gross_rte": 471.972,
       "gross_gap_pct": -0.317,
-      "corrected": 467.467,
+      "corrected": 467.464,
       "corrected_rte": 468.762,
-      "corrected_gap_pct": -0.276
+      "corrected_gap_pct": -0.277
     },
     {
       "year": 2020,
       "gross": 446.58,
       "gross_rte": 448.482,
       "gross_gap_pct": -0.424,
-      "corrected": 449.26,
+      "corrected": 449.259,
       "corrected_rte": 451.902,
       "corrected_gap_pct": -0.585
     },
@@ -962,16 +962,16 @@
       "gross": 468.589,
       "gross_rte": 471.494,
       "gross_gap_pct": -0.616,
-      "corrected": 459.989,
+      "corrected": 459.985,
       "corrected_rte": 461.105,
-      "corrected_gap_pct": -0.242
+      "corrected_gap_pct": -0.243
     },
     {
       "year": 2022,
       "gross": 450.145,
       "gross_rte": 454.009,
       "gross_gap_pct": -0.851,
-      "corrected": 449.282,
+      "corrected": 449.284,
       "corrected_rte": 454.521,
       "corrected_gap_pct": -1.152
     },
@@ -980,7 +980,7 @@
       "gross": 435.569,
       "gross_rte": 438.697,
       "gross_gap_pct": -0.713,
-      "corrected": 436.645,
+      "corrected": 436.643,
       "corrected_rte": 438.817,
       "corrected_gap_pct": -0.495
     },
@@ -989,16 +989,16 @@
       "gross": 440.081,
       "gross_rte": 441.721,
       "gross_gap_pct": -0.371,
-      "corrected": 441.927,
+      "corrected": 441.928,
       "corrected_rte": 442.014,
-      "corrected_gap_pct": -0.02
+      "corrected_gap_pct": -0.019
     },
     {
       "year": 2025,
       "gross": 443.878,
       "gross_rte": 446.146,
       "gross_gap_pct": -0.508,
-      "corrected": 442.766,
+      "corrected": 442.763,
       "corrected_rte": 444.767,
       "corrected_gap_pct": -0.45
     }

@@ -3,36 +3,6 @@
   "model_id": "baseline",
   "months": [
     {
-      "month": "2025-10",
-      "provisional": false,
-      "temperature": {
-        "mean": 13.31,
-        "reference": 13.771,
-        "year_before": 14.397,
-        "forecast": 14.132
-      },
-      "against_forecast": {
-        "actual": 35.023,
-        "reference": 34.182,
-        "gap": 0.841,
-        "climate": 0.438,
-        "calendar": 0.0,
-        "lockdown": 0.0,
-        "structural": 0.208,
-        "residual": 0.195
-      },
-      "against_year_before": {
-        "actual": 35.023,
-        "reference": 34.274,
-        "gap": 0.749,
-        "climate": 0.687,
-        "calendar": -0.003,
-        "lockdown": 0.0,
-        "structural": 0.097,
-        "residual": -0.032
-      }
-    },
-    {
       "month": "2025-11",
       "provisional": false,
       "temperature": {
@@ -48,18 +18,18 @@
         "climate": 0.048,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": -0.093,
-        "residual": 0.248
+        "structural": -0.09,
+        "residual": 0.245
       },
       "against_year_before": {
         "actual": 39.973,
         "reference": 39.333,
         "gap": 0.641,
-        "climate": 0.547,
+        "climate": 0.541,
         "calendar": -0.123,
         "lockdown": 0.0,
-        "structural": 0.096,
-        "residual": 0.12
+        "structural": 0.023,
+        "residual": 0.2
       }
     },
     {
@@ -78,18 +48,18 @@
         "climate": -0.759,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": -0.243,
-        "residual": -0.614
+        "structural": -0.244,
+        "residual": -0.613
       },
       "against_year_before": {
         "actual": 44.947,
         "reference": 46.113,
         "gap": -1.166,
-        "climate": -1.486,
-        "calendar": 0.088,
+        "climate": -1.485,
+        "calendar": 0.087,
         "lockdown": 0.0,
-        "structural": 0.11,
-        "residual": 0.122
+        "structural": 0.031,
+        "residual": 0.2
       }
     },
     {
@@ -108,18 +78,18 @@
         "climate": 0.012,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": 0.497,
-        "residual": 1.207
+        "structural": 0.496,
+        "residual": 1.208
       },
       "against_year_before": {
         "actual": 49.987,
         "reference": 49.512,
         "gap": 0.475,
-        "climate": -0.004,
+        "climate": -0.003,
         "calendar": -0.179,
         "lockdown": 0.0,
-        "structural": 0.127,
-        "residual": 0.531
+        "structural": 0.045,
+        "residual": 0.613
       }
     },
     {
@@ -138,18 +108,18 @@
         "climate": -2.423,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": 0.101,
-        "residual": 1.047
+        "structural": 0.104,
+        "residual": 1.044
       },
       "against_year_before": {
         "actual": 39.948,
         "reference": 42.286,
         "gap": -2.338,
         "climate": -3.439,
-        "calendar": 0.0,
+        "calendar": -0.0,
         "lockdown": 0.0,
-        "structural": 0.125,
-        "residual": 0.976
+        "structural": 0.05,
+        "residual": 1.051
       }
     },
     {
@@ -168,18 +138,18 @@
         "climate": -0.784,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": -0.186,
-        "residual": -0.213
+        "structural": -0.187,
+        "residual": -0.212
       },
       "against_year_before": {
         "actual": 39.918,
         "reference": 40.732,
         "gap": -0.815,
         "climate": -1.077,
-        "calendar": 0.108,
+        "calendar": 0.109,
         "lockdown": 0.0,
-        "structural": 0.137,
-        "residual": 0.018
+        "structural": 0.056,
+        "residual": 0.097
       }
     },
     {
@@ -198,18 +168,18 @@
         "climate": -2.151,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": -0.101,
-        "residual": -0.327
+        "structural": -0.111,
+        "residual": -0.318
       },
       "against_year_before": {
         "actual": 33.545,
         "reference": 33.289,
         "gap": 0.256,
-        "climate": -0.177,
+        "climate": -0.185,
         "calendar": 0.006,
         "lockdown": 0.0,
-        "structural": 0.123,
-        "residual": 0.305
+        "structural": 0.048,
+        "residual": 0.387
       }
     },
     {
@@ -228,18 +198,18 @@
         "climate": 0.639,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": 0.094,
-        "residual": -0.241
+        "structural": 0.075,
+        "residual": -0.223
       },
       "against_year_before": {
         "actual": 32.546,
         "reference": 31.209,
         "gap": 1.337,
-        "climate": 0.948,
+        "climate": 0.965,
         "calendar": -0.107,
         "lockdown": 0.0,
-        "structural": 0.113,
-        "residual": 0.382
+        "structural": 0.041,
+        "residual": 0.438
       }
     },
     {
@@ -258,18 +228,18 @@
         "climate": 1.345,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": 0.148,
-        "residual": 0.545
+        "structural": 0.123,
+        "residual": 0.57
       },
       "against_year_before": {
         "actual": 32.996,
         "reference": 31.636,
         "gap": 1.36,
-        "climate": 0.659,
+        "climate": 0.654,
         "calendar": 0.249,
         "lockdown": 0.0,
-        "structural": 0.098,
-        "residual": 0.354
+        "structural": 0.033,
+        "residual": 0.423
       }
     },
     {
@@ -288,18 +258,18 @@
         "climate": 1.271,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": -0.098,
-        "residual": 0.727
+        "structural": -0.132,
+        "residual": 0.762
       },
       "against_year_before": {
         "actual": 34.431,
         "reference": 32.925,
         "gap": 1.506,
-        "climate": 1.106,
+        "climate": 1.116,
         "calendar": -0.087,
         "lockdown": 0.0,
-        "structural": 0.091,
-        "residual": 0.397
+        "structural": 0.031,
+        "residual": 0.446
       }
     },
     {
@@ -318,18 +288,18 @@
         "climate": 0.978,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": -0.257,
-        "residual": -0.492
+        "structural": -0.305,
+        "residual": -0.444
       },
       "against_year_before": {
         "actual": 32.078,
         "reference": 30.934,
         "gap": 1.144,
-        "climate": 0.785,
-        "calendar": 0.089,
+        "climate": 0.792,
+        "calendar": 0.09,
         "lockdown": 0.0,
-        "structural": 0.076,
-        "residual": 0.194
+        "structural": 0.024,
+        "residual": 0.237
       }
     },
     {
@@ -348,18 +318,48 @@
         "climate": -0.02,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": -0.101,
-        "residual": -0.11
+        "structural": -0.162,
+        "residual": -0.049
       },
       "against_year_before": {
         "actual": 31.209,
         "reference": 31.41,
         "gap": -0.201,
-        "climate": -0.139,
+        "climate": -0.131,
         "calendar": 0.024,
         "lockdown": 0.0,
-        "structural": 0.054,
-        "residual": -0.14
+        "structural": 0.013,
+        "residual": -0.107
+      }
+    },
+    {
+      "month": "2026-10",
+      "provisional": true,
+      "temperature": {
+        "mean": 13.913,
+        "reference": 13.771,
+        "year_before": 13.31,
+        "forecast": 13.721
+      },
+      "against_forecast": {
+        "actual": 34.377,
+        "reference": 34.298,
+        "gap": 0.079,
+        "climate": 0.285,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": -0.074,
+        "residual": -0.133
+      },
+      "against_year_before": {
+        "actual": 34.377,
+        "reference": 35.023,
+        "gap": -0.646,
+        "climate": -0.061,
+        "calendar": -0.114,
+        "lockdown": 0.0,
+        "structural": 0.001,
+        "residual": -0.473
       }
     }
   ]
