@@ -16,6 +16,9 @@ FactTopic = Literal["method", "sources", "perimeter", "revision", "temperature"]
 # Fields of a gap that are not terms.
 TOTALS = ("actual", "reference", "gap")
 DATES = ("published", "consolidated_until", "temperature_until", "measured_until")
+# Percent of the time the P10-P90 band should hold the actual energy, as set by
+# conformal.QUANTILES. The question API runs without the forecasting stack, hence the copy.
+BAND_LEVEL_PCT = 80
 
 
 def load_bundle(path: Path) -> Bundle:
@@ -55,10 +58,12 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
         the 11 after, with the total P50 of these 12 months.
         """
         content = bundle["forecast"]
+        band = {"band_level_pct": BAND_LEVEL_PCT}
         if month is None:
             months = [m for m in content["months"] if m["month"] >= content["current_month"]]
             return _json(
                 published
+                | band
                 | {
                     "current_month": content["current_month"],
                     "total_p50": content["total_p50"],
@@ -67,7 +72,7 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
             )
         for entry in content["months"]:
             if entry["month"] == month:
-                return _json(published | entry)
+                return _json(published | band | entry)
         first, last = content["months"][0]["month"], content["months"][-1]["month"]
         return _error(f"no forecast for {month}: the forecast covers {first} to {last}")
 
