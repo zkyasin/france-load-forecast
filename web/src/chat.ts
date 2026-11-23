@@ -2,8 +2,10 @@
 
 import "./chat.css";
 import { API, ask, caption, failure, type Reply } from "./ask";
+import { colors } from "./chart";
 import {
   type Exchange,
+  focus,
   followUps,
   KEPT,
   layout,
@@ -17,6 +19,7 @@ import {
   verdict,
 } from "./conversation";
 import type { Bundle } from "./data";
+import { figure } from "./minichart";
 import { createPylon, type Mood, type Pylon } from "./pylon";
 
 // What the visit keeps in the session: the exchanges, and whether the panel was opened.
@@ -248,10 +251,25 @@ export function render(bundle: Bundle): void {
     show(box);
   }
 
-  function answer(reply: Reply, entering: boolean): void {
+  /** The chart of the month an answer read, drawn from the data of the page when they are the
+   * data of the answer. */
+  function chart(reply: Reply, question: string): HTMLElement | null {
+    const spot = focus(reply, question);
+    if (spot === null || !reply.verified || reply.published !== bundle.meta.published) return null;
+    const width = thread.clientWidth > 0 ? thread.clientWidth - 28 : 340;
+    const drawn = figure(spot, bundle.forecast, bundle.gaps, width, colors());
+    if (drawn === null) return null;
+    const box = element("figure", "chat-figure");
+    box.append(drawn.chart, element("figcaption", "", drawn.caption));
+    return box;
+  }
+
+  function answer(reply: Reply, entering: boolean, question: string): void {
     const card = element("article", "chat-answer");
     const { lead, paragraphs } = layout(reply.answer);
     const blocks = [fill(element("p", "chat-lead"), lead)];
+    const drawn = chart(reply, question);
+    if (drawn !== null) blocks.push(drawn);
     for (const paragraph of paragraphs) blocks.push(fill(element("p", ""), paragraph));
     const { label, mood: tone } = verdict(reply);
     const proof = element("footer", "chat-proof");
@@ -299,7 +317,7 @@ export function render(bundle: Bundle): void {
 
   function exchange({ question, reply, error }: Exchange, entering: boolean): void {
     show(element("p", "chat-question", question));
-    if (reply !== null) answer(reply, entering);
+    if (reply !== null) answer(reply, entering, question);
     if (error !== null) show(element("p", "chat-error", error));
   }
 
@@ -379,7 +397,7 @@ export function render(bundle: Bundle): void {
       });
       kept.reply = reply;
       waiting.remove();
-      answer(reply, !reduce.matches);
+      answer(reply, !reduce.matches, question);
       feel(verdict(reply).mood, 2600);
     } catch (error) {
       kept.error = failure(error);

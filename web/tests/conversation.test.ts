@@ -3,6 +3,7 @@ import forecastFile from "../../tests/fixtures/bundle/forecast.json";
 import gapsFile from "../../tests/fixtures/bundle/gaps.json";
 import { AskError, type Reply } from "../src/ask";
 import {
+  focus,
   followUps,
   layout,
   moodOf,
@@ -11,6 +12,7 @@ import {
   stepText,
   suggestions,
   verdict,
+  viewOf,
 } from "../src/conversation";
 import type { Forecast, Gaps } from "../src/data";
 
@@ -123,4 +125,28 @@ test("each step says what the agent reads", () => {
   );
   expect(step("scenario")).toBe("les scénarios");
   expect(step("unknown")).toBe("les données publiées");
+});
+
+test("an answer is drawn on the month it read, compared as the question asks", () => {
+  const read = (...calls: [string, Record<string, unknown>][]) => ({
+    ...reply,
+    calls: calls.map(([tool, args]) => ({ tool, args })),
+  });
+
+  expect(focus(read(["forecast", { month: "2027-01" }]), "Et janvier ?")).toEqual({
+    kind: "forecast",
+    month: "2027-01",
+  });
+  expect(
+    focus(
+      read(["accuracy", {}], ["month_gap", { month: "2026-04" }]),
+      "Pourquoi plus bas que prévu ?",
+    ),
+  ).toEqual({ kind: "gap", month: "2026-04", view: "against_forecast" });
+  expect(viewOf("A-t-elle augmenté par rapport à août 2025 ?", "2026-08")).toBe(
+    "against_year_before",
+  );
+  expect(viewOf("Et par rapport à l'an dernier ?", "2026-08")).toBe("against_year_before");
+  expect(focus(read(["forecast", {}]), "Et l'an prochain ?")).toBeNull();
+  expect(focus(reply, "Et janvier ?")).toBeNull();
 });

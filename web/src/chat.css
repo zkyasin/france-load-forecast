@@ -348,6 +348,22 @@
   }
 }
 
+.chat-figure {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+}
+
+.chat-figure svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.chat-figure figcaption {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .chat-proof {
   display: flex;
   flex-wrap: wrap;

@@ -3,6 +3,7 @@
 import { AskError, type Call, type Reply } from "./ask";
 import type { Forecast, Gaps } from "./data";
 import { monthName, of } from "./format";
+import type { View } from "./gaps";
 import type { Mood } from "./pylon";
 
 export interface Suggestion {
@@ -174,6 +175,30 @@ export function stepText({ tool, args }: Call): string {
     default:
       return "les données publiées";
   }
+}
+
+export type Focus =
+  | { kind: "forecast"; month: string }
+  | { kind: "gap"; month: string; view: View };
+
+/** The comparison a question asks for: the year before when it names it, else the forecast. */
+export function viewOf(question: string, month: string): View {
+  if (/prév/i.test(question)) return "against_forecast";
+  const before = String(Number(month.slice(0, 4)) - 1);
+  return /\ban\b|année|précédent/i.test(question) || question.includes(before)
+    ? "against_year_before"
+    : "against_forecast";
+}
+
+/** The month an answer read, for its chart: its first forecast or gap of a given month. */
+export function focus(reply: Reply, question: string): Focus | null {
+  for (const { tool, args } of reply.calls ?? []) {
+    if (tool === "month_gap" && isMonth(args.month)) {
+      return { kind: "gap", month: args.month, view: viewOf(question, args.month) };
+    }
+    if (tool === "forecast" && isMonth(args.month)) return { kind: "forecast", month: args.month };
+  }
+  return null;
 }
 
 // The section of the page that shows what each tool reads.
