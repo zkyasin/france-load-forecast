@@ -6,7 +6,9 @@ import { addMonths, capitalize, dayName, monthName, NBSP, signed, twh } from "./
 
 const REPOSITORY = "https://github.com/zkyasin/france-load-forecast";
 
-export interface Note extends GapMonth {
+// The page shows no temperature of a note, and the notes written before the temperature the
+// forecast assumed was published lack it.
+export interface Note extends Omit<GapMonth, "temperature"> {
   published: string;
   // "provider:model", as in config/agent.toml.
   model: string;

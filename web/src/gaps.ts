@@ -45,9 +45,9 @@ export interface MonthGap {
   calendar: number;
   others: number;
   temperature: number;
-  // Only against the year before: the climate term against the forecast compares the weather with
-  // the past years that the forecast replayed, not with a single temperature.
-  yearBeforeTemperature: number | undefined;
+  // The temperature that the weather term compares with: that of the same month a year earlier,
+  // or that of the past weather the forecast assumed.
+  referenceTemperature: number;
 }
 
 export const monthGaps = (gaps: Gaps, view: View): MonthGap[] =>
@@ -63,8 +63,8 @@ export const monthGaps = (gaps: Gaps, view: View): MonthGap[] =>
       calendar: terms.calendar,
       others: terms.gap - terms.climate - terms.calendar,
       temperature: month.temperature.mean,
-      yearBeforeTemperature:
-        view === "against_year_before" ? month.temperature.year_before : undefined,
+      referenceTemperature:
+        view === "against_year_before" ? month.temperature.year_before : month.temperature.forecast,
     };
   });
 
@@ -123,10 +123,9 @@ export function tipText(month: MonthGap, view: View, terms: Term[]): string {
     `${forecast ? "Prévu au début du mois" : "Un an plus tôt"} : ${twh(month.reference)}`,
     `Écart : ${signedTwh(month.gap)}`,
     ...terms.map(({ key, label }) => `${label} : ${signedTwh(month[key])}`),
-    `Température : ${celsius(month.temperature)}` +
-      (month.yearBeforeTemperature === undefined
-        ? ""
-        : ` (un an plus tôt : ${celsius(month.yearBeforeTemperature)})`),
+    `Température : ${celsius(month.temperature)} ` +
+      `(${forecast ? "supposée par la prévision" : "un an plus tôt"} : ` +
+      `${celsius(month.referenceTemperature)})`,
   ].join("\n");
 }
 
@@ -221,7 +220,7 @@ function showTable(months: MonthGap[], terms: Term[], view: View): void {
       "Écart",
       ...terms.map((term) => term.label),
       "Température",
-      ...(forecast ? [] : ["Température un an plus tôt"]),
+      forecast ? "Température supposée par la prévision" : "Température un an plus tôt",
     ],
     months.map((month) => [
       `${monthName(month.month)}${month.provisional ? " (provisoire)" : ""}`,
@@ -230,7 +229,7 @@ function showTable(months: MonthGap[], terms: Term[], view: View): void {
       signed(month.gap),
       ...terms.map(({ key }) => signed(month[key])),
       number(month.temperature),
-      ...(month.yearBeforeTemperature === undefined ? [] : [number(month.yearBeforeTemperature)]),
+      number(month.referenceTemperature),
     ]),
   );
 }
