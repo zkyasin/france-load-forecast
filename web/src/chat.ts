@@ -2,20 +2,26 @@
 
 import "./chat.css";
 import { API, ask, caption, failure, type Reply } from "./ask";
+import { colors } from "./chart";
 import {
   type Exchange,
+  focus,
   followUps,
   KEPT,
   layout,
+  leftText,
   moodOf,
   type Piece,
+  previousOf,
   readExchanges,
   type Suggestion,
   sections,
+  stepText,
   suggestions,
   verdict,
 } from "./conversation";
 import type { Bundle } from "./data";
+import { figure } from "./minichart";
 import { createPylon, type Mood, type Pylon } from "./pylon";
 
 // What the visit keeps in the session: the exchanges, and whether the panel was opened.
@@ -49,6 +55,7 @@ const SKELETON = `
       <button class="chat-close" type="button" aria-label="Fermer les questions">×</button>
     </header>
     <div class="chat-thread" aria-live="polite"></div>
+    <p class="chat-left" aria-live="polite" hidden></p>
     <form class="chat-form">
       <label class="chat-label" for="chat-question">Votre question</label>
       <textarea id="chat-question" rows="1" maxlength="${LIMIT}"
@@ -159,6 +166,7 @@ export function render(bundle: Bundle): void {
   const form = part<HTMLFormElement>(".chat-form");
   const field = part<HTMLTextAreaElement>("#chat-question");
   const counter = part(".chat-count");
+  const left = part(".chat-left");
   const send = part<HTMLButtonElement>(".chat-send");
 
   const pylon = createPylon({ view: "corner", towards: -1 });
@@ -247,10 +255,25 @@ export function render(bundle: Bundle): void {
     show(box);
   }
 
-  function answer(reply: Reply, entering: boolean): void {
+  /** The chart of the month an answer read, drawn from the data of the page when they are the
+   * data of the answer. */
+  function chart(reply: Reply, question: string): HTMLElement | null {
+    const spot = focus(reply, question);
+    if (spot === null || !reply.verified || reply.published !== bundle.meta.published) return null;
+    const width = thread.clientWidth > 0 ? thread.clientWidth - 28 : 340;
+    const drawn = figure(spot, bundle.forecast, bundle.gaps, width, colors());
+    if (drawn === null) return null;
+    const box = element("figure", "chat-figure");
+    box.append(drawn.chart, element("figcaption", "", drawn.caption));
+    return box;
+  }
+
+  function answer(reply: Reply, entering: boolean, question: string): void {
     const card = element("article", "chat-answer");
     const { lead, paragraphs } = layout(reply.answer);
     const blocks = [fill(element("p", "chat-lead"), lead)];
+    const drawn = chart(reply, question);
+    if (drawn !== null) blocks.push(drawn);
     for (const paragraph of paragraphs) blocks.push(fill(element("p", ""), paragraph));
     const { label, mood: tone } = verdict(reply);
     const proof = element("footer", "chat-proof");
@@ -298,7 +321,7 @@ export function render(bundle: Bundle): void {
 
   function exchange({ question, reply, error }: Exchange, entering: boolean): void {
     show(element("p", "chat-question", question));
-    if (reply !== null) answer(reply, entering);
+    if (reply !== null) answer(reply, entering, question);
     if (error !== null) show(element("p", "chat-error", error));
   }
 
@@ -353,18 +376,35 @@ export function render(bundle: Bundle): void {
     for (const box of thread.querySelectorAll(".chat-chips")) box.remove();
     const kept: Exchange = { question, reply: null, error: null };
     show(element("p", "chat-question", question));
-    const waiting = show(element("p", "chat-thinking", "Le pylône lit les données publiées"));
+    // What the agent reads, step by step, as the API streams it.
+    const waiting = show(element("div", "chat-steps"));
+    const status = element("p", "chat-thinking", "Le pylône lit les données publiées");
+    const steps = element("ul", "chat-step-list");
+    waiting.append(status, steps);
     const slow = window.setTimeout(() => {
-      waiting.textContent = "Encore quelques secondes";
+      status.textContent = "Encore quelques secondes";
     }, 8000);
     feel("think");
     pending = new AbortController();
     busy(true);
     try {
-      const reply = await ask(question, { signal: pending.signal });
+      const reply = await ask(question, {
+        signal: pending.signal,
+        previous: previousOf(exchanges),
+        onStep: (call) => {
+          steps.append(element("li", "", `Lit ${stepText(call)}`));
+          thread.scrollTop = thread.scrollHeight;
+        },
+        onRetry: () => {
+          steps.replaceChildren();
+          status.textContent = "Un autre modèle reprend la question";
+        },
+      });
       kept.reply = reply;
       waiting.remove();
-      answer(reply, !reduce.matches);
+      left.textContent = leftText(reply.left);
+      left.hidden = left.textContent === "";
+      answer(reply, !reduce.matches, question);
       feel(verdict(reply).mood, 2600);
     } catch (error) {
       kept.error = failure(error);

@@ -7,7 +7,7 @@ within the same tool budget; an answer that still fails is not shown.
 
 import re
 import tomllib
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -201,7 +201,15 @@ def _calls_that_ran(messages: list[AnyMessage]) -> list[dict[str, Any]]:
     ]
 
 
-def ask(
+@dataclass(frozen=True)
+class Step:
+    """A tool the agent calls while it answers, with its arguments."""
+
+    tool: str
+    args: dict[str, Any]
+
+
+def answering(
     question: str,
     bundle: Bundle,
     facts: dict[str, dict[str, Any]],
@@ -210,15 +218,23 @@ def ask(
     words: int = 120,
     only: Collection[str] | None = None,
     cite: bool = True,
-) -> Answer:
+    previous: tuple[str, str] | None = None,
+) -> Iterator[Step | Answer]:
     """Answer `question` with the tools, or with those named in `only`, and check every number
-    of the answer. With `cite` false, the answer need not give the date of the data."""
+    of the answer. Yields each tool call as the model makes it, then the answer, last.
+
+    With `cite` false, the answer need not give the date of the data. `previous` is the question
+    and the answer just before: the model reads them, but their numbers are no source.
+    """
     system = instructions(bundle, words, cite)
     tools = [tool for tool in make_tools(bundle, facts) if only is None or tool.name in only]
     # Besides the tool results, which all carry the data dates, an answer may name the years of
     # the question.
     known = YEAR.findall(question)
-    conversation: list[AnyMessage | dict[str, Any]] = [HumanMessage(question)]
+    conversation: list[AnyMessage | dict[str, Any]] = []
+    if previous is not None:
+        conversation += [HumanMessage(previous[0]), AIMessage(previous[1])]
+    conversation.append(HumanMessage(question))
     ran: list[dict[str, Any]] = []
     text, problem = "", None
     for _ in range(2):
@@ -232,10 +248,17 @@ def ask(
         agent = create_agent(
             model, tools=tools if budget > 0 else [], system_prompt=system, middleware=limits
         )
+        state: dict[str, Any] = {"messages": conversation}
+        seen = len(conversation)
         try:
-            state = agent.invoke(InputAgentState(messages=conversation))
+            for state in agent.stream(InputAgentState(messages=conversation), stream_mode="values"):
+                for message in state["messages"][seen:]:
+                    if isinstance(message, AIMessage):
+                        yield from (Step(call["name"], call["args"]) for call in message.tool_calls)
+                seen = len(state["messages"])
         except ModelCallLimitExceededError:
-            return Answer("", ran, "the model kept calling tools")
+            yield Answer("", ran, "the model kept calling tools")
+            return
         messages: list[AnyMessage] = state["messages"]
         ran += _calls_that_ran(messages[len(conversation) :])
         text = messages[-1].text.strip()
@@ -249,6 +272,23 @@ def ask(
         elif LINK.search(text):
             problem, retry = "link in the answer", RETRY_LINK
         else:
-            return Answer(text, ran, None)
+            yield Answer(text, ran, None)
+            return
         conversation = [*messages, HumanMessage(retry)]
-    return Answer(text, ran, problem)
+    yield Answer(text, ran, problem)
+
+
+def ask(
+    question: str,
+    bundle: Bundle,
+    facts: dict[str, dict[str, Any]],
+    model: BaseChatModel,
+    config: AgentConfig,
+    words: int = 120,
+    only: Collection[str] | None = None,
+    cite: bool = True,
+    previous: tuple[str, str] | None = None,
+) -> Answer:
+    """The checked answer of `answering`, once the agent is done."""
+    steps = answering(question, bundle, facts, model, config, words, only, cite, previous)
+    return [item for item in steps if isinstance(item, Answer)][-1]

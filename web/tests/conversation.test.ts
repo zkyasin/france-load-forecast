@@ -3,13 +3,18 @@ import forecastFile from "../../tests/fixtures/bundle/forecast.json";
 import gapsFile from "../../tests/fixtures/bundle/gaps.json";
 import { AskError, type Reply } from "../src/ask";
 import {
+  focus,
   followUps,
   layout,
+  leftText,
   moodOf,
+  previousOf,
   readExchanges,
   sections,
+  stepText,
   suggestions,
   verdict,
+  viewOf,
 } from "../src/conversation";
 import type { Forecast, Gaps } from "../src/data";
 
@@ -106,4 +111,68 @@ test("only well-formed exchanges are read back from the session", () => {
     error: "x",
   }));
   expect(readExchanges(JSON.stringify(many))).toHaveLength(20);
+});
+
+test("each step says what the agent reads", () => {
+  const step = (tool: string, args: Record<string, unknown> = {}) => stepText({ tool, args });
+
+  expect(step("forecast", { month: "2027-01" })).toBe("la prévision de janvier 2027");
+  expect(step("forecast")).toBe("la prévision des mois à venir");
+  expect(step("month_gap", { month: "2026-04" })).toBe("les écarts d'avril 2026");
+  expect(step("annual_energy", { first: 2019, last: 2020 })).toBe("l'énergie de 2019 à 2020");
+  expect(step("annual_energy", { first: 2025, last: 2025 })).toBe("l'énergie de 2025");
+  expect(step("fact", { topic: "revision" })).toBe("la révision des données en temps réel");
+  expect(step("scenario", { trajectory: "rapid", winter: "cold", year: 2027 })).toBe(
+    "le scénario avec une décarbonation rapide et un hiver froid en 2027",
+  );
+  expect(step("scenario")).toBe("les scénarios");
+  expect(step("unknown")).toBe("les données publiées");
+});
+
+test("an answer is drawn on the month it read, compared as the question asks", () => {
+  const read = (...calls: [string, Record<string, unknown>][]) => ({
+    ...reply,
+    calls: calls.map(([tool, args]) => ({ tool, args })),
+  });
+
+  expect(focus(read(["forecast", { month: "2027-01" }]), "Et janvier ?")).toEqual({
+    kind: "forecast",
+    month: "2027-01",
+  });
+  expect(
+    focus(
+      read(["accuracy", {}], ["month_gap", { month: "2026-04" }]),
+      "Pourquoi plus bas que prévu ?",
+    ),
+  ).toEqual({ kind: "gap", month: "2026-04", view: "against_forecast" });
+  expect(viewOf("A-t-elle augmenté par rapport à août 2025 ?", "2026-08")).toBe(
+    "against_year_before",
+  );
+  expect(viewOf("Et par rapport à l'an dernier ?", "2026-08")).toBe("against_year_before");
+  expect(focus(read(["forecast", {}]), "Et l'an prochain ?")).toBeNull();
+  expect(focus(reply, "Et janvier ?")).toBeNull();
+});
+
+test("the next question carries the exchange before it, if it got an answer", () => {
+  const answered = { question: "Et avril ?", reply, error: null };
+
+  expect(previousOf([answered])).toEqual({ question: "Et avril ?", answer: reply.answer });
+  expect(previousOf([answered, { question: "Et mai ?", reply: null, error: "Réessayez." }])).toBe(
+    undefined,
+  );
+  expect(previousOf([])).toBe(undefined);
+  const long = { ...answered, reply: { ...reply, answer: "x".repeat(3000) } };
+  expect(previousOf([long])?.answer).toHaveLength(2000);
+});
+
+test("the visitor hears of the questions left only once few are", () => {
+  expect(leftText({ hour: 4, day: 19 })).toBe("");
+  expect(leftText({ hour: 2, day: 19 })).toBe("Il vous reste 2 questions cette heure-ci.");
+  expect(leftText({ hour: 1, day: 19 })).toBe("Il vous reste 1 question cette heure-ci.");
+  expect(leftText({ hour: 3, day: 3 })).toBe("Il vous reste 3 questions aujourd'hui.");
+  expect(leftText({ hour: 0, day: 5 })).toBe(
+    "C'était votre dernière question pour cette heure-ci.",
+  );
+  expect(leftText({ hour: 0, day: 0 })).toBe("C'était votre dernière question pour aujourd'hui.");
+  expect(leftText(undefined)).toBe("");
 });

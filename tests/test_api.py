@@ -1,3 +1,4 @@
+import json
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
@@ -69,8 +70,23 @@ def test_answer_gives_its_tools_and_the_date_of_its_data(
         "answer": agent.plain(ANSWER),
         "verified": True,
         "tools": ["month_gap"],
+        "calls": [{"tool": "month_gap", "args": {"month": "2026-02"}}],
         "published": "2026-11-22",
+        "left": {"hour": 4, "day": 19},
     }
+
+
+def test_a_visitor_is_told_how_many_questions_are_left(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(*[("month_gap", {"month": "2026-02"}), ANSWER] * 3)
+    test = client(bundle, facts, agent_config, {"model": model}, questions_per_day=2)
+
+    _, first = ask(test)
+    _, second = ask(test, address="2.2.2.2")
+
+    assert first["left"] == {"hour": 1, "day": 1}
+    assert second["left"] == {"hour": 0, "day": 0}
 
 
 def test_answer_with_a_number_without_source_is_refused(
@@ -252,6 +268,103 @@ def test_an_answer_that_read_no_data_is_out_of_scope(
     assert status == 200
     assert body["answer"] == api.OUT_OF_SCOPE
     assert body["tools"] == []
+
+
+def test_the_previous_exchange_reaches_the_agent(
+    bundle: tools.Bundle,
+    facts: dict[str, Any],
+    agent_config: agent.AgentConfig,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: list[Any] = []
+
+    def answer(*args: Any, previous: tuple[str, str] | None = None, **kwargs: Any) -> agent.Answer:
+        seen.append(previous)
+        return agent.Answer(ANSWER, [{"name": "forecast", "args": {}}], None)
+
+    monkeypatch.setattr(agent, "ask", answer)
+    test = client(bundle, facts, agent_config, {"model": down()})
+    # Accented text weighs two bytes a character: the body limit leaves room for it.
+    before = {"question": "Et avril 2026 ?", "answer": "é" * api.MAX_PREVIOUS_CHARS}
+
+    reply = test.post("/ask", json={"question": "Et en mai ?", "previous": before})
+
+    assert reply.status_code == 200
+    assert seen == [("Et avril 2026 ?", "é" * api.MAX_PREVIOUS_CHARS)]
+
+
+def test_a_previous_answer_too_long_is_refused(
+    bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    test = client(bundle, facts, agent_config, {"model": down()})
+    before = {"question": "Et avril ?", "answer": "x" * (api.MAX_PREVIOUS_CHARS + 1)}
+
+    reply = test.post("/ask", json={"question": "Et en mai ?", "previous": before})
+
+    assert reply.status_code == 422
+
+
+def events(test: TestClient, address: str = "1.1.1.1") -> list[tuple[str, Any]]:
+    """The server-sent events of the reply to QUESTION, in order."""
+    reply = test.post(
+        "/ask/stream", json={"question": QUESTION}, headers={"X-Forwarded-For": address}
+    )
+    assert reply.status_code == 200
+    assert reply.headers["content-type"].startswith("text/event-stream")
+    parsed = []
+    for block in reply.text.strip().split("\n\n"):
+        kind, data = block.split("\n")
+        parsed.append((kind.removeprefix("event: "), json.loads(data.removeprefix("data: "))))
+    return parsed
+
+
+def test_the_stream_gives_each_step_then_the_answer(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(("month_gap", {"month": "2026-02"}), ("thermosensitivity", {}), ANSWER)
+
+    stream = events(client(bundle, facts, agent_config, {"model": model}))
+
+    assert stream[:2] == [
+        ("step", {"tool": "month_gap", "args": {"month": "2026-02"}}),
+        ("step", {"tool": "thermosensitivity", "args": {}}),
+    ]
+    kind, body = stream[2]
+    assert (kind, body["answer"], body["verified"]) == ("answer", agent.plain(ANSWER), True)
+    assert len(stream) == 3
+
+
+def test_the_stream_starts_over_with_the_next_model(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    second = script(("month_gap", {"month": "2026-02"}), ANSWER)
+
+    stream = events(client(bundle, facts, agent_config, {"first": down(), "second": second}))
+
+    assert [kind for kind, _ in stream] == ["retry", "step", "answer"]
+
+
+def test_the_stream_says_when_no_model_answers(
+    bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    stream = events(client(bundle, facts, agent_config, {"model": down()}))
+
+    assert stream == [("error", {"detail": api.NO_MODEL})]
+
+
+def test_a_streamed_question_is_turned_down_before_it_streams(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(("month_gap", {"month": "2026-02"}), ANSWER)
+    test = client(bundle, facts, agent_config, {"model": model}, questions_per_visitor_per_hour=1)
+    events(test)
+
+    reply = test.post(
+        "/ask/stream", json={"question": QUESTION}, headers={"X-Forwarded-For": "1.1.1.1"}
+    )
+
+    assert reply.status_code == 429
+    assert reply.json()["detail"] == "Vous avez posé beaucoup de questions. Réessayez plus tard."
 
 
 def test_a_body_too_large_is_refused_before_it_is_read(

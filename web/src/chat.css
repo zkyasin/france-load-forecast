@@ -280,6 +280,32 @@
   color: var(--muted);
 }
 
+.chat-steps {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.chat-step-list {
+  display: grid;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  list-style: none;
+}
+
+.chat-step-list li::before {
+  margin-right: 0.375rem;
+  color: var(--third);
+  content: "✓";
+}
+
+.chat-step-list li:last-child::before {
+  color: var(--forecast);
+  content: "•";
+}
+
 .chat-thinking::after {
   display: inline-block;
   width: 1.2em;
@@ -320,6 +346,22 @@
     opacity: 0;
     transform: translateY(4px);
   }
+}
+
+.chat-figure {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+}
+
+.chat-figure svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.chat-figure figcaption {
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 
 .chat-proof {
@@ -393,6 +435,13 @@
 
 .chat-chip:hover {
   border-color: var(--forecast);
+}
+
+.chat-left {
+  margin: 0;
+  padding: 0.375rem 0.875rem 0;
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 
 .chat-form {

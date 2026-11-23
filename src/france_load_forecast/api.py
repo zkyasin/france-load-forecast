@@ -1,20 +1,22 @@
 """The public question API: the agent answers from the last published bundle.
 
 POST /ask takes a question in French and returns the answer, or the refusal of the agent when a
-number of the answer has no source. The bundle is read from the page, where each publication
-deploys it. Limits per visitor and per day keep the use of the model and of Cloud Run small. They
-are kept in memory, so they start again when Cloud Run stops or replaces the instance.
+number of the answer has no source. POST /ask/stream gives the same reply as server-sent events,
+after one event for each tool the agent calls. The bundle is read from the page, where each
+publication deploys it. Limits per visitor and per day keep the use of the model and of Cloud Run
+small. They are kept in memory, so they start again when Cloud Run stops or replaces the instance.
 
 Run it with `uvicorn france_load_forecast.api:build --factory`.
 """
 
 import ipaddress
+import json
 import logging
 import os
 import time
 import tomllib
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, replace
 from pathlib import Path
 from threading import Lock
@@ -24,9 +26,9 @@ import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from langchain_core.language_models import BaseChatModel
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from france_load_forecast import bundle as schema
@@ -34,8 +36,12 @@ from france_load_forecast.agent import agent, tools
 
 DAY = 86_400
 HOUR = 3_600
-# Far above a question of 300 characters, even with every character escaped.
-MAX_BODY_BYTES = 4_096
+# Far above a question and the exchange before it, even with every character escaped.
+MAX_BODY_BYTES = 16_384
+# Bounds the exchange before a question, which the page sends back.
+MAX_PREVIOUS_CHARS = 2_000
+
+NO_MODEL = "Le modèle ne répond pas pour le moment. Réessayez plus tard."
 
 # Said instead of an answer that read no data: a question in scope always calls a tool, so the
 # text could only come from the model, as when a question asks it to change its rules.
@@ -139,6 +145,19 @@ class Limits:
             self.today += 1
             return None
 
+    def left(self, visitor: str) -> "Left":
+        """How many more questions `visitor` may ask this hour and today."""
+        now = self.clock()
+        with self.lock:
+            asked = self.asked.get(visitor, deque())
+            last_hour = sum(1 for moment in asked if moment > now - HOUR)
+            today = min(
+                self.settings.questions_per_visitor_per_day - len(asked),
+                self.settings.questions_per_day - self.today,
+            )
+            hour = self.settings.questions_per_visitor_per_hour - last_hour
+            return Left(hour=max(0, min(hour, today)), day=max(0, today))
+
 
 def visitor(request: Request) -> str:
     """Who asks. Cloud Run appends the address of the visitor to X-Forwarded-For, after any value
@@ -181,17 +200,54 @@ class BodyLimit:
         await self.app(scope, counted, send)
 
 
+class Previous(BaseModel):
+    """The exchange just before a question, as the page sends it back."""
+
+    question: str = Field(max_length=MAX_PREVIOUS_CHARS)
+    answer: str = Field(max_length=MAX_PREVIOUS_CHARS)
+
+
 class Question(BaseModel):
     question: str
+    # Read by the agent as context, never as a source of numbers.
+    previous: Previous | None = None
+
+
+def _event(kind: str, data: dict[str, Any]) -> str:
+    """A server-sent event."""
+    return f"event: {kind}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+def _readable(text: str) -> str:
+    """`text` without its outer spaces, or nothing if UTF-8 cannot carry it."""
+    try:
+        text.encode("utf-8")
+    except UnicodeEncodeError:
+        return ""
+    return text.strip()
+
+
+class Call(BaseModel):
+    tool: str
+    args: dict[str, Any]
+
+
+class Left(BaseModel):
+    """Questions a visitor may still ask, this hour and today."""
+
+    hour: int
+    day: int
 
 
 class Reply(BaseModel):
     answer: str
     verified: bool
-    # The tools the agent called, in order.
+    # The tools the agent called, in order, and the same calls with their arguments.
     tools: list[str]
+    calls: list[Call]
     # Date of the bundle the answer comes from.
     published: str
+    left: Left
 
 
 def create_app(
@@ -223,16 +279,20 @@ def create_app(
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    @app.post("/ask")
-    def ask(body: Question, request: Request) -> Reply:
-        question = body.question.strip()
-        try:
-            question.encode("utf-8")
-        except UnicodeEncodeError:
-            question = ""
+    def admit(
+        body: Question, request: Request
+    ) -> tuple[str, tuple[str, str] | None, str, tools.Bundle]:
+        """The question, the exchange before it and who asks, once the question is well formed
+        and within the limits, and the bundle that answers it."""
+        question = _readable(body.question)
         if not question or len(question) > config.max_question_chars:
             raise HTTPException(422, malformed)
-        refused = limits.refuse(visitor(request))
+        previous = None
+        if body.previous is not None:
+            before = (_readable(body.previous.question), _readable(body.previous.answer))
+            previous = before if all(before) else None
+        who = visitor(request)
+        refused = limits.refuse(who)
         if refused:
             raise HTTPException(429, refused)
         try:
@@ -241,27 +301,66 @@ def create_app(
             raise HTTPException(
                 503, "Les données ne sont pas disponibles pour le moment."
             ) from error
+        return question, previous, who, current
+
+    def reply(answer: agent.Answer, current: tools.Bundle, who: str) -> Reply:
+        if not answer.tool_calls:
+            text = OUT_OF_SCOPE
+        elif answer.verified:
+            text = agent.plain(answer.text)
+        else:
+            text = agent.REFUSAL
+        return Reply(
+            answer=text,
+            verified=answer.verified,
+            tools=[call["name"] for call in answer.tool_calls],
+            calls=[Call(tool=call["name"], args=call["args"]) for call in answer.tool_calls],
+            published=current["meta"]["published"],
+            left=limits.left(who),
+        )
+
+    @app.post("/ask")
+    def ask(body: Question, request: Request) -> Reply:
+        question, previous, who, current = admit(body, request)
         for name in settings.models:
             # Whatever stops a model, a rate limit, a timeout or a malformed call, the next one
             # may answer. The question stays out of the logs.
             try:
-                answer = agent.ask(question, current, facts, models[name], config)
+                answer = agent.ask(
+                    question, current, facts, models[name], config, previous=previous
+                )
             except Exception as error:
                 log.warning("%s did not answer: %s", name, type(error).__name__)
                 continue
-            if not answer.tool_calls:
-                text = OUT_OF_SCOPE
-            elif answer.verified:
-                text = agent.plain(answer.text)
-            else:
-                text = agent.REFUSAL
-            return Reply(
-                answer=text,
-                verified=answer.verified,
-                tools=[call["name"] for call in answer.tool_calls],
-                published=current["meta"]["published"],
-            )
-        raise HTTPException(503, "Le modèle ne répond pas pour le moment. Réessayez plus tard.")
+            return reply(answer, current, who)
+        raise HTTPException(503, NO_MODEL)
+
+    @app.post("/ask/stream")
+    def ask_stream(body: Question, request: Request) -> StreamingResponse:
+        """The reply of /ask as server-sent events: "step" for each tool the agent calls,
+        "retry" when the next model starts over, then "answer" with the reply, or "error"."""
+        question, previous, who, current = admit(body, request)
+
+        def events() -> Iterator[str]:
+            for name in settings.models:
+                try:
+                    for item in agent.answering(
+                        question, current, facts, models[name], config, previous=previous
+                    ):
+                        if isinstance(item, agent.Step):
+                            yield _event("step", {"tool": item.tool, "args": item.args})
+                        else:
+                            yield _event("answer", reply(item, current, who).model_dump())
+                            return
+                except Exception as error:
+                    log.warning("%s did not answer: %s", name, type(error).__name__)
+                    if name != settings.models[-1]:
+                        yield _event("retry", {})
+            yield _event("error", {"detail": NO_MODEL})
+
+        return StreamingResponse(
+            events(), media_type="text/event-stream", headers={"Cache-Control": "no-store"}
+        )
 
     return app
 

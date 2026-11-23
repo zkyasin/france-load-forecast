@@ -1,8 +1,9 @@
 /** What the question panel says around the answers of the API: none of it calls the model. */
 
-import { AskError, type Reply } from "./ask";
+import { AskError, type Call, type Left, type Previous, type Reply } from "./ask";
 import type { Forecast, Gaps } from "./data";
 import { monthName, of } from "./format";
+import type { View } from "./gaps";
 import type { Mood } from "./pylon";
 
 export interface Suggestion {
@@ -123,6 +124,83 @@ export function layout(answer: string): { lead: Piece[]; paragraphs: Piece[][] }
   return { lead: pieces(lead), paragraphs: paragraphs.map(pieces) };
 }
 
+const TOPICS: Record<string, string> = {
+  method: "la méthode",
+  sources: "les sources des données",
+  perimeter: "le périmètre des données",
+  revision: "la révision des données en temps réel",
+  temperature: "la publication des températures",
+};
+const TRAJECTORIES: Record<string, string> = {
+  slow: "une décarbonation lente",
+  rapid: "une décarbonation rapide",
+};
+const WINTERS: Record<string, string> = { cold: "un hiver froid", mild: "un hiver doux" };
+
+export const isMonth = (value: unknown): value is string =>
+  typeof value === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(value);
+const word = (value: unknown): string => (typeof value === "string" ? value : "");
+
+/** What the agent reads with `call`, in a few words: "les écarts d'avril 2026". */
+export function stepText({ tool, args }: Call): string {
+  switch (tool) {
+    case "forecast":
+      return isMonth(args.month)
+        ? `la prévision ${of(monthName(args.month))}`
+        : "la prévision des mois à venir";
+    case "month_gap":
+      return isMonth(args.month)
+        ? `les écarts ${of(monthName(args.month))}`
+        : "les écarts d'un mois";
+    case "annual_energy": {
+      const { first, last } = args;
+      if (!Number.isInteger(first) || !Number.isInteger(last)) return "l'énergie des années";
+      return first === last ? `l'énergie de ${first}` : `l'énergie de ${first} à ${last}`;
+    }
+    case "thermosensitivity":
+      return "la réponse à la température";
+    case "accuracy":
+      return "la fiabilité des prévisions passées";
+    case "fact":
+      return TOPICS[word(args.topic)] ?? "la méthode";
+    case "scenario": {
+      const cases = [TRAJECTORIES[word(args.trajectory)], WINTERS[word(args.winter)]].filter(
+        Boolean,
+      );
+      const year = Number.isInteger(args.year) ? ` en ${args.year}` : "";
+      return cases.length > 0
+        ? `le scénario avec ${cases.join(" et ")}${year}`
+        : `les scénarios${year}`;
+    }
+    default:
+      return "les données publiées";
+  }
+}
+
+export type Focus =
+  | { kind: "forecast"; month: string }
+  | { kind: "gap"; month: string; view: View };
+
+/** The comparison a question asks for: the year before when it names it, else the forecast. */
+export function viewOf(question: string, month: string): View {
+  if (/prév/i.test(question)) return "against_forecast";
+  const before = String(Number(month.slice(0, 4)) - 1);
+  return /\ban\b|année|précédent/i.test(question) || question.includes(before)
+    ? "against_year_before"
+    : "against_forecast";
+}
+
+/** The month an answer read, for its chart: its first forecast or gap of a given month. */
+export function focus(reply: Reply, question: string): Focus | null {
+  for (const { tool, args } of reply.calls ?? []) {
+    if (tool === "month_gap" && isMonth(args.month)) {
+      return { kind: "gap", month: args.month, view: viewOf(question, args.month) };
+    }
+    if (tool === "forecast" && isMonth(args.month)) return { kind: "forecast", month: args.month };
+  }
+  return null;
+}
+
 // The section of the page that shows what each tool reads.
 const SECTIONS: Record<string, { anchor: string; label: string }> = {
   forecast: { anchor: "headline", label: "Voir la prévision" },
@@ -172,6 +250,26 @@ export interface Exchange {
 
 // The panel keeps the last exchanges of the visit.
 export const KEPT = 20;
+// The API reads at most this much of the answer before a question.
+const PREVIOUS_CHARS = 2_000;
+
+/** The exchange before the next question, when the last one got an answer. */
+export function previousOf(exchanges: Exchange[]): Previous | undefined {
+  const last = exchanges.at(-1);
+  if (!last?.reply) return undefined;
+  return { question: last.question, answer: last.reply.answer.slice(0, PREVIOUS_CHARS) };
+}
+
+/** What the visitor is told of the questions left, once few are. */
+export function leftText(left: Left | undefined): string {
+  if (left === undefined) return "";
+  const questions = (count: number) => `${count} question${count > 1 ? "s" : ""}`;
+  if (left.day === 0) return "C'était votre dernière question pour aujourd'hui.";
+  if (left.hour === 0) return "C'était votre dernière question pour cette heure-ci.";
+  if (left.hour <= 2) return `Il vous reste ${questions(left.hour)} cette heure-ci.`;
+  if (left.day <= 3) return `Il vous reste ${questions(left.day)} aujourd'hui.`;
+  return "";
+}
 
 const isReply = (value: unknown): value is Reply => {
   const reply = value as Partial<Reply> | null;
