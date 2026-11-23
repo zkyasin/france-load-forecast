@@ -93,14 +93,48 @@ class AgentConfig:
     max_question_chars: int
 
 
+MONTHS = (
+    "janvier",
+    "février",
+    "mars",
+    "avril",
+    "mai",
+    "juin",
+    "juillet",
+    "août",
+    "septembre",
+    "octobre",
+    "novembre",
+    "décembre",
+)
+# A day or a month as the tools write them, 2026-11-23 or 2026-11, not inside a longer number.
+ISO_DAY = re.compile(r"(?<![\d-])(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])(?![\d-])")
+ISO_MONTH = re.compile(r"(?<![\d-])(\d{4})-(0[1-9]|1[0-2])(?![\d-])")
+# The dashes a model may write for a minus sign.
+DASHES = "-\u2010\u2011\u2012\u2013\u2014"
+
+
+def _day(match: re.Match[str]) -> str:
+    year, month, day = match.groups()
+    number = int(day)
+    return f"{'1er' if number == 1 else number} {MONTHS[int(month) - 1]} {year}"
+
+
+def _month(match: re.Match[str]) -> str:
+    year, month = match.groups()
+    return f"{MONTHS[int(month) - 1]} {year}"
+
+
 def plain(text: str) -> str:
     """A text of the agent as plain French text: without the asterisks of Markdown emphasis, with
-    decimal commas, a true minus sign where the model wrote a dash, and a non-breaking space before
-    units, so that no line breaks inside a value."""
+    days and months in words, decimal commas, a true minus sign wherever the model wrote a dash,
+    and a non-breaking space before units, so that no line breaks inside a value."""
     text = text.replace("*", "")
+    text = ISO_DAY.sub(_day, text)
+    text = ISO_MONTH.sub(_month, text)
     text = re.sub(r"(?<=\d)\.(?=\d)", ",", text)
-    text = re.sub(r"(?<!\w)[-\u2013](?=\d)", "\u2212", text)
-    return re.sub(r"(?<=\d) (?=TWh|GWh|GW|MW|°C|%)", "\u00a0", text)
+    text = re.sub(rf"(?<!\w)[{DASHES}](?=\d)", "\u2212", text)
+    return re.sub(r"(?<=\d) ?(?=TWh|GWh|GW|MW|°C|%)", "\u00a0", text)
 
 
 def load_config(path: Path) -> AgentConfig:
