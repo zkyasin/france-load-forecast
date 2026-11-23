@@ -50,7 +50,7 @@ results of `flf backtest`. Every file carries the publication date and the model
 |---|---|
 | `meta.json` | Last consolidated day, last day with a temperature, last measured day, revision of real-time load |
 | `forecast.json` | Monthly P10, P50 and P90 from the current month, energy measured so far, total P50 over 12 months |
-| `gaps.json` | Gaps of the last 12 months to the forecast and to the year before, term by term |
+| `gaps.json` | Gaps of the last 12 months to the forecast and to the year before, term by term, with the temperatures they compare |
 | `history.json` | Energy of each whole month, annual gross and corrected energy against RTE's |
 | `accuracy.json` | Backtest errors by horizon and coverage of the P10-P90 band |
 | `model.json` | Estimation window and response to temperature of the forecasting model |
