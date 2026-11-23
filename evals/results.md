@@ -4,7 +4,7 @@
 
 | Model | Passed | Right tool | Figures stated | Verified | Refusals | Errors | Median time | Tokens in / out |
 |---|---|---|---|---|---|---|---|---|
-| ollama:ministral-3:14b | 28/40 | 24/33 | 33/43 | 28/33 | 7/7 | 0 | 13.4 s | 3,272 / 195 |
+| ollama:ministral-3:14b | 29/40 | 25/33 | 33/43 | 28/33 | 7/7 | 0 | 13.4 s | 3,272 / 195 |
 
 ## By question
 
@@ -12,7 +12,7 @@
 |---|---|---|
 | forecast-january | forecast | fail: refused |
 | forecast-next-twelve-months | forecast | pass |
-| forecast-current-month | forecast | fail: tool |
+| forecast-current-month | forecast | pass |
 | forecast-reliability | forecast | pass |
 | gap-february | gap | fail: figures |
 | gap-april-weather | gap | pass |

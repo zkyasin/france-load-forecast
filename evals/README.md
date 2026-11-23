@@ -8,8 +8,10 @@ next question does.
 
 `flf eval` asks them to a model and scores each answer without a judge:
 
-- the expected tool is called with the expected arguments;
-- each expected figure is stated, rounded to one decimal or within 1 %;
+- the expected tool is called with the expected arguments, or with others whose result holds the
+  expected figures, as the forecast of every month holds the current one;
+- each expected figure is stated, rounded to one decimal or within 1 %; a change may be stated in
+  TWh or in percent when the question allows both;
 - the verifier accepts the answer: each of its numbers comes from a tool result;
 - a question out of scope gets no tool call and no number but a year.
 

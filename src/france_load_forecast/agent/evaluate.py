@@ -1,17 +1,17 @@
 """The frozen questions of evals/questions.toml asked to a model, and scored without a judge.
 
-A question in scope passes when the agent calls the expected tool with the expected arguments,
-states each expected figure as the tool returns it, and the verifier accepts its answer. A
-question out of scope passes when the agent calls no tool and states no number but a year. Each
-run keeps the answer, the tool calls, the time and the tokens, so that models can be compared on
-the same questions and the same data.
+A question in scope passes when the agent calls the expected tool with the expected arguments, or
+with others whose result holds the expected figures, states each expected figure as the tool
+returns it, and the verifier accepts its answer. A question out of scope passes when the agent
+calls no tool and states no number but a year. Each run keeps the answer, the tool calls, the time
+and the tokens, so that models can be compared on the same questions and the same data.
 """
 
 import json
 import re
 import time
 import tomllib
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from statistics import mean, median
@@ -19,6 +19,7 @@ from typing import Any
 
 from langchain_core.callbacks import get_usage_metadata_callback
 from langchain_core.language_models import BaseChatModel
+from langchain_core.tools import BaseTool
 
 from france_load_forecast.agent import agent, tools
 
@@ -35,7 +36,8 @@ class Question:
     tool: str | None = None
     # The arguments the call must have; others are free.
     arguments: dict[str, Any] = field(default_factory=dict)
-    # Fields of the tool result that the answer must state; a dotted name reaches into a field.
+    # Fields of the tool result that the answer must state; a dotted name reaches into a field,
+    # and "a|b" is stated when either is.
     figures: tuple[str, ...] = ()
     refuse: bool = False
     # The question and the answer just before, for a follow-up.
@@ -152,11 +154,42 @@ def dig(result: dict[str, Any], dotted: str) -> list[float]:
     return [float(value)]
 
 
+def leaves(value: Any) -> Iterator[float]:
+    """The numbers of a JSON value, however deep."""
+    if isinstance(value, dict):
+        for item in value.values():
+            yield from leaves(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from leaves(item)
+    elif isinstance(value, int | float) and not isinstance(value, bool):
+        yield float(value)
+
+
+def fetched(
+    call: dict[str, Any], tool: BaseTool, expected: dict[str, Any], values: list[float]
+) -> bool:
+    """Whether `call` is the expected call of `tool`, or another whose result holds each of
+    `values`, as the forecast of every month holds the forecast of one."""
+    if call["name"] != tool.name:
+        return False
+    if all(call["args"].get(key) == value for key, value in expected.items()):
+        return True
+    if not values:
+        return False
+    try:
+        found = set(leaves(json.loads(tool.invoke(call["args"]))))
+    except ValueError:  # Arguments the tool turns down.
+        return False
+    return all(value in found for value in values)
+
+
 @dataclass(frozen=True)
 class Score:
     id: str
     category: str
-    # The expected call was made, or none at all for a question out of scope.
+    # The expected call was made, or one that fetched the expected figures; none at all for a
+    # question out of scope.
     tool: bool
     # The expected figures that the answer does not state.
     missing: tuple[str, ...]
@@ -176,26 +209,33 @@ def score(
     said = numbers(run.answer)
     if question.refuse:
         silent = all(YEAR.fullmatch(f"{number:g}") for number in said)
-        tool = not run.calls
-        why = _reasons(error=run.error is not None, tool=not tool, numbers=not silent)
-        return Score(question.id, question.category, tool, (), run.verified, not why, why)
+        called = bool(run.calls)
+        why = _reasons(error=run.error is not None, tool=called, numbers=not silent)
+        return Score(question.id, question.category, not called, (), run.verified, not why, why)
     expected = arguments(question, bundle)
-    tool = any(
-        call["name"] == question.tool
-        and all(call["args"].get(key) == value for key, value in expected.items())
-        for call in run.calls
-    )
-    by_name = {each.name: each for each in tools.make_tools(bundle, facts)}
-    result = json.loads(by_name[str(question.tool)].invoke(expected))
+    tool = {each.name: each for each in tools.make_tools(bundle, facts)}[str(question.tool)]
+    result = json.loads(tool.invoke(expected))
+    values = [
+        value
+        for figure in question.figures
+        for name in figure.split("|")
+        for value in dig(result, name)
+    ]
+    called = any(fetched(call, tool, expected, values) for call in run.calls)
     missing = tuple(
         figure
         for figure in question.figures
-        if not all(stated(value, said) for value in dig(result, figure))
+        if not any(
+            all(stated(value, said) for value in dig(result, name)) for name in figure.split("|")
+        )
     )
     why = _reasons(
-        error=run.error is not None, tool=not tool, figures=bool(missing), refused=not run.verified
+        error=run.error is not None,
+        tool=not called,
+        figures=bool(missing),
+        refused=not run.verified,
     )
-    return Score(question.id, question.category, tool, missing, run.verified, not why, why)
+    return Score(question.id, question.category, called, missing, run.verified, not why, why)
 
 
 def pending(questions: Iterable[Question], runs: Iterable[Run]) -> list[Question]:
