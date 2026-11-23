@@ -8,7 +8,8 @@
       "temperature": {
         "mean": 13.31,
         "reference": 13.771,
-        "year_before": 14.397
+        "year_before": 14.397,
+        "forecast": 14.132
       },
       "against_forecast": {
         "actual": 35.023,
@@ -37,7 +38,8 @@
       "temperature": {
         "mean": 9.253,
         "reference": 9.1,
-        "year_before": 9.337
+        "year_before": 9.337,
+        "forecast": 8.857
       },
       "against_forecast": {
         "actual": 39.973,
@@ -66,7 +68,8 @@
       "temperature": {
         "mean": 7.097,
         "reference": 6.287,
-        "year_before": 6.071
+        "year_before": 6.071,
+        "forecast": 6.623
       },
       "against_forecast": {
         "actual": 44.947,
@@ -95,7 +98,8 @@
       "temperature": {
         "mean": 5.371,
         "reference": 5.594,
-        "year_before": 5.29
+        "year_before": 5.29,
+        "forecast": 5.403
       },
       "against_forecast": {
         "actual": 49.987,
@@ -124,7 +128,8 @@
       "temperature": {
         "mean": 9.089,
         "reference": 6.4,
-        "year_before": 6.389
+        "year_before": 6.389,
+        "forecast": 7.123
       },
       "against_forecast": {
         "actual": 39.948,
@@ -153,7 +158,8 @@
       "temperature": {
         "mean": 9.739,
         "reference": 9.023,
-        "year_before": 9.213
+        "year_before": 9.213,
+        "forecast": 9.303
       },
       "against_forecast": {
         "actual": 39.918,
@@ -182,7 +188,8 @@
       "temperature": {
         "mean": 13.817,
         "reference": 11.933,
-        "year_before": 13.313
+        "year_before": 13.313,
+        "forecast": 11.34
       },
       "against_forecast": {
         "actual": 33.545,
@@ -211,7 +218,8 @@
       "temperature": {
         "mean": 17.19,
         "reference": 15.574,
-        "year_before": 15.99
+        "year_before": 15.99,
+        "forecast": 15.248
       },
       "against_forecast": {
         "actual": 32.546,
@@ -240,7 +248,8 @@
       "temperature": {
         "mean": 22.467,
         "reference": 19.097,
-        "year_before": 21.793
+        "year_before": 21.793,
+        "forecast": 18.91
       },
       "against_forecast": {
         "actual": 32.996,
@@ -269,7 +278,8 @@
       "temperature": {
         "mean": 24.248,
         "reference": 21.287,
-        "year_before": 21.4
+        "year_before": 21.4,
+        "forecast": 21.158
       },
       "against_forecast": {
         "actual": 34.431,
@@ -298,7 +308,8 @@
       "temperature": {
         "mean": 23.571,
         "reference": 20.9,
-        "year_before": 21.735
+        "year_before": 21.735,
+        "forecast": 21.069
       },
       "against_forecast": {
         "actual": 32.078,
@@ -327,7 +338,8 @@
       "temperature": {
         "mean": 19.9,
         "reference": 17.757,
-        "year_before": 16.59
+        "year_before": 16.59,
+        "forecast": 17.225
       },
       "against_forecast": {
         "actual": 31.209,
