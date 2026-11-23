@@ -14,7 +14,7 @@ All inputs are public datasets published by RTE on [ODRÉ](https://odre.opendata
 | `eco2mix-national-cons-def` | National consumption every 30 minutes since 2012, consolidated then definitive |
 | `eco2mix-national-tr` | National consumption every 15 minutes, in real time, after the last consolidated day |
 | `consommation-quotidienne-brute` | Consolidated consumption every 30 minutes, a month ahead of éCO2mix, to measure the revision of real-time data |
-| `pic-journalier-consommation-brute` | Daily peak, national temperature and reference temperature |
+| `pic-journalier-consommation-brute` | National temperature and reference temperature of each day; its daily peak is not used |
 | `conso_brute_corrigee_client_direct` | Monthly gross and corrected consumption, used for validation |
 
 ```sh
@@ -36,7 +36,15 @@ fit the daily load model, compare the climate-corrected consumption with RTE's, 
 made from past months, forecast monthly energy over the current month and the next 11 with a band
 calibrated on those past errors, and split the energy gaps of the last 12 months into climate,
 calendar, structural and residual terms.
-[docs/methodology.md](docs/methodology.md) describes the model and its results.
+
+```sh
+uv run flf backtest --config config/peak.toml
+uv run flf forecast --config config/peak.toml
+```
+
+do the same for the monthly peak, the highest half-hour of each month, with the daily model fitted
+on the daily peak. [docs/methodology.md](docs/methodology.md) describes the models and their
+results.
 
 ```sh
 uv run flf publish
