@@ -189,6 +189,11 @@
   box-shadow: var(--chat-shadow);
 }
 
+/* The panel takes the focus when it opens on a touch screen, without a ring around it. */
+.chat-panel:focus {
+  outline: none;
+}
+
 .chat-head {
   display: grid;
   grid-template-columns: auto 1fr auto auto;

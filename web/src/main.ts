@@ -30,7 +30,6 @@ function notify(text: string): void {
 const reason = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
 function masthead(meta: Meta, now: Date): void {
-  byId("issue").textContent = `Publication du ${dayName(meta.published)}`;
   const age = daysSince(meta.published, now);
   if (age > STALE_AFTER_DAYS) {
     notify(

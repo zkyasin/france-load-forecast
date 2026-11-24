@@ -211,23 +211,34 @@ function plot(scenarios: Scenarios, choice: Choice, width: number, colors: Color
   });
 }
 
-/** Radio buttons for `options` in `fieldset`, the one of value `checked` chosen. */
+/**
+ * Radio buttons for `options` in `fieldset`, the one of value `checked` chosen. Each shows its
+ * `short` label on a phone, so that a choice holds on one line above the chart; the full label
+ * stays its accessible name.
+ */
 function fillChoice(
   fieldset: HTMLElement,
-  options: { value: string; label: string }[],
+  options: { value: string; label: string; short: string }[],
   checked: string,
 ): void {
   const box = fieldset.querySelector(".options");
   if (box === null) throw new Error(`#${fieldset.id} has no options`);
   box.replaceChildren(
-    ...options.map(({ value, label }) => {
+    ...options.map(({ value, label, short }) => {
       const input = document.createElement("input");
       input.type = "radio";
       input.name = fieldset.id;
       input.value = value;
       input.checked = value === checked;
+      input.setAttribute("aria-label", label);
+      const full = document.createElement("span");
+      full.className = "label-full";
+      full.textContent = label;
+      const brief = document.createElement("span");
+      brief.className = "label-short";
+      brief.textContent = short;
       const text = document.createElement("span");
-      text.textContent = label;
+      text.append(full, brief);
       const wrapper = document.createElement("label");
       wrapper.append(input, text);
       return wrapper;
@@ -262,6 +273,8 @@ export function render(scenarios: Scenarios): void {
     Object.keys(scenarios.trajectories).map((key) => ({
       value: key,
       label: trajectoryName(scenarios, key),
+      // "décarbonation lente" reads "lente" beside "stagnation" and "rapide".
+      short: trajectoryName(scenarios, key).split(" ").at(-1) ?? key,
     })),
     choice.trajectory,
   );
@@ -269,7 +282,7 @@ export function render(scenarios: Scenarios): void {
     byId("scenario-winter"),
     Object.entries(WINTERS).map(([value, name]) => {
       const year = weatherYear(scenarios, value);
-      return { value, label: year === undefined ? name : `${name}, comme ${year}` };
+      return { value, label: year === undefined ? name : `${name}, comme ${year}`, short: name };
     }),
     choice.winter,
   );
