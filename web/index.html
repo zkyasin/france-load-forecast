@@ -8,461 +8,547 @@
       name="description"
       content="Prévision mois par mois de la consommation d'électricité en France continentale, avec sa marge d'incertitude, publiée chaque semaine à partir des données ouvertes de RTE."
     />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f5ede0" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script type="module" src="/src/main.ts"></script>
   </head>
   <body>
-    <header class="masthead">
-      <div class="wrap">
-        <p class="site-name">Consommation d'électricité en France</p>
-        <p class="issue" id="issue"></p>
-        <nav aria-label="Sections de la page">
-          <ul>
-            <li><a href="#accuracy-title">Fiabilité</a></li>
-            <li id="peak-nav" hidden><a href="#peak-title">Pointe</a></li>
-            <li><a href="#gaps-title">Écarts</a></li>
-            <li><a href="#note-title">Note</a></li>
-            <li><a href="#questions">Questions</a></li>
-            <li><a href="#temperature-title">Température</a></li>
-            <li><a href="#history-title">Historique</a></li>
-            <li><a href="#scenarios-title">Scénarios</a></li>
-            <li><a href="#method-title">Méthode</a></li>
-            <li><a href="#sources-title">Sources</a></li>
-          </ul>
-        </nav>
-      </div>
+    <header class="masthead" id="masthead">
+      <a class="brand" href="#story">
+        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 21 12 3l8 18M7 14h10M9.5 9h5" />
+        </svg>
+        <span>Consommation d'électricité en France</span>
+      </a>
+      <nav aria-label="Chapitres de la page">
+        <ul>
+          <li><a href="#forecast">Prévision</a></li>
+          <li><a href="#accuracy">Fiabilité</a></li>
+          <li id="peak-nav" hidden><a href="#peak">Pointe</a></li>
+          <li><a href="#gaps">Écarts</a></li>
+          <li><a href="#note-title">Note</a></li>
+          <li><a href="#questions">Questions</a></li>
+          <li><a href="#temperature">Température</a></li>
+          <li><a href="#history">Historique</a></li>
+          <li><a href="#scenarios">Scénarios</a></li>
+          <li><a href="#method">Méthode</a></li>
+          <li><a href="#sources">Sources</a></li>
+        </ul>
+      </nav>
+      <p class="issue" id="issue"></p>
+      <div class="progress" aria-hidden="true"><span id="progress"></span></div>
     </header>
 
-    <main class="wrap">
+    <main>
       <p class="notice" id="notice" role="status" hidden></p>
 
-      <section class="hero" aria-labelledby="headline">
-        <h1 id="headline">Prévision de la consommation d'électricité sur douze mois</h1>
-        <p class="lead" id="lead"></p>
-        <ul class="legend">
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <line class="measured" x1="0" y1="6" x2="24" y2="6" />
-              <circle class="measured" cx="12" cy="6" r="4" />
-            </svg>
-            Consommation mesurée
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <circle class="provisional" cx="12" cy="6" r="3.5" />
-            </svg>
-            Mois provisoire, en temps réel
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <line class="forecast" x1="0" y1="6" x2="24" y2="6" />
-            </svg>
-            Prévision médiane (P50)
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <rect class="band" x="0" y="0" width="24" height="12" rx="2" />
-            </svg>
-            Bande P10–P90 : 8 chances sur 10 que le mois y tombe
-          </li>
-        </ul>
-        <figure class="chart">
-          <div
-            class="plot"
-            id="forecast-plot"
-            role="img"
-            aria-label="Consommation mensuelle mesurée puis prévue, avec la bande P10–P90"
-          ></div>
-          <figcaption id="forecast-caption"></figcaption>
-        </figure>
-        <p class="archive" id="archive" hidden>
-          <label for="publication">Prévision publiée le</label>
-          <select id="publication"></select>
-        </p>
-        <details>
-          <summary id="forecast-values">Valeurs du graphique, en TWh</summary>
-          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
-          <section class="table-scroll" tabindex="0" aria-labelledby="forecast-values">
-            <table id="forecast-table"></table>
-          </section>
-        </details>
+      <section class="story" id="story" aria-labelledby="headline">
+        <div class="stage" id="stage"></div>
+        <div class="steps" id="steps">
+          <article class="step step-hero">
+            <h1 id="headline">
+              <span class="sr-only" id="headline-text">Prévision de la consommation sur douze mois</span>
+              <span class="headline-figure" aria-hidden="true">
+                <span class="figure" id="headline-figure">&nbsp;</span>
+                <span class="unit">TWh</span>
+              </span>
+              <span class="headline-period" id="headline-period" aria-hidden="true"></span>
+            </h1>
+            <p class="lead" id="lead"></p>
+            <p class="scroll-cue" aria-hidden="true">Faire défiler</p>
+          </article>
+        </div>
       </section>
 
-      <section aria-labelledby="accuracy-title">
-        <h2 id="accuracy-title">Fiabilité</h2>
-        <p class="prose" id="accuracy-summary"></p>
-        <ul class="legend">
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <circle class="forecast" cx="12" cy="6" r="5" />
-            </svg>
-            Ce modèle
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <rect class="measured" x="7.5" y="1.5" width="9" height="9" />
-            </svg>
-            Même mois un an plus tôt, corrigé du climat
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <path class="third" d="M12 0.5 L17.5 11 L6.5 11 Z" />
-            </svg>
-            Même mois un an plus tôt
-          </li>
-        </ul>
-        <figure class="chart narrow">
-          <div
-            class="plot"
-            id="accuracy-plot"
-            role="img"
-            aria-label="Erreur moyenne des prévisions passées selon leur horizon, pour ce modèle et deux prévisions naïves"
-          ></div>
-        </figure>
-        <p class="prose" id="accuracy-coverage"></p>
-        <details>
-          <summary id="accuracy-values">Erreurs moyennes par horizon</summary>
-          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
-          <section class="table-scroll" tabindex="0" aria-labelledby="accuracy-values">
-            <table id="accuracy-table"></table>
-          </section>
-        </details>
-      </section>
-
-      <section id="peak" aria-labelledby="peak-title" hidden>
-        <h2 id="peak-title">Pointe</h2>
-        <p class="prose" id="peak-summary"></p>
-        <ul class="legend">
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <line class="measured" x1="0" y1="6" x2="24" y2="6" />
-              <circle class="measured" cx="12" cy="6" r="4" />
-            </svg>
-            Pointe mesurée
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <circle class="provisional" cx="12" cy="6" r="3.5" />
-            </svg>
-            Mois provisoire, en temps réel
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <line class="forecast" x1="0" y1="6" x2="24" y2="6" />
-            </svg>
-            Prévision médiane (P50)
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <rect class="band" x="0" y="0" width="24" height="12" rx="2" />
-            </svg>
-            Bande P10–P90
-          </li>
-        </ul>
-        <figure class="chart">
-          <div
-            class="plot"
-            id="peak-plot"
-            role="img"
-            aria-label="Pointe de chaque mois, mesurée puis prévue, avec la bande P10–P90"
-          ></div>
-          <figcaption>
-            Plus forte demi-heure de consommation de chaque mois, en GW, en France continentale hors
-            Corse.
-          </figcaption>
-        </figure>
-        <p class="prose" id="peak-accuracy"></p>
-        <details>
-          <summary id="peak-values">Valeurs du graphique, en GW</summary>
-          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
-          <section class="table-scroll" tabindex="0" aria-labelledby="peak-values">
-            <table id="peak-table"></table>
-          </section>
-        </details>
-      </section>
-
-      <section aria-labelledby="gaps-title">
-        <h2 id="gaps-title">Écarts</h2>
-        <p class="prose">
-          L'écart de chaque mois à sa référence se décompose avec le modèle : l'effet de la météo,
-          celui du calendrier (jour de la semaine, jours fériés, ponts) et les autres effets, qui
-          regroupent l'évolution de fond de la consommation et les écarts de quelques jours.
-        </p>
-        <fieldset class="choice" id="gaps-view">
-          <legend>Comparer chaque mois</legend>
-          <div class="options">
-            <label>
-              <input type="radio" name="gaps-view" value="against_year_before" checked />
-              <span>à l'année précédente</span>
-            </label>
-            <label>
-              <input type="radio" name="gaps-view" value="against_forecast" />
-              <span>à sa prévision</span>
-            </label>
+      <section class="chapter" id="forecast" data-theme="paper" aria-labelledby="forecast-title">
+        <div class="chapter-inner">
+          <header class="chapter-head">
+            <h2 id="forecast-title">Mois par mois</h2>
+            <p class="intro">
+              Les derniers mois mesurés, puis la prévision des douze suivants, publiée chaque lundi.
+            </p>
+          </header>
+          <div class="chapter-body">
+            <ul class="legend">
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <line class="measured" x1="0" y1="6" x2="24" y2="6" />
+                  <circle class="measured" cx="12" cy="6" r="4" />
+                </svg>
+                Consommation mesurée
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <circle class="provisional" cx="12" cy="6" r="3.5" />
+                </svg>
+                Mois provisoire, en temps réel
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <line class="forecast" x1="0" y1="6" x2="24" y2="6" />
+                </svg>
+                Prévision médiane (P50)
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <rect class="band" x="0" y="0" width="24" height="12" rx="2" />
+                </svg>
+                Bande P10–P90 : 8 chances sur 10 que le mois y tombe
+              </li>
+            </ul>
+            <figure class="chart">
+              <div
+                class="plot"
+                id="forecast-plot"
+                role="img"
+                aria-label="Consommation mensuelle mesurée puis prévue, avec la bande P10–P90"
+              ></div>
+              <figcaption id="forecast-caption"></figcaption>
+            </figure>
+            <p class="archive" id="archive" hidden>
+              <label for="publication">Prévision publiée le</label>
+              <select id="publication"></select>
+            </p>
+            <details>
+              <summary id="forecast-values">Valeurs du graphique, en TWh</summary>
+              <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+              <section class="table-scroll" tabindex="0" aria-labelledby="forecast-values">
+                <table id="forecast-table"></table>
+              </section>
+            </details>
           </div>
-        </fieldset>
-        <p class="prose" id="gaps-summary" aria-live="polite"></p>
-        <ul class="legend" id="gaps-legend">
-          <li data-term="climate">
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <rect class="measured" x="6" y="0" width="12" height="12" rx="2" />
-            </svg>
-            Météo
-          </li>
-          <li data-term="calendar">
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <rect class="third" x="6" y="0" width="12" height="12" rx="2" />
-            </svg>
-            Calendrier
-          </li>
-          <li data-term="others">
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <rect class="fourth" x="6" y="0" width="12" height="12" rx="2" />
-            </svg>
-            Autres effets
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <circle class="total" cx="12" cy="6" r="4.5" />
-            </svg>
-            Écart total
-          </li>
-          <li id="gaps-provisional">
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <circle class="total provisional" cx="12" cy="6" r="4" />
-            </svg>
-            Mois provisoire
-          </li>
-        </ul>
-        <figure class="chart">
-          <div
-            class="plot"
-            id="gaps-plot"
-            role="img"
-            aria-label="Écart de chaque mois au même mois un an plus tôt, décomposé en météo, calendrier et autres effets"
-          ></div>
-        </figure>
-        <details>
-          <summary id="gaps-values">Valeurs du graphique, en TWh et en °C</summary>
-          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
-          <section class="table-scroll" tabindex="0" aria-labelledby="gaps-values">
-            <table id="gaps-table"></table>
-          </section>
-        </details>
-      </section>
-
-      <section class="note" id="note" aria-labelledby="note-title">
-        <h2 id="note-title">Note du mois</h2>
-        <p class="note-month" id="note-month"></p>
-        <p class="note-dates" id="note-dates"></p>
-        <div class="prose">
-          <p id="note-summary"></p>
-          <div id="note-reading"></div>
         </div>
-        <p class="note-credit" id="note-credit"></p>
       </section>
 
-      <section aria-labelledby="temperature-title">
-        <h2 id="temperature-title">Température</h2>
-        <p class="prose" id="temperature-summary"></p>
-        <figure class="chart narrow">
-          <div
-            class="plot"
-            id="temperature-plot"
-            role="img"
-            aria-label="Hausse de la consommation pour un degré de moins, selon la température"
-          ></div>
-        </figure>
-        <details>
-          <summary id="temperature-values">Valeurs du graphique</summary>
-          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
-          <section class="table-scroll" tabindex="0" aria-labelledby="temperature-values">
-            <table id="temperature-table"></table>
-          </section>
-        </details>
-      </section>
-
-      <section aria-labelledby="history-title">
-        <h2 id="history-title">Historique</h2>
-        <p class="prose" id="history-summary"></p>
-        <ul class="legend">
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <line class="measured" x1="0" y1="6" x2="24" y2="6" />
-              <circle class="measured" cx="12" cy="6" r="4" />
-            </svg>
-            Mesurée
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <line class="third" x1="0" y1="6" x2="24" y2="6" />
-              <rect class="third" x="8.5" y="2.5" width="7" height="7" />
-            </svg>
-            Corrigée de la météo
-          </li>
-        </ul>
-        <figure class="chart narrow">
-          <div
-            class="plot"
-            id="history-plot"
-            role="img"
-            aria-label="Énergie consommée chaque année, mesurée et corrigée de la météo"
-          ></div>
-        </figure>
-        <details>
-          <summary id="history-values">Valeurs du graphique, en TWh</summary>
-          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
-          <section class="table-scroll" tabindex="0" aria-labelledby="history-values">
-            <table id="history-table"></table>
-          </section>
-        </details>
-      </section>
-
-      <section aria-labelledby="scenarios-title">
-        <h2 id="scenarios-title">Scénarios</h2>
-        <p class="prose">
-          Les scénarios prolongent la consommation jusqu'en 2031 selon trois trajectoires du Bilan
-          prévisionnel 2025 de RTE. Ils appliquent au niveau actuel de la consommation, à
-          température de référence, la croissance annuelle moyenne de chaque trajectoire entre les
-          années dont RTE donne le niveau (2024, 2030, 2035), et non ces niveaux, qui portent sur un
-          autre périmètre. La stagnation, un test de sensibilité de RTE, sert de référence avec un
-          hiver normal.
-        </p>
-        <p class="prose" id="scenarios-winters"></p>
-        <div class="controls">
-          <fieldset class="choice" id="scenario-trajectory">
-            <legend>Trajectoire</legend>
-            <div class="options"></div>
-          </fieldset>
-          <fieldset class="choice" id="scenario-winter">
-            <legend>Hiver</legend>
-            <div class="options"></div>
-          </fieldset>
+      <section class="chapter" id="accuracy" data-theme="paper" aria-labelledby="accuracy-title">
+        <div class="chapter-inner">
+          <header class="chapter-head">
+            <h2 id="accuracy-title">Fiabilité</h2>
+            <p class="intro" id="accuracy-summary"></p>
+          </header>
+          <div class="chapter-body">
+            <ul class="legend">
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <circle class="forecast" cx="12" cy="6" r="5" />
+                </svg>
+                Ce modèle
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <rect class="measured" x="7.5" y="1.5" width="9" height="9" />
+                </svg>
+                Même mois un an plus tôt, corrigé du climat
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <path class="third" d="M12 0.5 L17.5 11 L6.5 11 Z" />
+                </svg>
+                Même mois un an plus tôt
+              </li>
+            </ul>
+            <figure class="chart narrow">
+              <div
+                class="plot"
+                id="accuracy-plot"
+                role="img"
+                aria-label="Erreur moyenne des prévisions passées selon leur horizon, pour ce modèle et deux prévisions naïves"
+              ></div>
+            </figure>
+            <p class="prose" id="accuracy-coverage"></p>
+            <details>
+              <summary id="accuracy-values">Erreurs moyennes par horizon</summary>
+              <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+              <section class="table-scroll" tabindex="0" aria-labelledby="accuracy-values">
+                <table id="accuracy-table"></table>
+              </section>
+            </details>
+          </div>
         </div>
-        <p class="prose" id="scenarios-result" aria-live="polite"></p>
-        <ul class="legend">
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <line class="chosen" x1="0" y1="6" x2="24" y2="6" />
-              <circle class="chosen" cx="12" cy="6" r="4" />
-            </svg>
-            Trajectoire choisie
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <line class="other" x1="0" y1="6" x2="24" y2="6" />
-            </svg>
-            Autres trajectoires
-          </li>
-          <li>
-            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
-              <rect class="band" x="0" y="0" width="24" height="12" rx="2" />
-            </svg>
-            D'un hiver doux à un hiver froid
-          </li>
-        </ul>
-        <figure class="chart narrow">
-          <div
-            class="plot"
-            id="scenarios-plot"
-            role="img"
-            aria-label="Énergie de chaque année jusqu'en 2031 selon trois trajectoires de consommation"
-          ></div>
-        </figure>
-        <p class="prose">
-          Ce sont des ordres de grandeur, pas des prévisions. Les hivers observés depuis 2012 sont
-          peu nombreux pour estimer un hiver qui revient une année sur dix. Les trajectoires de RTE
-          ne croissent pas au même rythme chaque année : la lente monte surtout à partir de 2027,
-          et une croissance moyenne depuis 2024 sous-estime alors celle des années 2027 à 2031.
-          Enfin, les scénarios partent du niveau d'aujourd'hui, alors que les niveaux du Bilan
-          prévisionnel pour 2030 supposent une croissance depuis 2024.
-        </p>
-        <details>
-          <summary id="scenarios-values">Énergie de chaque scénario, en TWh</summary>
-          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
-          <section class="table-scroll" tabindex="0" aria-labelledby="scenarios-values">
-            <table id="scenarios-table"></table>
-          </section>
-        </details>
       </section>
 
-      <section class="prose" aria-labelledby="method-title">
-        <h2 id="method-title">Méthode</h2>
-        <p>
-          Un modèle journalier relie la consommation à la température nationale lissée, au
-          calendrier (jour de la semaine, jours fériés, ponts, fin d'année, mois d'août) et à deux
-          états qui évoluent lentement, le niveau de consommation et la forme de l'année, estimés
-          par un filtre de Kalman sur les trois dernières années.
-        </p>
-        <p>
-          Chaque trajectoire de prévision rejoue la météo d'une année passée complète, depuis 2012,
-          autour des températures de référence. La prévision médiane est la médiane de ces
-          trajectoires. La bande P10–P90 applique à la part de cette médiane encore à venir les
-          erreurs relatives des prévisions passées au même horizon, puis ajoute l'énergie déjà
-          mesurée du mois. Elle couvre la météo, les erreurs du modèle et les changements de
-          structure.
-        </p>
-        <p id="realtime">
-          Les données consolidées s'arrêtent quelques mois avant la publication. Les jours
-          suivants viennent du temps réel, relevé de l'écart moyen observé entre temps réel et
-          consolidé, <span id="revision"></span> : les mois concernés restent provisoires.
-        </p>
-        <p>
-          Le code, la méthode détaillée (en anglais) et toutes les publications passées sont sur
-          <a href="https://github.com/zkyasin/france-load-forecast">GitHub</a>.
-        </p>
+      <section class="chapter" id="peak" data-theme="paper" aria-labelledby="peak-title" hidden>
+        <div class="chapter-inner">
+          <header class="chapter-head">
+            <h2 id="peak-title">Pointe</h2>
+            <p class="intro" id="peak-summary"></p>
+          </header>
+          <div class="chapter-body">
+            <ul class="legend">
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <line class="measured" x1="0" y1="6" x2="24" y2="6" />
+                  <circle class="measured" cx="12" cy="6" r="4" />
+                </svg>
+                Pointe mesurée
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <circle class="provisional" cx="12" cy="6" r="3.5" />
+                </svg>
+                Mois provisoire, en temps réel
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <line class="forecast" x1="0" y1="6" x2="24" y2="6" />
+                </svg>
+                Prévision médiane (P50)
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <rect class="band" x="0" y="0" width="24" height="12" rx="2" />
+                </svg>
+                Bande P10–P90
+              </li>
+            </ul>
+            <figure class="chart">
+              <div
+                class="plot"
+                id="peak-plot"
+                role="img"
+                aria-label="Pointe de chaque mois, mesurée puis prévue, avec la bande P10–P90"
+              ></div>
+              <figcaption>
+                Plus forte demi-heure de consommation de chaque mois, en GW, en France continentale
+                hors Corse.
+              </figcaption>
+            </figure>
+            <p class="prose" id="peak-accuracy"></p>
+            <details>
+              <summary id="peak-values">Valeurs du graphique, en GW</summary>
+              <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+              <section class="table-scroll" tabindex="0" aria-labelledby="peak-values">
+                <table id="peak-table"></table>
+              </section>
+            </details>
+          </div>
+        </div>
       </section>
 
-      <section class="prose" aria-labelledby="sources-title">
-        <h2 id="sources-title">Sources</h2>
-        <p>
-          Jeux de données de RTE publiés sur
-          <a href="https://odre.opendatasoft.com">ODRÉ</a> sous Licence Ouverte 2.0 :
-        </p>
-        <ul class="sources">
-          <li>
-            <a
-              href="https://odre.opendatasoft.com/explore/dataset/eco2mix-national-cons-def/information/"
-              >Données éCO2mix nationales consolidées et définitives</a
-            >, la consommation toutes les demi-heures depuis 2012 ;
-          </li>
-          <li>
-            <a
-              href="https://odre.opendatasoft.com/explore/dataset/eco2mix-national-tr/information/"
-              >Données éCO2mix nationales temps réel</a
-            >, après le dernier jour consolidé ;
-          </li>
-          <li>
-            <a
-              href="https://odre.opendatasoft.com/explore/dataset/consommation-quotidienne-brute/information/"
-              >Consommation quotidienne brute</a
-            >, qui mesure l'écart entre temps réel et consolidé ;
-          </li>
-          <li>
-            <a
-              href="https://odre.opendatasoft.com/explore/dataset/pic-journalier-consommation-brute/information/"
-              >Pic journalier de la consommation brute d'électricité</a
-            >, pour la température moyenne nationale et la température de référence ;
-          </li>
-          <li>
-            <a
-              href="https://odre.opendatasoft.com/explore/dataset/conso_brute_corrigee_client_direct/information/"
-              >Consommation mensuelle brute corrigée et des clients RPT</a
-            >, Corse et pertes comprises, pour vérifier la correction du climat.
-          </li>
-        </ul>
-        <p>
-          Les trajectoires des scénarios viennent du
-          <a
-            href="https://assets.rte-france.com/prod/public/2025-12/2025-12-23-bilan-previsionnel-2025-consommation.pdf"
-            >Bilan prévisionnel 2025-2035 de RTE, chapitre « La consommation d'électricité »</a
-          >, publié le 23 décembre 2025, p. 10, 11 et 35.
-        </p>
+      <section class="chapter" id="gaps" data-theme="sage" aria-labelledby="gaps-title">
+        <div class="chapter-inner">
+          <header class="chapter-head">
+            <h2 id="gaps-title">Écarts</h2>
+            <p class="intro">
+              L'écart de chaque mois à sa référence se décompose avec le modèle : l'effet de la météo,
+              celui du calendrier (jour de la semaine, jours fériés, ponts) et les autres effets, qui
+              regroupent l'évolution de fond de la consommation et les écarts de quelques jours.
+            </p>
+          </header>
+          <div class="chapter-body">
+            <fieldset class="choice" id="gaps-view">
+              <legend>Comparer chaque mois</legend>
+              <div class="options">
+                <label>
+                  <input type="radio" name="gaps-view" value="against_year_before" checked />
+                  <span>à l'année précédente</span>
+                </label>
+                <label>
+                  <input type="radio" name="gaps-view" value="against_forecast" />
+                  <span>à sa prévision</span>
+                </label>
+              </div>
+            </fieldset>
+            <p class="prose" id="gaps-summary" aria-live="polite"></p>
+            <ul class="legend" id="gaps-legend">
+              <li data-term="climate">
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <rect class="measured" x="6" y="0" width="12" height="12" rx="2" />
+                </svg>
+                Météo
+              </li>
+              <li data-term="calendar">
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <rect class="third" x="6" y="0" width="12" height="12" rx="2" />
+                </svg>
+                Calendrier
+              </li>
+              <li data-term="others">
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <rect class="fourth" x="6" y="0" width="12" height="12" rx="2" />
+                </svg>
+                Autres effets
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <circle class="total" cx="12" cy="6" r="4.5" />
+                </svg>
+                Écart total
+              </li>
+              <li id="gaps-provisional">
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <circle class="total provisional" cx="12" cy="6" r="4" />
+                </svg>
+                Mois provisoire
+              </li>
+            </ul>
+            <figure class="chart">
+              <div
+                class="plot"
+                id="gaps-plot"
+                role="img"
+                aria-label="Écart de chaque mois au même mois un an plus tôt, décomposé en météo, calendrier et autres effets"
+              ></div>
+            </figure>
+            <details>
+              <summary id="gaps-values">Valeurs du graphique, en TWh et en °C</summary>
+              <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+              <section class="table-scroll" tabindex="0" aria-labelledby="gaps-values">
+                <table id="gaps-table"></table>
+              </section>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter" id="note" data-theme="sage" aria-labelledby="note-title">
+        <div class="chapter-inner">
+          <header class="chapter-head">
+            <h2 id="note-title">Note du mois</h2>
+          </header>
+          <div class="chapter-body">
+            <p class="note-month" id="note-month"></p>
+            <p class="note-dates" id="note-dates"></p>
+            <div class="prose">
+              <p id="note-summary"></p>
+              <div id="note-reading"></div>
+            </div>
+            <p class="note-credit" id="note-credit"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter" id="temperature" data-theme="ice" aria-labelledby="temperature-title">
+        <div class="chapter-inner">
+          <header class="chapter-head">
+            <h2 id="temperature-title">Température</h2>
+            <p class="intro" id="temperature-summary"></p>
+          </header>
+          <div class="chapter-body">
+            <figure class="chart narrow">
+              <div
+                class="plot"
+                id="temperature-plot"
+                role="img"
+                aria-label="Hausse de la consommation pour un degré de moins, selon la température"
+              ></div>
+            </figure>
+            <details>
+              <summary id="temperature-values">Valeurs du graphique</summary>
+              <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+              <section class="table-scroll" tabindex="0" aria-labelledby="temperature-values">
+                <table id="temperature-table"></table>
+              </section>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter" id="history" data-theme="stone" aria-labelledby="history-title">
+        <div class="chapter-inner">
+          <header class="chapter-head">
+            <h2 id="history-title">Historique</h2>
+            <p class="intro" id="history-summary"></p>
+          </header>
+          <div class="chapter-body">
+            <ul class="legend">
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <line class="measured" x1="0" y1="6" x2="24" y2="6" />
+                  <circle class="measured" cx="12" cy="6" r="4" />
+                </svg>
+                Mesurée
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <line class="third" x1="0" y1="6" x2="24" y2="6" />
+                  <rect class="third" x="8.5" y="2.5" width="7" height="7" />
+                </svg>
+                Corrigée de la météo
+              </li>
+            </ul>
+            <figure class="chart narrow">
+              <div
+                class="plot"
+                id="history-plot"
+                role="img"
+                aria-label="Énergie consommée chaque année, mesurée et corrigée de la météo"
+              ></div>
+            </figure>
+            <details>
+              <summary id="history-values">Valeurs du graphique, en TWh</summary>
+              <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+              <section class="table-scroll" tabindex="0" aria-labelledby="history-values">
+                <table id="history-table"></table>
+              </section>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter" id="scenarios" data-theme="night" aria-labelledby="scenarios-title">
+        <div class="chapter-inner">
+          <header class="chapter-head">
+            <h2 id="scenarios-title">Scénarios</h2>
+            <p class="intro">
+              Les scénarios prolongent la consommation jusqu'en 2031 selon trois trajectoires du Bilan
+              prévisionnel 2025 de RTE. Ils appliquent au niveau actuel de la consommation, à
+              température de référence, la croissance annuelle moyenne de chaque trajectoire entre les
+              années dont RTE donne le niveau (2024, 2030, 2035), et non ces niveaux, qui portent sur un
+              autre périmètre. La stagnation, un test de sensibilité de RTE, sert de référence avec un
+              hiver normal.
+            </p>
+          </header>
+          <div class="chapter-body">
+            <p class="prose" id="scenarios-winters"></p>
+            <div class="controls">
+              <fieldset class="choice" id="scenario-trajectory">
+                <legend>Trajectoire</legend>
+                <div class="options"></div>
+              </fieldset>
+              <fieldset class="choice" id="scenario-winter">
+                <legend>Hiver</legend>
+                <div class="options"></div>
+              </fieldset>
+            </div>
+            <p class="prose" id="scenarios-result" aria-live="polite"></p>
+            <ul class="legend">
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <line class="chosen" x1="0" y1="6" x2="24" y2="6" />
+                  <circle class="chosen" cx="12" cy="6" r="4" />
+                </svg>
+                Trajectoire choisie
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <line class="other" x1="0" y1="6" x2="24" y2="6" />
+                </svg>
+                Autres trajectoires
+              </li>
+              <li>
+                <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+                  <rect class="band" x="0" y="0" width="24" height="12" rx="2" />
+                </svg>
+                D'un hiver doux à un hiver froid
+              </li>
+            </ul>
+            <figure class="chart narrow">
+              <div
+                class="plot"
+                id="scenarios-plot"
+                role="img"
+                aria-label="Énergie de chaque année jusqu'en 2031 selon trois trajectoires de consommation"
+              ></div>
+            </figure>
+            <p class="prose">
+              Ce sont des ordres de grandeur, pas des prévisions. Les hivers observés depuis 2012 sont
+              peu nombreux pour estimer un hiver qui revient une année sur dix. Les trajectoires de RTE
+              ne croissent pas au même rythme chaque année : la lente monte surtout à partir de 2027,
+              et une croissance moyenne depuis 2024 sous-estime alors celle des années 2027 à 2031.
+              Enfin, les scénarios partent du niveau d'aujourd'hui, alors que les niveaux du Bilan
+              prévisionnel pour 2030 supposent une croissance depuis 2024.
+            </p>
+            <details>
+              <summary id="scenarios-values">Énergie de chaque scénario, en TWh</summary>
+              <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+              <section class="table-scroll" tabindex="0" aria-labelledby="scenarios-values">
+                <table id="scenarios-table"></table>
+              </section>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter chapter-text" id="method" data-theme="paper" aria-labelledby="method-title">
+        <div class="chapter-inner">
+          <header class="chapter-head">
+            <h2 id="method-title">Méthode</h2>
+          </header>
+          <div class="chapter-body prose">
+            <p>
+              Un modèle journalier relie la consommation à la température nationale lissée, au
+              calendrier (jour de la semaine, jours fériés, ponts, fin d'année, mois d'août) et à deux
+              états qui évoluent lentement, le niveau de consommation et la forme de l'année, estimés
+              par un filtre de Kalman sur les trois dernières années.
+            </p>
+            <p>
+              Chaque trajectoire de prévision rejoue la météo d'une année passée complète, depuis 2012,
+              autour des températures de référence. La prévision médiane est la médiane de ces
+              trajectoires. La bande P10–P90 applique à la part de cette médiane encore à venir les
+              erreurs relatives des prévisions passées au même horizon, puis ajoute l'énergie déjà
+              mesurée du mois. Elle couvre la météo, les erreurs du modèle et les changements de
+              structure.
+            </p>
+            <p id="realtime">
+              Les données consolidées s'arrêtent quelques mois avant la publication. Les jours
+              suivants viennent du temps réel, relevé de l'écart moyen observé entre temps réel et
+              consolidé, <span id="revision"></span> : les mois concernés restent provisoires.
+            </p>
+            <p>
+              Le code, la méthode détaillée (en anglais) et toutes les publications passées sont sur
+              <a href="https://github.com/zkyasin/france-load-forecast">GitHub</a>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter chapter-text" id="sources" data-theme="paper" aria-labelledby="sources-title">
+        <div class="chapter-inner">
+          <header class="chapter-head">
+            <h2 id="sources-title">Sources</h2>
+          </header>
+          <div class="chapter-body prose">
+            <p>
+              Jeux de données de RTE publiés sur
+              <a href="https://odre.opendatasoft.com">ODRÉ</a> sous Licence Ouverte 2.0 :
+            </p>
+            <ul class="sources">
+              <li>
+                <a
+                  href="https://odre.opendatasoft.com/explore/dataset/eco2mix-national-cons-def/information/"
+                  >Données éCO2mix nationales consolidées et définitives</a
+                >, la consommation toutes les demi-heures depuis 2012 ;
+              </li>
+              <li>
+                <a
+                  href="https://odre.opendatasoft.com/explore/dataset/eco2mix-national-tr/information/"
+                  >Données éCO2mix nationales temps réel</a
+                >, après le dernier jour consolidé ;
+              </li>
+              <li>
+                <a
+                  href="https://odre.opendatasoft.com/explore/dataset/consommation-quotidienne-brute/information/"
+                  >Consommation quotidienne brute</a
+                >, qui mesure l'écart entre temps réel et consolidé ;
+              </li>
+              <li>
+                <a
+                  href="https://odre.opendatasoft.com/explore/dataset/pic-journalier-consommation-brute/information/"
+                  >Pic journalier de la consommation brute d'électricité</a
+                >, pour la température moyenne nationale et la température de référence ;
+              </li>
+              <li>
+                <a
+                  href="https://odre.opendatasoft.com/explore/dataset/conso_brute_corrigee_client_direct/information/"
+                  >Consommation mensuelle brute corrigée et des clients RPT</a
+                >, Corse et pertes comprises, pour vérifier la correction du climat.
+              </li>
+            </ul>
+            <p>
+              Les trajectoires des scénarios viennent du
+              <a
+                href="https://assets.rte-france.com/prod/public/2025-12/2025-12-23-bilan-previsionnel-2025-consommation.pdf"
+                >Bilan prévisionnel 2025-2035 de RTE, chapitre « La consommation d'électricité »</a
+              >, publié le 23 décembre 2025, p. 10, 11 et 35.
+            </p>
+          </div>
+        </div>
       </section>
     </main>
 
-    <footer class="colophon">
+    <footer class="colophon" data-theme="paper">
       <div class="wrap">
         Code sous licence MIT. Données RTE sous Licence Ouverte 2.0. Modèle
         <span id="model-id"></span>.

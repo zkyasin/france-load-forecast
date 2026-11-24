@@ -1,4 +1,5 @@
-import "@fontsource-variable/archivo/wdth.css";
+import "@fontsource-variable/big-shoulders-display";
+import "@fontsource-variable/ibm-plex-sans";
 import "./style.css";
 import * as accuracy from "./accuracy";
 import * as annual from "./annual";

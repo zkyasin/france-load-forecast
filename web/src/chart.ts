@@ -11,9 +11,9 @@ export interface Colors {
   fourth: string;
 }
 
-/** The colors of the current color scheme, set in style.css. */
-export function colors(): Colors {
-  const style = getComputedStyle(document.documentElement);
+/** The colors of the chapter around `element`, set in style.css. */
+export function colors(element: Element = document.documentElement): Colors {
+  const style = getComputedStyle(element);
   const read = (name: string) => style.getPropertyValue(`--${name}`).trim();
   return {
     paper: read("paper"),
@@ -54,20 +54,27 @@ export const tipStyle = (colors: Colors, width: number) => ({
   lineWidth: width < 480 ? 13 : 20,
 });
 
+/** Solid lines get a length of 1, so that the scroll can draw them: see story/scope.ts. */
+function measureLines(box: HTMLElement): void {
+  for (const path of box.querySelectorAll<SVGPathElement>('[aria-label="line"] path')) {
+    if (!path.closest("[stroke-dasharray]")) path.setAttribute("pathLength", "1");
+  }
+}
+
 /**
- * Draws `draw` in `box` at the width of the box, and again whenever that width or the color scheme
- * changes. Returns a function that draws it again, after its data changed.
+ * Draws `draw` in `box` at the width of the box, in the colors of its chapter, and again whenever
+ * that width changes. Returns a function that draws it again, after its data changed.
  */
 export function drawIn(box: HTMLElement, draw: (width: number, colors: Colors) => Element) {
   let width = 0;
   const redraw = () => {
     width = box.clientWidth;
-    box.replaceChildren(draw(width, colors()));
+    box.replaceChildren(draw(width, colors(box)));
+    measureLines(box);
   };
   new ResizeObserver(() => {
     if (box.clientWidth !== width) redraw();
   }).observe(box);
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
   redraw();
   return redraw;
 }
