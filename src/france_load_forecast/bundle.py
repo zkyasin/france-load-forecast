@@ -4,20 +4,24 @@ Beyond types, the checks catch values that no correct run produces: a band out o
 energy out of plausible bounds, terms that do not add up to their gap, a missing scenario.
 """
 
+from collections.abc import Iterable
 from datetime import date
 from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-# Bounds of national consumption in TWh, far beyond any month or year since 2012.
+# Bounds of national consumption in TWh, far beyond any month or year since 2012, and of the
+# load in GW, as the data checks of the warehouse bound it.
 MONTHLY_TWH = (15.0, 80.0)
 ANNUAL_TWH = (300.0, 700.0)
+LOAD_GW = (20.0, 110.0)
 # The bundle rounds to 3 decimals, so sums may differ by a little.
 ROUNDING = 0.01
 
 Month = Annotated[str, Field(pattern=r"^\d{4}-\d{2}$")]
 MonthlyEnergy = Annotated[float, Field(ge=MONTHLY_TWH[0], le=MONTHLY_TWH[1])]
 AnnualEnergy = Annotated[float, Field(ge=ANNUAL_TWH[0], le=ANNUAL_TWH[1])]
+Load = Annotated[float, Field(ge=LOAD_GW[0], le=LOAD_GW[1])]
 Percent = Annotated[float, Field(ge=0, le=100)]
 Celsius = Annotated[float, Field(ge=-20, le=40)]
 
@@ -48,20 +52,28 @@ class Meta(File):
     revision: Revision | None
 
 
-class ForecastMonth(Strict):
+class BandMonth(Strict):
+    """A month of a forecast: its band, and what is measured of it so far."""
+
     month: Month
-    p10: MonthlyEnergy
-    p50: MonthlyEnergy
-    p90: MonthlyEnergy
+    p10: float
+    p50: float
+    p90: float
     measured: float = Field(ge=0)
     horizon: int = Field(ge=1)
     provisional: bool
 
     @model_validator(mode="after")
-    def band_in_order(self) -> "ForecastMonth":
+    def band_in_order(self) -> "BandMonth":
         if not self.measured - ROUNDING <= self.p10 <= self.p50 <= self.p90:
             raise ValueError(f"{self.month}: measured, P10, P50 and P90 are out of order")
         return self
+
+
+class ForecastMonth(BandMonth):
+    p10: MonthlyEnergy
+    p50: MonthlyEnergy
+    p90: MonthlyEnergy
 
 
 class Forecast(File):
@@ -134,7 +146,9 @@ class History(File):
     years: list[HistoryYear] = Field(min_length=1)
 
 
-class Accuracy(File):
+class Scores(Strict):
+    """Backtest errors by horizon, and the share of actual values inside the band."""
+
     first_origin: Month
     last_origin: Month
     mape: dict[str, Percent]
@@ -144,6 +158,34 @@ class Accuracy(File):
     coverage_first_origin: Month
     coverage: dict[str, Percent]
     coverage_since_2023: dict[str, Percent]
+
+
+class Accuracy(File, Scores):
+    pass
+
+
+class PeakMonth(BandMonth):
+    p10: Load
+    p50: Load
+    p90: Load
+
+
+class MeasuredPeak(Strict):
+    """The highest half-hour of a whole month measured, and the day it fell on."""
+
+    month: Month
+    peak: Load
+    day: date
+    provisional: bool
+
+
+class Peak(File):
+    current_month: Month
+    months: list[PeakMonth] = Field(min_length=12)
+    history: list[MeasuredPeak] = Field(min_length=12)
+    # Rise of the daily peak for one degree less, from December to February.
+    winter_gw_per_c: float = Field(gt=0, le=5)
+    accuracy: Scores
 
 
 class Gradient(Strict):
@@ -208,12 +250,14 @@ FILES: dict[str, type[File]] = {
     "accuracy": Accuracy,
     "model": ModelFile,
     "scenarios": Scenarios,
+    "peak": Peak,
 }
 
 
-def check(files: dict[str, dict[str, Any]]) -> list[str]:
-    """One message per file missing from `files`, unknown, or breaking its schema."""
-    problems = [f"{name}: missing" for name in FILES if name not in files]
+def check(files: dict[str, dict[str, Any]], required: Iterable[str] = tuple(FILES)) -> list[str]:
+    """One message per file of `required` missing from `files`, per file unknown, and per file
+    breaking its schema."""
+    problems = [f"{name}: missing" for name in required if name not in files]
     for name, content in files.items():
         if name not in FILES:
             problems.append(f"{name}: unknown file")

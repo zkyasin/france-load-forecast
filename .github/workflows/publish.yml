@@ -29,6 +29,7 @@ jobs:
       - run: uv sync --locked
       - run: uv run flf ingest
       - run: uv run flf backtest
+      - run: uv run flf backtest --config config/peak.toml
       - run: uv run flf publish --out bundle
       - run: uv run flf snapshot bundle/realtime.parquet
       - run: scripts/archive.sh bundle

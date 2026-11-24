@@ -16,6 +16,8 @@ FactTopic = Literal["method", "sources", "perimeter", "revision", "temperature"]
 # Fields of a gap that are not terms.
 TOTALS = ("actual", "reference", "gap")
 DATES = ("published", "consolidated_until", "temperature_until", "measured_until")
+# Files of the bundle that the tools read.
+FILES = ("meta", "forecast", "gaps", "history", "accuracy", "model", "scenarios")
 # Percent of the time the P10-P90 band should hold the actual energy, as set by
 # conformal.QUANTILES. The question API runs without the forecasting stack, hence the copy.
 BAND_LEVEL_PCT = 80

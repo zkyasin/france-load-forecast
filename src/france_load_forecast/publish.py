@@ -5,6 +5,7 @@ errors and coverage in %.
 """
 
 import json
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -57,23 +58,27 @@ def meta_file(
     }
 
 
+def _band_months(table: pd.DataFrame, provisional: pd.Index) -> list[dict[str, Any]]:
+    """Each month of a forecast table. Months measured from real-time data are provisional."""
+    return [
+        {
+            "month": _month(month),
+            **_rounded(row.drop("horizon")),
+            "horizon": int(row["horizon"]),
+            "provisional": month in provisional,
+        }
+        for month, row in table.iterrows()
+    ]
+
+
 def forecast_file(
     table: pd.DataFrame, current: pd.Timestamp, provisional: pd.Index
 ) -> dict[str, Any]:
-    """Monthly forecast with its band, and the total P50 of the 12 months from the current one.
-    Months measured from real-time data are provisional."""
+    """Monthly forecast with its band, and the total P50 of the 12 months from the current one."""
     return {
         "current_month": _month(current),
         "total_p50": _round(table.loc[table.index >= current, "p50"].sum()),
-        "months": [
-            {
-                "month": _month(month),
-                **_rounded(row.drop("horizon")),
-                "horizon": int(row["horizon"]),
-                "provisional": month in provisional,
-            }
-            for month, row in table.iterrows()
-        ],
+        "months": _band_months(table, provisional),
     }
 
 
@@ -148,20 +153,28 @@ def accuracy_file(results: pd.DataFrame) -> dict[str, Any]:
     }
 
 
+def winter_gradient(fitted: model.DailyModel, history: pd.DataFrame) -> float:
+    """Mean rise of the modelled load for one degree less, from December to February of the
+    estimation window, in GW/°C."""
+    window = history.loc[fitted.level.index]
+    smooth = window["temperature_smooth"]
+    winter = smooth[pd.DatetimeIndex(window.index).month.isin([12, 1, 2])]
+    return float(model.thermosensitivity(fitted, winter).mean())
+
+
 def model_file(fitted: model.DailyModel, history: pd.DataFrame) -> dict[str, Any]:
     """Estimation window and response to temperature of the forecasting model, at the
     temperatures of GRADIENT_GRID that lie between the coldest and the warmest smoothed day of the
     window: beyond them, the spline has no data."""
     window = history.loc[fitted.level.index]
     smooth = window["temperature_smooth"]
-    winter = smooth[pd.DatetimeIndex(window.index).month.isin([12, 1, 2])]
     temperatures = pd.Series([t for t in GRADIENT_GRID if smooth.min() <= t <= smooth.max()])
     gradients = model.thermosensitivity(fitted, temperatures)
     return {
         "fitted_from": _day(window.index[0]),
         "fitted_until": _day(window.index[-1]),
         "thermosensitivity": {
-            "winter": _round(model.thermosensitivity(fitted, winter).mean()),
+            "winter": _round(winter_gradient(fitted, history)),
             "by_temperature": [
                 {"temperature": temperature, "gw_per_c": _round(gradient)}
                 for temperature, gradient in zip(temperatures, gradients, strict=True)
@@ -209,6 +222,45 @@ def scenarios_file(
     }
 
 
+@dataclass(frozen=True)
+class PeakInputs:
+    """What the peak file is made from: the daily frame smoothed as the peak model wants, the spec
+    of that model, its backtest results and the daily peaks measured after the frame."""
+
+    history: pd.DataFrame
+    spec: model.ModelSpec
+    past_forecasts: pd.DataFrame
+    observed: pd.Series
+
+
+def peak_file(peak: PeakInputs, current: pd.Timestamp, provisional: pd.Index) -> dict[str, Any]:
+    """Monthly peak forecast with its band, the peak of each whole month measured and the day it
+    fell on, the winter gradient of the peak model and its backtest scores."""
+    fitted = model.fit_recent(peak.history, peak.spec)
+    table = outlook.table(fitted, peak.history, peak.observed, peak.past_forecasts)
+    daily = pd.concat([peak.history["peak_gw"], peak.observed])
+    by_month = daily.groupby(pd.DatetimeIndex(daily.index).to_period("M").to_timestamp())
+    peaks, days = by_month.max(), by_month.idxmax()
+    # The last month only counts once measured in full.
+    if not pd.Timestamp(daily.index[-1]).is_month_end:
+        peaks, days = peaks.iloc[:-1], days.iloc[:-1]
+    return {
+        "current_month": _month(current),
+        "months": _band_months(table, provisional),
+        "history": [
+            {
+                "month": _month(month),
+                "peak": _round(value),
+                "day": _day(days[month]),
+                "provisional": month in provisional,
+            }
+            for month, value in peaks.items()
+        ],
+        "winter_gw_per_c": _round(winter_gradient(fitted, peak.history)),
+        "accuracy": accuracy_file(peak.past_forecasts),
+    }
+
+
 def build(
     history: pd.DataFrame,
     observed: pd.Series,
@@ -218,12 +270,14 @@ def build(
     revision: tuple[float, int],
     scenario_spec: scenarios.ScenarioSpec,
     published: date,
+    peak: PeakInputs,
 ) -> dict[str, dict[str, Any]]:
     """Every file of the bundle, by name.
 
     `history` is the daily frame, `observed` the load measured after it, `past_forecasts` the
-    backtest results, `rte` RTE's monthly series, `revision` the revision of real-time load and
-    `scenario_spec` the trajectories and winters of the scenarios.
+    backtest results, `rte` RTE's monthly series, `revision` the revision of real-time load,
+    `scenario_spec` the trajectories and winters of the scenarios and `peak` what the peak file
+    is made from.
     """
     latest = model.fit_recent(history, spec)
     current = outlook.current_month(history, observed)
@@ -253,7 +307,11 @@ def build(
         "scenarios": scenarios_file(*scenarios.grid(latest, history, scenario_spec), scenario_spec),
     }
     header = {"published": published.isoformat(), "model_id": spec.model_id}
-    return {name: header | content for name, content in files.items()}
+    bundle = {name: header | content for name, content in files.items()}
+    bundle["peak"] = (
+        header | {"model_id": peak.spec.model_id} | peak_file(peak, current, provisional)
+    )
+    return bundle
 
 
 def write(files: dict[str, dict[str, Any]], out: Path) -> None:
