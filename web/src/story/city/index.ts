@@ -42,7 +42,7 @@ export async function mount(ctx: Context): Promise<() => void> {
     const { createColourCity } = await import("./scene");
     const scene = createColourCity(canvas, { lite: ctx.lite, layer, ...data });
     s.add(() => scene.destroy());
-    drive(s, ctx, scene, cards.length, 3.7, corner);
+    drive(s, ctx, scene, cards.length, 0, corner);
   } catch (error) {
     console.error(error);
     ctx.story.classList.add("no-model");

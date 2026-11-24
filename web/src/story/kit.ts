@@ -100,7 +100,8 @@ export function colourKey(
 
 /**
  * Drives a scene with the scroll, in steps: 0 at the headline, `cards` at the end. With reduced
- * motion the scene shows one still frame at `still`.
+ * motion the scene cuts, without moving, to the still of each card as it comes in, and shows the
+ * still at `still` until the first one.
  */
 export function drive(
   s: Scope,
@@ -112,8 +113,22 @@ export function drive(
 ) {
   if (ctx.reducedMotion) {
     scene.setRunning(false);
-    scene.setProgress(still);
-    onTime?.(still);
+    const show = (t: number) => {
+      scene.setProgress(t);
+      onTime?.(t);
+    };
+    show(still);
+    const steps = ctx.steps.querySelectorAll<HTMLElement>(".step:not(.step-hero)");
+    steps.forEach((step, k) => {
+      s.trigger({
+        trigger: step,
+        start: "top 70%",
+        end: "bottom 60%",
+        onToggle: (self) => {
+          if (self.isActive) show(k + 0.7);
+        },
+      });
+    });
     return;
   }
   scene.setProgress(0);
