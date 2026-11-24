@@ -1,7 +1,7 @@
 /*
- * Tokens: see DESIGN.md. Each chapter sets its own theme with data-theme; the body takes the theme
- * of the chapter in view, so that the background changes as the page scrolls. Charts read their
- * colors from their chapter.
+ * Tokens. Each chapter sets its own theme with data-theme; the body takes the theme of the chapter
+ * in view, so that the background changes as the page scrolls. Charts read their colors from their
+ * chapter.
  */
 :root {
   color-scheme: light;
