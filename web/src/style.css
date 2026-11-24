@@ -1159,3 +1159,53 @@ tbody th {
     font-size: 0.875rem;
   }
 }
+
+/* On a touch screen, every control is at least 44px high. */
+@media (pointer: coarse), (max-width: 44rem) {
+  .brand {
+    position: relative;
+  }
+
+  .brand::after {
+    position: absolute;
+    inset: -0.75rem -0.5rem;
+    content: "";
+  }
+
+  .chapters-toggle {
+    min-height: 44px;
+    padding-inline: 0.875rem;
+    font-size: 0.875rem;
+  }
+
+  .chapters-menu a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 0.9375rem;
+  }
+
+  select,
+  summary {
+    min-height: 44px;
+  }
+
+  .options span {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: 1rem;
+  }
+}
+
+/* On a phone, a choice of three is a list across the width rather than a row that breaks. */
+@media (max-width: 34rem) {
+  .options:has(> :nth-child(3)) {
+    display: grid;
+    border-radius: 0.875rem;
+  }
+
+  .options:has(> :nth-child(3)) span {
+    border-radius: 0.625rem;
+  }
+}
