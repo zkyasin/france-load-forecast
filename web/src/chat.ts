@@ -193,7 +193,6 @@ export function render(bundle: Bundle): void {
   function toggle(open: boolean): void {
     panel.hidden = !open;
     corner.setAttribute("aria-expanded", String(open));
-    corner.classList.remove("chat-ducked");
     if (open) {
       opened = true;
       write(OPENED, "1");
@@ -220,18 +219,6 @@ export function render(bundle: Bundle): void {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !panel.hidden) toggle(false);
   });
-  // The pylon crouches while the page scrolls, so that it hides less of it.
-  let settle = 0;
-  addEventListener(
-    "scroll",
-    () => {
-      if (!panel.hidden) return;
-      corner.classList.add("chat-ducked");
-      clearTimeout(settle);
-      settle = window.setTimeout(() => corner.classList.remove("chat-ducked"), 900);
-    },
-    { passive: true },
-  );
 
   let exchanges = readExchanges(read(SAVED));
   const asked = (): Set<string> => new Set(exchanges.map((exchange) => exchange.question));

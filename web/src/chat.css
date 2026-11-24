@@ -117,11 +117,6 @@
   background: transparent;
   font: inherit;
   cursor: pointer;
-  transition: transform 0.35s ease;
-}
-
-.chat-corner.chat-ducked {
-  transform: translateY(58%);
 }
 
 .chat-corner:focus-visible {
@@ -530,10 +525,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chat-corner {
-    transition: none;
-  }
-
   .chat-entering > *,
   .chat-thinking::after {
     animation: none;
