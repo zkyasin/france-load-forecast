@@ -1,10 +1,10 @@
 /**
  * The city of days in WebGL: every building is a day since 2012 in glazed ceramic, as high as its
  * mean power and in its colour; the districts are navy plinths with streets between the months,
- * on a plain paper ground, under a high soft sun. The forecast is a district under scaffolding.
+ * on the ground of the page, under a high soft sun. The forecast is a district under scaffolding.
  */
 
-import { ToneMappingEffect, ToneMappingMode, VignetteEffect } from "postprocessing";
+import { ToneMappingEffect, ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
@@ -23,6 +23,14 @@ import {
   plan,
 } from "./layout";
 import { power } from "./palette";
+
+/**
+ * The background of the page, #f6f7f9, in linear light before the neutral tone curve, which
+ * brings it back to #f6f7f9 on screen: the stage has no edge on the page.
+ */
+const BACKDROP = new THREE.Color().setRGB(1.605, 1.621, 1.653, THREE.LinearSRGBColorSpace);
+/** The darkness of the shadows on the ground. */
+const SHADOW = 0.2;
 
 export interface ColourOptions {
   lite: boolean;
@@ -103,11 +111,9 @@ export function createColourCity(canvas: HTMLCanvasElement, o: ColourOptions) {
     o.focus,
   );
   const [fx, fz] = forecastAt;
-  // The ground, the fog and the background are one grey that the vignette and the tone curve
-  // bring to the paper of the page.
   const stage = createStage(canvas, {
     lite: o.lite,
-    background: "#e2dfd8",
+    background: BACKDROP,
     layer: o.layer,
     keys,
     fov: 38,
@@ -115,7 +121,7 @@ export function createColourCity(canvas: HTMLCanvasElement, o: ColourOptions) {
   });
   const { scene, renderer } = stage;
   // A neutral studio for the glaze's reflections.
-  scene.fog = new THREE.Fog("#e2dfd8", 16, 44);
+  scene.fog = new THREE.Fog(BACKDROP, 16, 44);
   const pmrem = new THREE.PMREMGenerator(renderer);
   const environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   pmrem.dispose();
@@ -144,14 +150,22 @@ export function createColourCity(canvas: HTMLCanvasElement, o: ColourOptions) {
   sun.shadow.normalBias = 0.01;
   scene.add(sun);
 
+  // The ground is the background itself, unlit, and only takes the shadows of the city.
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(300, 300),
-    new THREE.MeshStandardMaterial({ color: "#d3cfc7", roughness: 1 }),
+    new THREE.MeshBasicMaterial({ color: BACKDROP }),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.22;
-  ground.receiveShadow = true;
   scene.add(ground);
+  const shadows = new THREE.Mesh(
+    new THREE.PlaneGeometry(300, 300),
+    new THREE.ShadowMaterial({ opacity: SHADOW }),
+  );
+  shadows.rotation.x = -Math.PI / 2;
+  shadows.position.y = -0.219;
+  shadows.receiveShadow = true;
+  scene.add(shadows);
 
   // A plinth per district, sandstone under navy streets.
   const islandW = DISTRICT_W - 0.15;
@@ -285,13 +299,10 @@ export function createColourCity(canvas: HTMLCanvasElement, o: ColourOptions) {
     stage.label(f.text, new THREE.Vector3(p.x, (d?.gw ?? 0) * H, p.z), f.when);
   });
 
-  // No blur and no glare: a neutral tone curve that keeps the paper and the colour scale.
+  // No blur, no glare and no vignette: a neutral tone curve that keeps the colour scale.
   postprocess(stage, {
     lite: o.lite,
-    effects: [
-      new VignetteEffect({ offset: 0.55, darkness: 0.1 }),
-      new ToneMappingEffect({ mode: ToneMappingMode.NEUTRAL }),
-    ],
+    effects: [new ToneMappingEffect({ mode: ToneMappingMode.NEUTRAL })],
   });
   const destroy = stage.destroy;
   return {

@@ -31,7 +31,7 @@ export interface Pipeline {
 
 export interface StageOptions {
   lite: boolean;
-  background: string;
+  background: THREE.ColorRepresentation;
   keys: Key[];
   /** A narrow screen keeps the same keys, seen from further away. */
   narrowFov?: number;

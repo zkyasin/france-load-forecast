@@ -9,6 +9,8 @@ import { createStage, type Key } from "../stage";
 import { columns, light, lineSegments, sourceColour, table } from "./map";
 
 const SLAB = 0.08;
+/** The background of the page: the frame of the map has no edge of its own colour. */
+const BACKDROP = "#f6f7f9";
 const HEIGHT = 0.00034;
 
 export interface MixOptions {
@@ -34,7 +36,7 @@ export function createMix(canvas: HTMLCanvasElement, grid: GridMap, o: MixOption
   let last = Number.NaN;
   const stage = createStage(canvas, {
     lite: o.lite,
-    background: "#e4e2dc",
+    background: BACKDROP,
     layer: o.layer,
     keys,
     narrowFov: 58,
@@ -48,7 +50,7 @@ export function createMix(canvas: HTMLCanvasElement, grid: GridMap, o: MixOption
   });
   const { scene } = stage;
   light(scene);
-  table(scene, grid, { land: "#f1efe9", abroad: "#d6d5cf", ground: "#e4e2dc" }, SLAB);
+  table(scene, grid, { land: "#eef0f3", abroad: "#d5d9df", ground: BACKDROP }, SLAB);
   scene.add(
     lineSegments(
       grid,

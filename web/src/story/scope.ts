@@ -1,6 +1,6 @@
 /**
  * The pieces of the scroll: a scope that collects what the story adds to the page, smooth
- * scrolling, chapter themes that follow the scroll, and chart lines drawn by the scroll.
+ * scrolling, and chart lines drawn by the scroll.
  */
 
 import { gsap } from "gsap";
@@ -88,26 +88,6 @@ export async function smoothScroll(s: Scope, reducedMotion: boolean, lerp = 0.1)
   s.add(() => {
     gsap.ticker.remove(tick);
     lenis.destroy();
-  });
-}
-
-/** The body takes the theme of the section in the middle of the screen. */
-export function morphThemes(s: Scope, reducedMotion: boolean): void {
-  const root = document.documentElement;
-  if (!reducedMotion) root.classList.add("morph");
-  for (const section of document.querySelectorAll<HTMLElement>("[data-theme]")) {
-    s.trigger({
-      trigger: section,
-      start: "top 55%",
-      end: "bottom 55%",
-      onToggle: (self) => {
-        if (self.isActive) document.body.dataset.theme = section.dataset.theme;
-      },
-    });
-  }
-  s.add(() => {
-    root.classList.remove("morph");
-    delete document.body.dataset.theme;
   });
 }
 

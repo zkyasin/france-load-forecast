@@ -14,7 +14,6 @@ import { HIGH, LOW, powerHex } from "./palette";
 export async function mount(ctx: Context): Promise<() => void> {
   const s = scope();
   const { canvas, layer, cards } = await frame(s, ctx, {
-    theme: "paper",
     label:
       "Une ville miniature dont chaque immeuble est un jour depuis 2012, haut et coloré selon sa consommation moyenne, un quartier par année",
     credit: `RTE, éCO2mix (ODRÉ), Licence Ouverte 2.0 · hauteur et couleur : puissance moyenne du jour, de l'indigo (${LOW} GW) au rose (${HIGH} GW) · prévision du projet : médiane, échafaudage jusqu'à la borne haute`,

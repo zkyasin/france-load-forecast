@@ -3,7 +3,6 @@
 import {
   activeSteps,
   drawCharts,
-  morphThemes,
   type Scope,
   smoothScroll,
   stageCanvas,
@@ -26,15 +25,12 @@ export async function frame(
   s: Scope,
   ctx: Context,
   options: {
-    theme: string;
     label: string;
     credit: string;
     cards: CardSpec[];
   },
 ) {
-  ctx.story.dataset.theme = options.theme;
   await smoothScroll(s, ctx.reducedMotion);
-  morphThemes(s, ctx.reducedMotion);
   drawCharts(s, ctx.reducedMotion);
   const canvas = stageCanvas(s, ctx.stage, options.label);
   const layer = s.element(ctx.stage, "div", "stage-labels v-labels");

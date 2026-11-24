@@ -94,7 +94,7 @@ export function light(scene: THREE.Scene, intensity = 1) {
 export function table(
   scene: THREE.Scene,
   grid: GridMap,
-  colours: { land: string; abroad: string; ground?: string },
+  colours: { land: string; abroad: string; ground?: THREE.ColorRepresentation },
   depth = 0.08,
 ) {
   const land = new THREE.MeshLambertMaterial({ color: colours.land });
