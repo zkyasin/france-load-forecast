@@ -3,8 +3,10 @@ import {
   addMonths,
   dayName,
   daysSince,
+  frenchSpacing,
   monthName,
   monthTick,
+  NBSP,
   number,
   percent,
   signed,
@@ -56,4 +58,10 @@ test("time ticks show the year under January only", () => {
 test("axis labels keep a decimal only where the step needs one", () => {
   expect([0, 0.5, 1, 1.5].map(tick)).toEqual(["0", "0,5", "1", "1,5"]);
   expect([-1, -0.5, 0, 0.5].map(signedTick)).toEqual(["\u22121", "\u22120,5", "0", "+0,5"]);
+});
+
+test("French punctuation keeps to the word before it", () => {
+  expect(frenchSpacing("Cet hiver ? Oui : non !")).toBe(
+    `Cet hiver${NBSP}? Oui${NBSP}: non${NBSP}!`,
+  );
 });

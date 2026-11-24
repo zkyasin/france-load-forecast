@@ -41,7 +41,9 @@ public page of an open-source tool that forecasts and analyses it from RTE's ope
   - scenario for a year ahead under a trajectory of RTE's Bilan prévisionnel 2025, or with a cold \
 or mild winter;
   - fact for how the forecast is made, where the data come from, their perimeter, the revision \
-of real-time data and when temperatures are published.
+of real-time data and when temperatures are published;
+  - peak for the highest half-hour of a month, ahead or measured, in GW, and the peak of the last \
+winter.
 - Get every figure from the tools, and quote it as the tools give it, rounded to one or two \
 decimals, with its unit. Do not compute new numbers such as sums, differences or shares.
 - Give each term of a gap in TWh: a positive term raised consumption, a negative one lowered it. \

@@ -32,6 +32,7 @@ const reply: Reply = {
 test("the first questions come from the months the data cover", () => {
   expect(suggestions(forecast, gaps)).toEqual([
     { theme: "Prévision", question: "Quelle consommation prévoyez-vous pour janvier 2027 ?" },
+    { theme: "Pointe", question: "Quelle pointe de consommation attendre cet hiver ?" },
     {
       theme: "Écarts",
       question: "Pourquoi la consommation d'avril 2026 a-t-elle été plus basse que prévu ?",
@@ -86,6 +87,7 @@ test("an answer points to the sections of the page it read", () => {
     { anchor: "headline", label: "Voir la prévision" },
     { anchor: "gaps-title", label: "Voir les écarts" },
   ]);
+  expect(sections(["peak"])).toEqual([{ anchor: "peak-title", label: "Voir la pointe" }]);
 });
 
 test("each outcome has its label and its mood", () => {
@@ -126,6 +128,8 @@ test("each step says what the agent reads", () => {
     "le scénario avec une décarbonation rapide et un hiver froid en 2027",
   );
   expect(step("scenario")).toBe("les scénarios");
+  expect(step("peak", { month: "2027-01" })).toBe("la pointe de janvier 2027");
+  expect(step("peak")).toBe("la pointe des mois à venir");
   expect(step("unknown")).toBe("les données publiées");
 });
 

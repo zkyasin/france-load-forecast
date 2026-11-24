@@ -42,6 +42,9 @@ export const percent = (value: number, digits = 1): string => `${number(value, d
 
 export const celsius = (value: number, digits = 1): string => `${number(value, digits)}${NBSP}°C`;
 
+/** A no-break space before ? ! : and ;, as French typography wants, so that none starts a line. */
+export const frenchSpacing = (text: string): string => text.replace(/ (?=[?!:;])/g, NBSP);
+
 /** "de mars", "d'avril": the preposition before a word, elided before a vowel. */
 export const of = (word: string): string => (/^[aeiouéè]/i.test(word) ? `d'${word}` : `de ${word}`);
 
