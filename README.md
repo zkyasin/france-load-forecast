@@ -1,8 +1,61 @@
 # france-load-forecast
 
-Forecasting and analysis of French electricity consumption from RTE open data.
+Monthly forecasts of French electricity consumption, rebuilt every Monday from RTE's open data:
+the energy and the peak of the next twelve months with a calibrated band, the reasons behind each
+monthly gap, the BP2025 scenarios, and an agent that answers questions from the published figures
+only.
 
-The project is in development.
+**The page, in French: <https://zkyasin.github.io/france-load-forecast/>**
+
+![Monthly energy measured, then forecast over twelve months with its P10-P90 band](docs/images/forecast.png)
+
+## At a glance
+
+- **Forecast.** A daily state-space model, fitted on the last three years with a Kalman filter,
+  replays the weather of every past year since 2012. One month ahead, the median forecast of
+  monthly energy has been off by 2.96 % on average since 2016, against 4.41 % for the same month a
+  year earlier. Its P10-P90 band, calibrated on past errors, held 79 % of the months since 2018.
+- **Peak.** The same model fitted on the highest half-hour of each day forecasts the peak of each
+  month, 4.16 % off one month ahead against 5.66 % for the same month a year earlier. Its band is
+  too narrow, with 72 % of the peaks inside it, and the page says so.
+- **Gaps.** Each month is set against its forecast and against the year before, split into
+  weather, calendar, structural and residual terms that add up to the gap.
+- **Agent.** Questions in French are answered with read-only tools over the published figures,
+  and a verifier refuses any number that no tool returned. On 40 frozen questions, gpt-oss-120b
+  passes 36, gpt-oss-20b 33 and Ministral 3 14B, run locally, 29: see the
+  [results](evals/results.md).
+- **Every Monday.** GitHub Actions downloads the data, scores the models again, publishes a dated
+  bundle of JSON files and rebuilds the page. Past forecasts stay in the archive.
+
+| | |
+|---|---|
+| ![The peak section of the page](docs/images/peak.png) | ![A question answered in the panel of the page](docs/images/questions.png) |
+
+## How it fits together
+
+```mermaid
+flowchart LR
+  odre[ODRÉ exports] --> warehouse[(DuckDB warehouse)]
+  warehouse --> models[Daily models of the mean load and of the peak]
+  models --> backtest[Backtests and calibrated bands]
+  backtest --> bundle[JSON bundle on the data branch]
+  bundle --> page[Page on GitHub Pages]
+  bundle --> api[Question API on Cloud Run]
+  api --> page
+```
+
+| Layer | Tools |
+|---|---|
+| Data | ODRÉ exports, DuckDB, data checks |
+| Models | statsmodels state-space model with a Kalman filter, patsy splines, split conformal bands |
+| Publication | JSON files checked with pydantic, a data branch, GitHub Actions |
+| Page | Vite, TypeScript, Observable Plot |
+| Agent and API | LangChain, gpt-oss on Groq, Ministral 3 14B on Ollama, FastAPI on Cloud Run |
+| Checks | pytest, mypy, ruff, Biome, Vitest, an evaluation on 40 frozen questions |
+
+[docs/methodology.md](docs/methodology.md) details the models, the backtests and their results.
+The sections below describe the data, the publication, the page, the agent and the API, and how
+to run each part.
 
 ## Data
 
