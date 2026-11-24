@@ -254,12 +254,19 @@
   }
 
   .v-panel li {
-    grid-template-columns: 0.75rem 1fr auto;
+    grid-template-columns: 0.75rem minmax(0, 1fr) auto;
+    overflow-wrap: anywhere;
   }
 
   /* The city waits below the headline: the cue to scroll sits close to the text, above it. */
   .step-hero .scroll-cue {
     margin-top: 1.25rem;
+  }
+
+  /* With large text the summary can reach the roofs: it keeps the page behind it. */
+  .step-hero h1,
+  .step-hero .lead {
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
   }
 }
 

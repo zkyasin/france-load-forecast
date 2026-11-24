@@ -21,6 +21,7 @@
   position: sticky;
   top: var(--v-day-top);
   height: var(--v-day-h);
+  overflow: clip;
   border-radius: 1rem;
   background: var(--bg);
   box-shadow: 0 24px 60px -36px rgb(20 22 26 / 0.45);
