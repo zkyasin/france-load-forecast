@@ -301,3 +301,29 @@ body:has(.chat-corner) .stage-credit {
     top: calc(7.75rem + env(safe-area-inset-top, 0px));
   }
 }
+
+/* A phone on its side: the credit waits over the headline too, where the summary reaches it. */
+@media (max-height: 30rem) {
+  #story .stage-credit {
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  #story .stage-credit[data-off] {
+    opacity: 0;
+  }
+
+  body:has(.chat-corner) #story .stage-credit {
+    top: auto;
+    right: calc(116px + 1.5rem);
+    bottom: 0.5rem;
+    left: var(--gutter);
+    width: fit-content;
+    padding: 0.25rem 0.5rem;
+    background: color-mix(in srgb, #fff 80%, transparent);
+    text-align: left;
+  }
+
+  #story .v-key {
+    top: calc(4.5rem + env(safe-area-inset-top, 0px));
+  }
+}

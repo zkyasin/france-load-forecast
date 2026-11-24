@@ -101,7 +101,9 @@ export function createStage(canvas: HTMLCanvasElement, options: StageOptions) {
     camera.aspect = width / height;
     narrow = width < height;
     camera.fov = narrow ? (options.narrowFov ?? 52) : (options.fov ?? 32);
-    const shift = !narrow && width / height > 1.15 ? (options.shift ?? 0.17) : 0;
+    // On a screen as low as a phone on its side, the text beside takes more of the width.
+    const reach = height < 480 ? Math.min(2, 3.5 / (width / height)) : 1;
+    const shift = !narrow && width / height > 1.15 ? (options.shift ?? 0.17) * reach : 0;
     const lift = narrow ? height * (options.narrowLift ?? 0) : 0;
     camera.setViewOffset(width, height, -width * shift, lift, width, height);
     camera.updateProjectionMatrix();
