@@ -1,0 +1,1225 @@
+{
+  "published": "2026-11-24",
+  "model_id": "peak",
+  "current_month": "2026-11",
+  "months": [
+    {
+      "month": "2026-11",
+      "p10": 69.711,
+      "p50": 72.982,
+      "p90": 79.261,
+      "measured": 68.449,
+      "horizon": 1,
+      "provisional": true
+    },
+    {
+      "month": "2026-12",
+      "p10": 74.873,
+      "p50": 79.718,
+      "p90": 87.773,
+      "measured": 0.0,
+      "horizon": 2,
+      "provisional": false
+    },
+    {
+      "month": "2027-01",
+      "p10": 77.51,
+      "p50": 82.525,
+      "p90": 90.865,
+      "measured": 0.0,
+      "horizon": 3,
+      "provisional": false
+    },
+    {
+      "month": "2027-02",
+      "p10": 73.741,
+      "p50": 78.78,
+      "p90": 86.121,
+      "measured": 0.0,
+      "horizon": 4,
+      "provisional": false
+    },
+    {
+      "month": "2027-03",
+      "p10": 65.689,
+      "p50": 70.177,
+      "p90": 76.717,
+      "measured": 0.0,
+      "horizon": 5,
+      "provisional": false
+    },
+    {
+      "month": "2027-04",
+      "p10": 58.846,
+      "p50": 62.867,
+      "p90": 68.725,
+      "measured": 0.0,
+      "horizon": 6,
+      "provisional": false
+    },
+    {
+      "month": "2027-05",
+      "p10": 51.834,
+      "p50": 55.267,
+      "p90": 60.35,
+      "measured": 0.0,
+      "horizon": 7,
+      "provisional": false
+    },
+    {
+      "month": "2027-06",
+      "p10": 50.386,
+      "p50": 53.723,
+      "p90": 58.665,
+      "measured": 0.0,
+      "horizon": 8,
+      "provisional": false
+    },
+    {
+      "month": "2027-07",
+      "p10": 51.2,
+      "p50": 54.592,
+      "p90": 59.613,
+      "measured": 0.0,
+      "horizon": 9,
+      "provisional": false
+    },
+    {
+      "month": "2027-08",
+      "p10": 50.576,
+      "p50": 53.926,
+      "p90": 58.886,
+      "measured": 0.0,
+      "horizon": 10,
+      "provisional": false
+    },
+    {
+      "month": "2027-09",
+      "p10": 49.343,
+      "p50": 52.611,
+      "p90": 57.451,
+      "measured": 0.0,
+      "horizon": 11,
+      "provisional": false
+    },
+    {
+      "month": "2027-10",
+      "p10": 54.551,
+      "p50": 58.165,
+      "p90": 63.515,
+      "measured": 0.0,
+      "horizon": 12,
+      "provisional": false
+    }
+  ],
+  "history": [
+    {
+      "month": "2012-01",
+      "peak": 89.707,
+      "day": "2012-01-31",
+      "provisional": false
+    },
+    {
+      "month": "2012-02",
+      "peak": 102.098,
+      "day": "2012-02-08",
+      "provisional": false
+    },
+    {
+      "month": "2012-03",
+      "peak": 76.591,
+      "day": "2012-03-07",
+      "provisional": false
+    },
+    {
+      "month": "2012-04",
+      "peak": 70.296,
+      "day": "2012-04-17",
+      "provisional": false
+    },
+    {
+      "month": "2012-05",
+      "peak": 59.961,
+      "day": "2012-05-21",
+      "provisional": false
+    },
+    {
+      "month": "2012-06",
+      "peak": 57.766,
+      "day": "2012-06-28",
+      "provisional": false
+    },
+    {
+      "month": "2012-07",
+      "peak": 56.996,
+      "day": "2012-07-26",
+      "provisional": false
+    },
+    {
+      "month": "2012-08",
+      "peak": 55.179,
+      "day": "2012-08-29",
+      "provisional": false
+    },
+    {
+      "month": "2012-09",
+      "peak": 57.66,
+      "day": "2012-09-26",
+      "provisional": false
+    },
+    {
+      "month": "2012-10",
+      "peak": 72.023,
+      "day": "2012-10-29",
+      "provisional": false
+    },
+    {
+      "month": "2012-11",
+      "peak": 80.609,
+      "day": "2012-11-29",
+      "provisional": false
+    },
+    {
+      "month": "2012-12",
+      "peak": 90.741,
+      "day": "2012-12-12",
+      "provisional": false
+    },
+    {
+      "month": "2013-01",
+      "peak": 92.629,
+      "day": "2013-01-17",
+      "provisional": false
+    },
+    {
+      "month": "2013-02",
+      "peak": 87.92,
+      "day": "2013-02-25",
+      "provisional": false
+    },
+    {
+      "month": "2013-03",
+      "peak": 84.824,
+      "day": "2013-03-13",
+      "provisional": false
+    },
+    {
+      "month": "2013-04",
+      "peak": 75.764,
+      "day": "2013-04-02",
+      "provisional": false
+    },
+    {
+      "month": "2013-05",
+      "peak": 63.273,
+      "day": "2013-05-24",
+      "provisional": false
+    },
+    {
+      "month": "2013-06",
+      "peak": 56.439,
+      "day": "2013-06-19",
+      "provisional": false
+    },
+    {
+      "month": "2013-07",
+      "peak": 57.429,
+      "day": "2013-07-23",
+      "provisional": false
+    },
+    {
+      "month": "2013-08",
+      "peak": 54.464,
+      "day": "2013-08-01",
+      "provisional": false
+    },
+    {
+      "month": "2013-09",
+      "peak": 56.615,
+      "day": "2013-09-18",
+      "provisional": false
+    },
+    {
+      "month": "2013-10",
+      "peak": 63.62,
+      "day": "2013-10-30",
+      "provisional": false
+    },
+    {
+      "month": "2013-11",
+      "peak": 85.084,
+      "day": "2013-11-28",
+      "provisional": false
+    },
+    {
+      "month": "2013-12",
+      "peak": 84.174,
+      "day": "2013-12-10",
+      "provisional": false
+    },
+    {
+      "month": "2014-01",
+      "peak": 82.23,
+      "day": "2014-01-29",
+      "provisional": false
+    },
+    {
+      "month": "2014-02",
+      "peak": 80.196,
+      "day": "2014-02-05",
+      "provisional": false
+    },
+    {
+      "month": "2014-03",
+      "peak": 76.187,
+      "day": "2014-03-03",
+      "provisional": false
+    },
+    {
+      "month": "2014-04",
+      "peak": 60.737,
+      "day": "2014-04-09",
+      "provisional": false
+    },
+    {
+      "month": "2014-05",
+      "peak": 57.992,
+      "day": "2014-05-13",
+      "provisional": false
+    },
+    {
+      "month": "2014-06",
+      "peak": 55.916,
+      "day": "2014-06-04",
+      "provisional": false
+    },
+    {
+      "month": "2014-07",
+      "peak": 57.108,
+      "day": "2014-07-18",
+      "provisional": false
+    },
+    {
+      "month": "2014-08",
+      "peak": 54.313,
+      "day": "2014-08-28",
+      "provisional": false
+    },
+    {
+      "month": "2014-09",
+      "peak": 55.394,
+      "day": "2014-09-17",
+      "provisional": false
+    },
+    {
+      "month": "2014-10",
+      "peak": 62.691,
+      "day": "2014-10-28",
+      "provisional": false
+    },
+    {
+      "month": "2014-11",
+      "peak": 72.493,
+      "day": "2014-11-19",
+      "provisional": false
+    },
+    {
+      "month": "2014-12",
+      "peak": 82.607,
+      "day": "2014-12-09",
+      "provisional": false
+    },
+    {
+      "month": "2015-01",
+      "peak": 86.689,
+      "day": "2015-01-22",
+      "provisional": false
+    },
+    {
+      "month": "2015-02",
+      "peak": 91.934,
+      "day": "2015-02-06",
+      "provisional": false
+    },
+    {
+      "month": "2015-03",
+      "peak": 75.701,
+      "day": "2015-03-06",
+      "provisional": false
+    },
+    {
+      "month": "2015-04",
+      "peak": 68.495,
+      "day": "2015-04-02",
+      "provisional": false
+    },
+    {
+      "month": "2015-05",
+      "peak": 57.088,
+      "day": "2015-05-20",
+      "provisional": false
+    },
+    {
+      "month": "2015-06",
+      "peak": 57.755,
+      "day": "2015-06-30",
+      "provisional": false
+    },
+    {
+      "month": "2015-07",
+      "peak": 58.969,
+      "day": "2015-07-01",
+      "provisional": false
+    },
+    {
+      "month": "2015-08",
+      "peak": 55.575,
+      "day": "2015-08-31",
+      "provisional": false
+    },
+    {
+      "month": "2015-09",
+      "peak": 57.032,
+      "day": "2015-09-16",
+      "provisional": false
+    },
+    {
+      "month": "2015-10",
+      "peak": 68.308,
+      "day": "2015-10-16",
+      "provisional": false
+    },
+    {
+      "month": "2015-11",
+      "peak": 80.414,
+      "day": "2015-11-24",
+      "provisional": false
+    },
+    {
+      "month": "2015-12",
+      "peak": 78.411,
+      "day": "2015-12-10",
+      "provisional": false
+    },
+    {
+      "month": "2016-01",
+      "peak": 88.731,
+      "day": "2016-01-18",
+      "provisional": false
+    },
+    {
+      "month": "2016-02",
+      "peak": 82.5,
+      "day": "2016-02-17",
+      "provisional": false
+    },
+    {
+      "month": "2016-03",
+      "peak": 79.159,
+      "day": "2016-03-07",
+      "provisional": false
+    },
+    {
+      "month": "2016-04",
+      "peak": 69.563,
+      "day": "2016-04-01",
+      "provisional": false
+    },
+    {
+      "month": "2016-05",
+      "peak": 61.066,
+      "day": "2016-05-02",
+      "provisional": false
+    },
+    {
+      "month": "2016-06",
+      "peak": 56.299,
+      "day": "2016-06-02",
+      "provisional": false
+    },
+    {
+      "month": "2016-07",
+      "peak": 57.074,
+      "day": "2016-07-19",
+      "provisional": false
+    },
+    {
+      "month": "2016-08",
+      "peak": 55.675,
+      "day": "2016-08-31",
+      "provisional": false
+    },
+    {
+      "month": "2016-09",
+      "peak": 55.911,
+      "day": "2016-09-13",
+      "provisional": false
+    },
+    {
+      "month": "2016-10",
+      "peak": 64.995,
+      "day": "2016-10-13",
+      "provisional": false
+    },
+    {
+      "month": "2016-11",
+      "peak": 81.917,
+      "day": "2016-11-29",
+      "provisional": false
+    },
+    {
+      "month": "2016-12",
+      "peak": 81.815,
+      "day": "2016-12-01",
+      "provisional": false
+    },
+    {
+      "month": "2017-01",
+      "peak": 94.236,
+      "day": "2017-01-20",
+      "provisional": false
+    },
+    {
+      "month": "2017-02",
+      "peak": 81.717,
+      "day": "2017-02-09",
+      "provisional": false
+    },
+    {
+      "month": "2017-03",
+      "peak": 74.624,
+      "day": "2017-03-07",
+      "provisional": false
+    },
+    {
+      "month": "2017-04",
+      "peak": 65.457,
+      "day": "2017-04-28",
+      "provisional": false
+    },
+    {
+      "month": "2017-05",
+      "peak": 60.912,
+      "day": "2017-05-03",
+      "provisional": false
+    },
+    {
+      "month": "2017-06",
+      "peak": 59.414,
+      "day": "2017-06-22",
+      "provisional": false
+    },
+    {
+      "month": "2017-07",
+      "peak": 57.408,
+      "day": "2017-07-07",
+      "provisional": false
+    },
+    {
+      "month": "2017-08",
+      "peak": 56.247,
+      "day": "2017-08-29",
+      "provisional": false
+    },
+    {
+      "month": "2017-09",
+      "peak": 57.339,
+      "day": "2017-09-20",
+      "provisional": false
+    },
+    {
+      "month": "2017-10",
+      "peak": 64.49,
+      "day": "2017-10-31",
+      "provisional": false
+    },
+    {
+      "month": "2017-11",
+      "peak": 83.961,
+      "day": "2017-11-30",
+      "provisional": false
+    },
+    {
+      "month": "2017-12",
+      "peak": 83.364,
+      "day": "2017-12-01",
+      "provisional": false
+    },
+    {
+      "month": "2018-01",
+      "peak": 79.657,
+      "day": "2018-01-17",
+      "provisional": false
+    },
+    {
+      "month": "2018-02",
+      "peak": 96.272,
+      "day": "2018-02-28",
+      "provisional": false
+    },
+    {
+      "month": "2018-03",
+      "peak": 91.064,
+      "day": "2018-03-01",
+      "provisional": false
+    },
+    {
+      "month": "2018-04",
+      "peak": 65.978,
+      "day": "2018-04-06",
+      "provisional": false
+    },
+    {
+      "month": "2018-05",
+      "peak": 59.004,
+      "day": "2018-05-02",
+      "provisional": false
+    },
+    {
+      "month": "2018-06",
+      "peak": 55.987,
+      "day": "2018-06-20",
+      "provisional": false
+    },
+    {
+      "month": "2018-07",
+      "peak": 57.647,
+      "day": "2018-07-26",
+      "provisional": false
+    },
+    {
+      "month": "2018-08",
+      "peak": 55.496,
+      "day": "2018-08-02",
+      "provisional": false
+    },
+    {
+      "month": "2018-09",
+      "peak": 55.221,
+      "day": "2018-09-12",
+      "provisional": false
+    },
+    {
+      "month": "2018-10",
+      "peak": 73.992,
+      "day": "2018-10-29",
+      "provisional": false
+    },
+    {
+      "month": "2018-11",
+      "peak": 80.337,
+      "day": "2018-11-20",
+      "provisional": false
+    },
+    {
+      "month": "2018-12",
+      "peak": 84.675,
+      "day": "2018-12-13",
+      "provisional": false
+    },
+    {
+      "month": "2019-01",
+      "peak": 88.453,
+      "day": "2019-01-24",
+      "provisional": false
+    },
+    {
+      "month": "2019-02",
+      "peak": 86.358,
+      "day": "2019-02-04",
+      "provisional": false
+    },
+    {
+      "month": "2019-03",
+      "peak": 72.363,
+      "day": "2019-03-14",
+      "provisional": false
+    },
+    {
+      "month": "2019-04",
+      "peak": 69.586,
+      "day": "2019-04-04",
+      "provisional": false
+    },
+    {
+      "month": "2019-05",
+      "peak": 62.143,
+      "day": "2019-05-06",
+      "provisional": false
+    },
+    {
+      "month": "2019-06",
+      "peak": 58.833,
+      "day": "2019-06-27",
+      "provisional": false
+    },
+    {
+      "month": "2019-07",
+      "peak": 59.198,
+      "day": "2019-07-25",
+      "provisional": false
+    },
+    {
+      "month": "2019-08",
+      "peak": 55.015,
+      "day": "2019-08-28",
+      "provisional": false
+    },
+    {
+      "month": "2019-09",
+      "peak": 54.057,
+      "day": "2019-09-04",
+      "provisional": false
+    },
+    {
+      "month": "2019-10",
+      "peak": 62.672,
+      "day": "2019-10-30",
+      "provisional": false
+    },
+    {
+      "month": "2019-11",
+      "peak": 79.551,
+      "day": "2019-11-20",
+      "provisional": false
+    },
+    {
+      "month": "2019-12",
+      "peak": 80.411,
+      "day": "2019-12-04",
+      "provisional": false
+    },
+    {
+      "month": "2020-01",
+      "peak": 83.371,
+      "day": "2020-01-22",
+      "provisional": false
+    },
+    {
+      "month": "2020-02",
+      "peak": 78.263,
+      "day": "2020-02-07",
+      "provisional": false
+    },
+    {
+      "month": "2020-03",
+      "peak": 74.965,
+      "day": "2020-03-03",
+      "provisional": false
+    },
+    {
+      "month": "2020-04",
+      "peak": 57.264,
+      "day": "2020-04-01",
+      "provisional": false
+    },
+    {
+      "month": "2020-05",
+      "peak": 53.184,
+      "day": "2020-05-13",
+      "provisional": false
+    },
+    {
+      "month": "2020-06",
+      "peak": 54.347,
+      "day": "2020-06-25",
+      "provisional": false
+    },
+    {
+      "month": "2020-07",
+      "peak": 54.749,
+      "day": "2020-07-09",
+      "provisional": false
+    },
+    {
+      "month": "2020-08",
+      "peak": 52.391,
+      "day": "2020-08-27",
+      "provisional": false
+    },
+    {
+      "month": "2020-09",
+      "peak": 57.553,
+      "day": "2020-09-28",
+      "provisional": false
+    },
+    {
+      "month": "2020-10",
+      "peak": 64.611,
+      "day": "2020-10-15",
+      "provisional": false
+    },
+    {
+      "month": "2020-11",
+      "peak": 76.256,
+      "day": "2020-11-30",
+      "provisional": false
+    },
+    {
+      "month": "2020-12",
+      "peak": 79.829,
+      "day": "2020-12-09",
+      "provisional": false
+    },
+    {
+      "month": "2021-01",
+      "peak": 88.416,
+      "day": "2021-01-11",
+      "provisional": false
+    },
+    {
+      "month": "2021-02",
+      "peak": 86.367,
+      "day": "2021-02-12",
+      "provisional": false
+    },
+    {
+      "month": "2021-03",
+      "peak": 73.617,
+      "day": "2021-03-09",
+      "provisional": false
+    },
+    {
+      "month": "2021-04",
+      "peak": 70.369,
+      "day": "2021-04-07",
+      "provisional": false
+    },
+    {
+      "month": "2021-05",
+      "peak": 59.783,
+      "day": "2021-05-06",
+      "provisional": false
+    },
+    {
+      "month": "2021-06",
+      "peak": 55.965,
+      "day": "2021-06-16",
+      "provisional": false
+    },
+    {
+      "month": "2021-07",
+      "peak": 54.793,
+      "day": "2021-07-22",
+      "provisional": false
+    },
+    {
+      "month": "2021-08",
+      "peak": 52.99,
+      "day": "2021-08-31",
+      "provisional": false
+    },
+    {
+      "month": "2021-09",
+      "peak": 54.405,
+      "day": "2021-09-08",
+      "provisional": false
+    },
+    {
+      "month": "2021-10",
+      "peak": 61.178,
+      "day": "2021-10-28",
+      "provisional": false
+    },
+    {
+      "month": "2021-11",
+      "peak": 83.349,
+      "day": "2021-11-29",
+      "provisional": false
+    },
+    {
+      "month": "2021-12",
+      "peak": 84.231,
+      "day": "2021-12-22",
+      "provisional": false
+    },
+    {
+      "month": "2022-01",
+      "peak": 86.978,
+      "day": "2022-01-14",
+      "provisional": false
+    },
+    {
+      "month": "2022-02",
+      "peak": 78.745,
+      "day": "2022-02-01",
+      "provisional": false
+    },
+    {
+      "month": "2022-03",
+      "peak": 75.925,
+      "day": "2022-03-07",
+      "provisional": false
+    },
+    {
+      "month": "2022-04",
+      "peak": 74.074,
+      "day": "2022-04-04",
+      "provisional": false
+    },
+    {
+      "month": "2022-05",
+      "peak": 53.889,
+      "day": "2022-05-05",
+      "provisional": false
+    },
+    {
+      "month": "2022-06",
+      "peak": 56.314,
+      "day": "2022-06-17",
+      "provisional": false
+    },
+    {
+      "month": "2022-07",
+      "peak": 57.304,
+      "day": "2022-07-19",
+      "provisional": false
+    },
+    {
+      "month": "2022-08",
+      "peak": 53.123,
+      "day": "2022-08-30",
+      "provisional": false
+    },
+    {
+      "month": "2022-09",
+      "peak": 53.372,
+      "day": "2022-09-28",
+      "provisional": false
+    },
+    {
+      "month": "2022-10",
+      "peak": 52.494,
+      "day": "2022-10-12",
+      "provisional": false
+    },
+    {
+      "month": "2022-11",
+      "peak": 69.629,
+      "day": "2022-11-30",
+      "provisional": false
+    },
+    {
+      "month": "2022-12",
+      "peak": 84.343,
+      "day": "2022-12-12",
+      "provisional": false
+    },
+    {
+      "month": "2023-01",
+      "peak": 83.757,
+      "day": "2023-01-23",
+      "provisional": false
+    },
+    {
+      "month": "2023-02",
+      "peak": 81.469,
+      "day": "2023-02-09",
+      "provisional": false
+    },
+    {
+      "month": "2023-03",
+      "peak": 78.471,
+      "day": "2023-03-01",
+      "provisional": false
+    },
+    {
+      "month": "2023-04",
+      "peak": 65.862,
+      "day": "2023-04-05",
+      "provisional": false
+    },
+    {
+      "month": "2023-05",
+      "peak": 52.605,
+      "day": "2023-05-10",
+      "provisional": false
+    },
+    {
+      "month": "2023-06",
+      "peak": 52.138,
+      "day": "2023-06-29",
+      "provisional": false
+    },
+    {
+      "month": "2023-07",
+      "peak": 55.616,
+      "day": "2023-07-11",
+      "provisional": false
+    },
+    {
+      "month": "2023-08",
+      "peak": 55.2,
+      "day": "2023-08-23",
+      "provisional": false
+    },
+    {
+      "month": "2023-09",
+      "peak": 53.755,
+      "day": "2023-09-06",
+      "provisional": false
+    },
+    {
+      "month": "2023-10",
+      "peak": 55.68,
+      "day": "2023-10-30",
+      "provisional": false
+    },
+    {
+      "month": "2023-11",
+      "peak": 72.535,
+      "day": "2023-11-29",
+      "provisional": false
+    },
+    {
+      "month": "2023-12",
+      "peak": 75.846,
+      "day": "2023-12-07",
+      "provisional": false
+    },
+    {
+      "month": "2024-01",
+      "peak": 85.37,
+      "day": "2024-01-10",
+      "provisional": false
+    },
+    {
+      "month": "2024-02",
+      "peak": 69.05,
+      "day": "2024-02-05",
+      "provisional": false
+    },
+    {
+      "month": "2024-03",
+      "peak": 68.115,
+      "day": "2024-03-04",
+      "provisional": false
+    },
+    {
+      "month": "2024-04",
+      "peak": 61.668,
+      "day": "2024-04-24",
+      "provisional": false
+    },
+    {
+      "month": "2024-05",
+      "peak": 55.822,
+      "day": "2024-05-02",
+      "provisional": false
+    },
+    {
+      "month": "2024-06",
+      "peak": 53.062,
+      "day": "2024-06-27",
+      "provisional": false
+    },
+    {
+      "month": "2024-07",
+      "peak": 54.571,
+      "day": "2024-07-30",
+      "provisional": false
+    },
+    {
+      "month": "2024-08",
+      "peak": 53.896,
+      "day": "2024-08-01",
+      "provisional": false
+    },
+    {
+      "month": "2024-09",
+      "peak": 53.426,
+      "day": "2024-09-30",
+      "provisional": false
+    },
+    {
+      "month": "2024-10",
+      "peak": 55.765,
+      "day": "2024-10-31",
+      "provisional": false
+    },
+    {
+      "month": "2024-11",
+      "peak": 73.686,
+      "day": "2024-11-21",
+      "provisional": false
+    },
+    {
+      "month": "2024-12",
+      "peak": 77.0,
+      "day": "2024-12-13",
+      "provisional": false
+    },
+    {
+      "month": "2025-01",
+      "peak": 87.713,
+      "day": "2025-01-14",
+      "provisional": false
+    },
+    {
+      "month": "2025-02",
+      "peak": 79.329,
+      "day": "2025-02-04",
+      "provisional": false
+    },
+    {
+      "month": "2025-03",
+      "peak": 70.836,
+      "day": "2025-03-03",
+      "provisional": false
+    },
+    {
+      "month": "2025-04",
+      "peak": 58.898,
+      "day": "2025-04-02",
+      "provisional": false
+    },
+    {
+      "month": "2025-05",
+      "peak": 53.03,
+      "day": "2025-05-07",
+      "provisional": false
+    },
+    {
+      "month": "2025-06",
+      "peak": 60.451,
+      "day": "2025-06-30",
+      "provisional": false
+    },
+    {
+      "month": "2025-07",
+      "peak": 59.733,
+      "day": "2025-07-01",
+      "provisional": false
+    },
+    {
+      "month": "2025-08",
+      "peak": 52.141,
+      "day": "2025-08-28",
+      "provisional": false
+    },
+    {
+      "month": "2025-09",
+      "peak": 54.882,
+      "day": "2025-09-26",
+      "provisional": false
+    },
+    {
+      "month": "2025-10",
+      "peak": 58.552,
+      "day": "2025-10-27",
+      "provisional": false
+    },
+    {
+      "month": "2025-11",
+      "peak": 76.162,
+      "day": "2025-11-21",
+      "provisional": false
+    },
+    {
+      "month": "2025-12",
+      "peak": 75.944,
+      "day": "2025-12-31",
+      "provisional": false
+    },
+    {
+      "month": "2026-01",
+      "peak": 90.236,
+      "day": "2026-01-06",
+      "provisional": false
+    },
+    {
+      "month": "2026-02",
+      "peak": 72.163,
+      "day": "2026-02-16",
+      "provisional": false
+    },
+    {
+      "month": "2026-03",
+      "peak": 66.052,
+      "day": "2026-03-27",
+      "provisional": false
+    },
+    {
+      "month": "2026-04",
+      "peak": 63.815,
+      "day": "2026-04-02",
+      "provisional": false
+    },
+    {
+      "month": "2026-05",
+      "peak": 54.945,
+      "day": "2026-05-28",
+      "provisional": false
+    },
+    {
+      "month": "2026-06",
+      "peak": 60.72,
+      "day": "2026-06-25",
+      "provisional": false
+    },
+    {
+      "month": "2026-07",
+      "peak": 57.941,
+      "day": "2026-07-09",
+      "provisional": false
+    },
+    {
+      "month": "2026-08",
+      "peak": 53.938,
+      "day": "2026-08-14",
+      "provisional": false
+    },
+    {
+      "month": "2026-09",
+      "peak": 53.226,
+      "day": "2026-09-07",
+      "provisional": true
+    },
+    {
+      "month": "2026-10",
+      "peak": 59.001,
+      "day": "2026-10-23",
+      "provisional": true
+    }
+  ],
+  "winter_gw_per_c": 1.907,
+  "accuracy": {
+    "first_origin": "2016-01",
+    "last_origin": "2026-09",
+    "mape": {
+      "1 month": 4.155,
+      "2-3 months": 5.088,
+      "4-6 months": 4.875,
+      "7-12 months": 4.818
+    },
+    "mape_naive": {
+      "1 month": 5.658,
+      "2-3 months": 5.661,
+      "4-6 months": 5.668,
+      "7-12 months": 5.77
+    },
+    "mape_naive_corrected": {
+      "1 month": 5.136,
+      "2-3 months": 5.14,
+      "4-6 months": 5.172,
+      "7-12 months": 5.283
+    },
+    "mape_since_2023": {
+      "1 month": 4.406,
+      "2-3 months": 5.004,
+      "4-6 months": 4.992,
+      "7-12 months": 4.751
+    },
+    "coverage_first_origin": "2018-01",
+    "coverage": {
+      "all months": 72.42,
+      "December to February": 72.852,
+      "June to August": 78.317
+    },
+    "coverage_since_2023": {
+      "all months": 74.892,
+      "December to February": 67.568,
+      "June to August": 71.318
+    }
+  }
+}
