@@ -7,8 +7,6 @@
   --v-masthead: 4rem;
   --v-day-top: calc(var(--v-masthead) + 1rem);
   --v-day-h: min(calc(100svh - var(--v-masthead) - 2rem), 56rem);
-
-  scroll-margin-top: var(--v-masthead);
 }
 
 .v-day .chapter-head {
