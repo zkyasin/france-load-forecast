@@ -257,11 +257,16 @@
     grid-template-columns: 0.75rem 1fr auto;
   }
 
-  .step-hero h1,
-  .step-hero .lead {
-    padding: 0.5rem 0.75rem;
-    margin-inline: -0.75rem;
-    background: color-mix(in srgb, var(--bg) 86%, transparent);
+  /* The city waits below the headline: the cue to scroll sits close to the text, above it. */
+  .step-hero .scroll-cue {
+    margin-top: 1.25rem;
+  }
+}
+
+@media (max-width: 44rem) and (max-height: 49rem) {
+  /* On a short phone the cue would sit on the roofs: the city below says it already. */
+  .step-hero .scroll-cue {
+    display: none;
   }
 }
 
@@ -271,11 +276,28 @@ body:has(.chat-corner) .stage-credit {
   text-align: right;
 }
 
+/*
+ * On a phone the cards and the pylon take the bottom of the screen: the credit goes to the top,
+ * under the masthead, with the colour key below it, and both wait over the headline.
+ */
 @media (max-width: 44rem) {
-  body:has(.chat-corner) .stage-credit {
-    right: var(--gutter);
-    bottom: 7.5rem;
-    left: var(--gutter);
+  body:has(.chat-corner) #story .stage-credit {
+    top: calc(4.5rem + env(safe-area-inset-top, 0px));
+    right: 0.75rem;
+    bottom: auto;
+    left: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: color-mix(in srgb, #fff 80%, transparent);
+    font-size: 0.625rem;
     text-align: left;
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  #story .stage-credit[data-off] {
+    opacity: 0;
+  }
+
+  #story .v-key {
+    top: calc(7.75rem + env(safe-area-inset-top, 0px));
   }
 }

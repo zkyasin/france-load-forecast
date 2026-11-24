@@ -105,7 +105,7 @@ function streets(paving = PAVING): THREE.CanvasTexture {
 }
 
 export function createColourCity(canvas: HTMLCanvasElement, o: ColourOptions) {
-  const { slots, districtAt, monthAt, cellAt, focus, keys, forecastAt } = plan(
+  const { slots, districtAt, monthAt, cellAt, focus, keys, narrowKeys, forecastAt } = plan(
     o.years,
     o.zoom,
     o.focus,
@@ -116,8 +116,11 @@ export function createColourCity(canvas: HTMLCanvasElement, o: ColourOptions) {
     background: BACKDROP,
     layer: o.layer,
     keys,
+    narrowKeys,
     fov: 38,
     narrowFov: 62,
+    // On a phone, what the camera looks at sits above the card at the bottom.
+    narrowLift: 0.12,
   });
   const { scene, renderer } = stage;
   // A neutral studio for the glaze's reflections.

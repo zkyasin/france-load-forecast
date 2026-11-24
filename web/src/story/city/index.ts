@@ -13,7 +13,7 @@ import { HIGH, LOW, powerHex } from "./palette";
 
 export async function mount(ctx: Context): Promise<() => void> {
   const s = scope();
-  const { canvas, layer, cards } = await frame(s, ctx, {
+  const { canvas, layer, credit, cards } = await frame(s, ctx, {
     label:
       "Une ville miniature dont chaque immeuble est un jour depuis 2012, haut et coloré selon sa consommation moyenne, un quartier par année",
     credit: `RTE, éCO2mix (ODRÉ), Licence Ouverte 2.0 · hauteur et couleur : puissance moyenne du jour, de l'indigo (${LOW} GW) au rose (${HIGH} GW) · prévision du projet : médiane, échafaudage jusqu'à la borne haute`,
@@ -28,7 +28,12 @@ export async function mount(ctx: Context): Promise<() => void> {
     gradient: `linear-gradient(90deg, ${steps.join(", ")})`,
     ends: [`${LOW} GW`, `${HIGH} GW`],
   });
-  key(0);
+  // The credit waits with the key: on a phone both sit at the top, where the headline is.
+  const corner = (t: number) => {
+    key(t);
+    credit.toggleAttribute("data-off", t < 0.3);
+  };
+  corner(0);
   try {
     const data = await cityData(ctx);
     cards.forEach((c, k) => {
@@ -37,7 +42,7 @@ export async function mount(ctx: Context): Promise<() => void> {
     const { createColourCity } = await import("./scene");
     const scene = createColourCity(canvas, { lite: ctx.lite, layer, ...data });
     s.add(() => scene.destroy());
-    drive(s, ctx, scene, cards.length, 3.7, key);
+    drive(s, ctx, scene, cards.length, 3.7, corner);
   } catch (error) {
     console.error(error);
     ctx.story.classList.add("no-model");

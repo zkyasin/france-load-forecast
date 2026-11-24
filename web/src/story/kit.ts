@@ -35,7 +35,7 @@ export async function frame(
   const canvas = stageCanvas(s, ctx.stage, options.label);
   const layer = s.element(ctx.stage, "div", "stage-labels v-labels");
   layer.setAttribute("aria-hidden", "true");
-  s.element(ctx.stage, "p", "stage-credit", options.credit);
+  const credit = s.element(ctx.stage, "p", "stage-credit", options.credit);
   const cards: Card[] = options.cards.map((spec) => {
     const step = s.element(ctx.steps, "article", "step");
     const inner = s.element(step, "div", "step-card");
@@ -45,7 +45,7 @@ export async function frame(
     return { step, inner, text };
   });
   activeSteps(s, ctx.steps);
-  return { canvas, layer, cards };
+  return { canvas, layer, credit, cards };
 }
 
 /** A legend in the corner of the stage, whose items appear one step after another. */

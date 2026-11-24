@@ -7,6 +7,9 @@
 import * as THREE from "three";
 import type { Key } from "../stage";
 
+/** The camera over the headline on a phone: its height, its depth, and the depth it aims at. */
+const NARROW_HERO = { y: 16, z: 15, aim: -20 };
+
 export const CELL = 0.08;
 export const MONTH_W = 7 * CELL + 0.14;
 export const MONTH_D = 6 * CELL + 0.14;
@@ -77,7 +80,22 @@ export function plan(years: number[], zoom: number, focusDays: CityFocus[]) {
     { t: 3.7, position: [-8, 4.5, 8.5], target: [0, 0.3, 0] },
     { t: 4.7, position: [fx + 2.4, 2.2, fz + 3.2], target: [fx, 0.4, fz] },
   ];
-  return { slots, districtAt, monthAt, cellAt, focus, keys, forecastAt: [fx, fz] as const };
+  // On a phone the headline holds the top of the screen: the city waits below it, seen from
+  // further back, and rises into view with the first card.
+  const narrowKeys: Key[] = [
+    { t: 0, position: [1.5, NARROW_HERO.y, NARROW_HERO.z], target: [0, 0, NARROW_HERO.aim] },
+    ...keys.slice(1),
+  ];
+  return {
+    slots,
+    districtAt,
+    monthAt,
+    cellAt,
+    focus,
+    keys,
+    narrowKeys,
+    forecastAt: [fx, fz] as const,
+  };
 }
 
 export type Plan = ReturnType<typeof plan>;
