@@ -35,6 +35,12 @@ export interface StageOptions {
   keys: Key[];
   /** A narrow screen keeps the same keys, seen from further away. */
   narrowFov?: number;
+  /** On a narrow screen, keys of its own, such as a headline framed under its title. */
+  narrowKeys?: Key[];
+  /** On a narrow screen, the camera stands this many times as far from its target. */
+  narrowDistance?: number;
+  /** On a narrow screen, the scene moves up by this share of the height, above the cards. */
+  narrowLift?: number;
   fov?: number;
   layer: HTMLElement;
   /** Called before each frame with the time in steps. */
@@ -84,6 +90,7 @@ export function createStage(canvas: HTMLCanvasElement, options: StageOptions) {
   let width = 1;
   let height = 1;
   let pipeline: Pipeline | null = null;
+  let narrow = false;
   const target = new THREE.Vector3();
 
   const resize = () => {
@@ -92,10 +99,11 @@ export function createStage(canvas: HTMLCanvasElement, options: StageOptions) {
     if (!width || !height) return;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
-    const narrow = width < height;
+    narrow = width < height;
     camera.fov = narrow ? (options.narrowFov ?? 52) : (options.fov ?? 32);
     const shift = !narrow && width / height > 1.15 ? (options.shift ?? 0.17) : 0;
-    camera.setViewOffset(width, height, -width * shift, 0, width, height);
+    const lift = narrow ? height * (options.narrowLift ?? 0) : 0;
+    camera.setViewOffset(width, height, -width * shift, lift, width, height);
     camera.updateProjectionMatrix();
     pipeline?.resize?.(width, height);
     dirty = true;
@@ -119,10 +127,12 @@ export function createStage(canvas: HTMLCanvasElement, options: StageOptions) {
     }
   };
   const draw = () => {
-    const { position, target: aim } = at(options.keys, t);
+    const keys = narrow && options.narrowKeys ? options.narrowKeys : options.keys;
+    const { position, target: aim } = at(keys, t);
     target.copy(aim);
     options.update?.(t);
-    camera.position.copy(position);
+    const distance = narrow ? (options.narrowDistance ?? 1) : 1;
+    camera.position.copy(position.sub(aim).multiplyScalar(distance).add(aim));
     camera.lookAt(target);
     camera.updateMatrixWorld();
     if (pipeline) pipeline.render();
