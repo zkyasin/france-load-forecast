@@ -568,6 +568,7 @@ h1 {
  * Chapters: a large title, its summary beside it, then the chart across the width. The chapters
  * share one centred column, so that titles, text and charts start on one axis: the map alone takes
  * the width of the page, and a chapter of text alone keeps its lines short within the column.
+ * Between two chapters, an even space before the hairline of the next.
  */
 
 main {
@@ -577,7 +578,7 @@ main {
 .chapter {
   position: relative;
   z-index: 3;
-  padding: clamp(5rem, 11vw, 10rem) var(--gutter) clamp(3rem, 6vw, 5rem);
+  padding: clamp(1.5rem, 2.5vw, 2rem) var(--gutter);
   counter-increment: chapter;
 }
 
