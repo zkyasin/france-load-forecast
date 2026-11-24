@@ -90,6 +90,8 @@ The page, in French, is at <https://zkyasin.github.io/france-load-forecast/>. It
 - the forecast of the next twelve months with its band, and the forecast of any past
   publication against the months measured since;
 - the accuracy of past forecasts;
+- the peak of each month, its highest half-hour, measured then forecast with its band, the peak
+  expected this winter and the peak of the last one;
 - the gaps of the last twelve months, against the year before or against the forecast, split
   into weather, calendar and other effects;
 - the note of the month, written by the agent;

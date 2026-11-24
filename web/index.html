@@ -20,6 +20,7 @@
         <nav aria-label="Sections de la page">
           <ul>
             <li><a href="#accuracy-title">Fiabilité</a></li>
+            <li id="peak-nav" hidden><a href="#peak-title">Pointe</a></li>
             <li><a href="#gaps-title">Écarts</a></li>
             <li><a href="#note-title">Note</a></li>
             <li><a href="#questions">Questions</a></li>
@@ -125,6 +126,58 @@
           <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
           <section class="table-scroll" tabindex="0" aria-labelledby="accuracy-values">
             <table id="accuracy-table"></table>
+          </section>
+        </details>
+      </section>
+
+      <section id="peak" aria-labelledby="peak-title" hidden>
+        <h2 id="peak-title">Pointe</h2>
+        <p class="prose" id="peak-summary"></p>
+        <ul class="legend">
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <line class="measured" x1="0" y1="6" x2="24" y2="6" />
+              <circle class="measured" cx="12" cy="6" r="4" />
+            </svg>
+            Pointe mesurée
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <circle class="provisional" cx="12" cy="6" r="3.5" />
+            </svg>
+            Mois provisoire, en temps réel
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <line class="forecast" x1="0" y1="6" x2="24" y2="6" />
+            </svg>
+            Prévision médiane (P50)
+          </li>
+          <li>
+            <svg class="key" viewBox="0 0 24 12" aria-hidden="true">
+              <rect class="band" x="0" y="0" width="24" height="12" rx="2" />
+            </svg>
+            Bande P10–P90
+          </li>
+        </ul>
+        <figure class="chart">
+          <div
+            class="plot"
+            id="peak-plot"
+            role="img"
+            aria-label="Pointe de chaque mois, mesurée puis prévue, avec la bande P10–P90"
+          ></div>
+          <figcaption>
+            Plus forte demi-heure de consommation de chaque mois, en GW, en France continentale hors
+            Corse.
+          </figcaption>
+        </figure>
+        <p class="prose" id="peak-accuracy"></p>
+        <details>
+          <summary id="peak-values">Valeurs du graphique, en GW</summary>
+          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+          <section class="table-scroll" tabindex="0" aria-labelledby="peak-values">
+            <table id="peak-table"></table>
           </section>
         </details>
       </section>

@@ -142,6 +142,27 @@ export interface Scenarios {
   cases: Case[];
 }
 
+/** The highest half-hour of a whole month measured, in GW, and the day it fell on. */
+export interface MeasuredPeak {
+  month: string;
+  peak: number;
+  day: string;
+  provisional: boolean;
+}
+
+/** The monthly peak forecast, in GW: the same fields as the energy forecast, `measured` being the
+ * highest day so far. */
+export interface Peak {
+  published: string;
+  model_id: string;
+  current_month: string;
+  months: ForecastMonth[];
+  history: MeasuredPeak[];
+  // Rise of the daily peak for one degree less, from December to February.
+  winter_gw_per_c: number;
+  accuracy: Omit<Accuracy, "published" | "model_id">;
+}
+
 export interface Bundle {
   meta: Meta;
   forecast: Forecast;
@@ -150,6 +171,8 @@ export interface Bundle {
   gaps: Gaps;
   model: Model;
   scenarios: Scenarios;
+  // Missing from the bundles published before the peak was.
+  peak: Peak | null;
 }
 
 async function get<T>(path: string): Promise<T> {
@@ -162,7 +185,7 @@ async function get<T>(path: string): Promise<T> {
 
 /** The last published bundle. */
 export async function latest(): Promise<Bundle> {
-  const [meta, forecast, history, accuracy, gaps, model, scenarios] = await Promise.all([
+  const [meta, forecast, history, accuracy, gaps, model, scenarios, peak] = await Promise.all([
     get<Meta>("data/latest/meta.json"),
     get<Forecast>("data/latest/forecast.json"),
     get<History>("data/latest/history.json"),
@@ -170,8 +193,9 @@ export async function latest(): Promise<Bundle> {
     get<Gaps>("data/latest/gaps.json"),
     get<Model>("data/latest/model.json"),
     get<Scenarios>("data/latest/scenarios.json"),
+    get<Peak>("data/latest/peak.json").catch(() => null),
   ]);
-  return { meta, forecast, history, accuracy, gaps, model, scenarios };
+  return { meta, forecast, history, accuracy, gaps, model, scenarios, peak };
 }
 
 /** Dates of all publications, oldest first. */

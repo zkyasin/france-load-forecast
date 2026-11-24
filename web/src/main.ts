@@ -9,6 +9,7 @@ import * as forecast from "./forecast";
 import { dayName, daysSince, NBSP, signed } from "./format";
 import * as gaps from "./gaps";
 import * as notes from "./notes";
+import * as peak from "./peak";
 import * as scenarios from "./scenarios";
 import * as temperature from "./temperature";
 
@@ -54,6 +55,7 @@ async function main(): Promise<void> {
   const sections: [string, () => void][] = [
     ["Prévision", () => forecast.render(bundle, days)],
     ["Fiabilité", () => accuracy.render(bundle.accuracy)],
+    ["Pointe", () => peak.render(bundle.peak)],
     ["Écarts", () => gaps.render(bundle.gaps)],
     ["Note du mois", () => notes.render()],
     ["Questions", () => chat.render(bundle)],
