@@ -18,8 +18,8 @@ const signedTwh = (value: number): string => `${signed(value)}${NBSP}TWh`;
 const millions = (value: number): string =>
   `${number(value)}${NBSP}${value >= 2 ? "millions" : "million"}`;
 
-export const title = (drivers: Drivers): string =>
-  `Pourquoi la consommation a ${change(drivers) < 0 ? "baissé" : "augmenté"} depuis ${drivers.base_year}`;
+/** A short title, as for the other chapters: the summary beside it says which way it went. */
+export const title = (drivers: Drivers): string => `Depuis ${drivers.base_year}`;
 
 /** "de septembre 2025 à août 2026": the twelve months compared with the base year. */
 const months = (drivers: Drivers): string =>
