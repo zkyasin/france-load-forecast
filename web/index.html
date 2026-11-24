@@ -170,6 +170,7 @@
                 role="img"
                 aria-label="Erreur moyenne des prévisions passées selon leur horizon, pour ce modèle et deux prévisions naïves"
               ></div>
+              <figcaption id="accuracy-caption"></figcaption>
             </figure>
             <p class="prose" id="accuracy-coverage"></p>
             <details>
@@ -224,10 +225,7 @@
                 role="img"
                 aria-label="Pointe de chaque mois, mesurée puis prévue, avec la bande P10–P90"
               ></div>
-              <figcaption>
-                Plus forte demi-heure de consommation de chaque mois, en GW, en France continentale
-                hors Corse.
-              </figcaption>
+              <figcaption>En GW, en France continentale hors Corse.</figcaption>
             </figure>
             <p class="prose" id="peak-accuracy"></p>
             <details>
@@ -348,9 +346,10 @@
                 role="img"
                 aria-label="Hausse de la consommation pour un degré de moins, selon la température"
               ></div>
+              <figcaption id="temperature-caption"></figcaption>
             </figure>
             <details>
-              <summary id="temperature-values">Valeurs du graphique</summary>
+              <summary id="temperature-values">Valeurs du graphique, en GW par degré</summary>
               <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
               <section class="table-scroll" tabindex="0" aria-labelledby="temperature-values">
                 <table id="temperature-table"></table>
@@ -406,6 +405,7 @@
                 role="img"
                 aria-label="Énergie consommée chaque année, mesurée et corrigée de la météo"
               ></div>
+              <figcaption id="history-caption"></figcaption>
             </figure>
             <details>
               <summary id="history-values">Valeurs du graphique, en TWh</summary>
@@ -423,12 +423,9 @@
           <header class="chapter-head">
             <h2 id="scenarios-title">Scénarios</h2>
             <p class="intro">
-              Les scénarios prolongent la consommation jusqu'en 2031 selon trois trajectoires du Bilan
-              prévisionnel 2025 de RTE. Ils appliquent au niveau actuel de la consommation, à
-              température de référence, la croissance annuelle moyenne de chaque trajectoire entre les
-              années dont RTE donne le niveau (2024, 2030, 2035), et non ces niveaux, qui portent sur un
-              autre périmètre. La stagnation, un test de sensibilité de RTE, sert de référence avec un
-              hiver normal.
+              Trois trajectoires du Bilan prévisionnel 2025 de RTE prolongent la consommation
+              d'aujourd'hui jusqu'en 2031. La stagnation, un test de sensibilité de RTE, sert de
+              référence avec un hiver normal.
             </p>
           </header>
           <div class="chapter-body">
@@ -473,14 +470,26 @@
                 aria-label="Énergie de chaque année jusqu'en 2031 selon trois trajectoires de consommation"
               ></div>
             </figure>
-            <p class="prose">
-              Ce sont des ordres de grandeur, pas des prévisions. Les hivers observés depuis 2012 sont
-              peu nombreux pour estimer un hiver qui revient une année sur dix. Les trajectoires de RTE
-              ne croissent pas au même rythme chaque année : la lente monte surtout à partir de 2027,
-              et une croissance moyenne depuis 2024 sous-estime alors celle des années 2027 à 2031.
-              Enfin, les scénarios partent du niveau d'aujourd'hui, alors que les niveaux du Bilan
-              prévisionnel pour 2030 supposent une croissance depuis 2024.
-            </p>
+            <p class="prose">Ce sont des ordres de grandeur, pas des prévisions.</p>
+            <details>
+              <summary>Construction et limites des scénarios</summary>
+              <div class="details-prose">
+                <p>
+                  Les scénarios appliquent au niveau actuel de la consommation, à température de
+                  référence, la croissance annuelle moyenne de chaque trajectoire entre les années dont
+                  RTE donne le niveau (2024, 2030, 2035), et non ces niveaux, qui portent sur un autre
+                  périmètre.
+                </p>
+                <p>
+                  Les hivers observés depuis 2012 sont peu nombreux pour estimer un hiver qui revient
+                  une année sur dix. Les trajectoires de RTE ne croissent pas au même rythme chaque
+                  année : la lente monte surtout à partir de 2027, et une croissance moyenne depuis 2024
+                  sous-estime alors celle des années 2027 à 2031. Enfin, les scénarios partent du niveau
+                  d'aujourd'hui, alors que les niveaux du Bilan prévisionnel pour 2030 supposent une
+                  croissance depuis 2024.
+                </p>
+              </div>
+            </details>
             <details>
               <summary id="scenarios-values">Énergie de chaque scénario, en TWh</summary>
               <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->

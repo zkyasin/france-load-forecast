@@ -21,9 +21,8 @@ export function signChange(gradients: Gradient[]): [number, number] | undefined 
 export function summary(model: Model): string {
   const { winter, by_temperature: gradients } = model.thermosensitivity;
   const sentences = [
-    `Le modèle a été estimé sur les jours du ${dayName(model.fitted_from)} au ` +
-      `${dayName(model.fitted_until)}. En hiver, de décembre à février, un degré de moins fait ` +
-      `monter la consommation de ${gw(winter)} en moyenne sur la journée.`,
+    `En hiver, de décembre à février, un degré de moins fait monter la consommation de ` +
+      `${gw(winter)} en moyenne sur la journée.`,
   ];
   const coldest = gradients[0];
   if (coldest !== undefined && coldest.gw_per_c > winter) {
@@ -41,6 +40,10 @@ export function summary(model: Model): string {
   }
   return sentences.join(" ");
 }
+
+/** The days the model was fitted on, under the chart. */
+export const fitted = (model: Model): string =>
+  `Modèle estimé sur les jours du ${dayName(model.fitted_from)} au ${dayName(model.fitted_until)}.`;
 
 export const tipText = ({ temperature, gw_per_c }: Gradient): string =>
   `À ${celsius(temperature, 0)}, un degré de moins ${gw_per_c < 0 ? "retire" : "ajoute"} ` +
@@ -99,6 +102,7 @@ function plot(gradients: Gradient[], width: number, colors: Colors) {
 export function render(model: Model): void {
   const gradients = model.thermosensitivity.by_temperature;
   byId("temperature-summary").textContent = summary(model);
+  byId("temperature-caption").textContent = fitted(model);
   drawIn(byId("temperature-plot"), (width, colors) => plot(gradients, width, colors));
   fillTable(
     byId<HTMLTableElement>("temperature-table"),

@@ -960,6 +960,18 @@ summary:hover {
   color: var(--ink);
 }
 
+.details-prose {
+  max-width: 68ch;
+  padding-bottom: 0.5rem;
+}
+
+.chapter-body .details-prose p {
+  margin: 0 0 0.875rem;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
 .table-scroll {
   overflow-x: auto;
 }
