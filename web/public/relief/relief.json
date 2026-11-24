@@ -1,0 +1,33 @@
+{
+  "source": "RTE, éCO2mix (ODRÉ), Licence Ouverte 2.0",
+  "start": "2012-01-01",
+  "end": "2026-11-21",
+  "days": 5439,
+  "unit_mw": 50,
+  "consolidated_until": "2026-08-31",
+  "peak": {
+    "day": "2012-02-08",
+    "hour": 19,
+    "mw": 101650
+  },
+  "last_day": {
+    "day": "2026-11-21",
+    "low": {
+      "hour": 4,
+      "mw": 44330
+    },
+    "high": {
+      "hour": 19,
+      "mw": 55215
+    },
+    "twh": 1.222
+  },
+  "april_2020": {
+    "twh": 30.47,
+    "mean_2015_2019": 37.15
+  },
+  "winter_2022": {
+    "twh": 170.86,
+    "mean_2014_2018": 189.95
+  }
+}
