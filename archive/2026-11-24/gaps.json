@@ -1,0 +1,366 @@
+{
+  "published": "2026-11-24",
+  "model_id": "baseline",
+  "months": [
+    {
+      "month": "2025-11",
+      "provisional": false,
+      "temperature": {
+        "mean": 9.253,
+        "reference": 9.1,
+        "year_before": 9.337,
+        "forecast": 8.857
+      },
+      "against_forecast": {
+        "actual": 39.973,
+        "reference": 39.77,
+        "gap": 0.203,
+        "climate": 0.048,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": -0.09,
+        "residual": 0.245
+      },
+      "against_year_before": {
+        "actual": 39.973,
+        "reference": 39.333,
+        "gap": 0.641,
+        "climate": 0.541,
+        "calendar": -0.123,
+        "lockdown": 0.0,
+        "structural": 0.023,
+        "residual": 0.2
+      }
+    },
+    {
+      "month": "2025-12",
+      "provisional": false,
+      "temperature": {
+        "mean": 7.097,
+        "reference": 6.287,
+        "year_before": 6.071,
+        "forecast": 6.623
+      },
+      "against_forecast": {
+        "actual": 44.947,
+        "reference": 46.564,
+        "gap": -1.617,
+        "climate": -0.759,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": -0.245,
+        "residual": -0.613
+      },
+      "against_year_before": {
+        "actual": 44.947,
+        "reference": 46.113,
+        "gap": -1.166,
+        "climate": -1.485,
+        "calendar": 0.087,
+        "lockdown": 0.0,
+        "structural": 0.031,
+        "residual": 0.2
+      }
+    },
+    {
+      "month": "2026-01",
+      "provisional": false,
+      "temperature": {
+        "mean": 5.371,
+        "reference": 5.594,
+        "year_before": 5.29,
+        "forecast": 5.403
+      },
+      "against_forecast": {
+        "actual": 49.987,
+        "reference": 48.272,
+        "gap": 1.716,
+        "climate": 0.012,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": 0.497,
+        "residual": 1.208
+      },
+      "against_year_before": {
+        "actual": 49.987,
+        "reference": 49.512,
+        "gap": 0.475,
+        "climate": -0.003,
+        "calendar": -0.179,
+        "lockdown": 0.0,
+        "structural": 0.045,
+        "residual": 0.613
+      }
+    },
+    {
+      "month": "2026-02",
+      "provisional": false,
+      "temperature": {
+        "mean": 9.089,
+        "reference": 6.4,
+        "year_before": 6.389,
+        "forecast": 7.123
+      },
+      "against_forecast": {
+        "actual": 39.948,
+        "reference": 41.222,
+        "gap": -1.275,
+        "climate": -2.423,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": 0.104,
+        "residual": 1.044
+      },
+      "against_year_before": {
+        "actual": 39.948,
+        "reference": 42.286,
+        "gap": -2.338,
+        "climate": -3.439,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": 0.05,
+        "residual": 1.051
+      }
+    },
+    {
+      "month": "2026-03",
+      "provisional": false,
+      "temperature": {
+        "mean": 9.739,
+        "reference": 9.023,
+        "year_before": 9.213,
+        "forecast": 9.303
+      },
+      "against_forecast": {
+        "actual": 39.918,
+        "reference": 41.101,
+        "gap": -1.183,
+        "climate": -0.784,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": -0.187,
+        "residual": -0.212
+      },
+      "against_year_before": {
+        "actual": 39.918,
+        "reference": 40.732,
+        "gap": -0.815,
+        "climate": -1.077,
+        "calendar": 0.109,
+        "lockdown": 0.0,
+        "structural": 0.056,
+        "residual": 0.097
+      }
+    },
+    {
+      "month": "2026-04",
+      "provisional": false,
+      "temperature": {
+        "mean": 13.817,
+        "reference": 11.933,
+        "year_before": 13.313,
+        "forecast": 11.34
+      },
+      "against_forecast": {
+        "actual": 33.545,
+        "reference": 36.124,
+        "gap": -2.579,
+        "climate": -2.151,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": -0.111,
+        "residual": -0.318
+      },
+      "against_year_before": {
+        "actual": 33.545,
+        "reference": 33.289,
+        "gap": 0.256,
+        "climate": -0.185,
+        "calendar": 0.006,
+        "lockdown": 0.0,
+        "structural": 0.048,
+        "residual": 0.387
+      }
+    },
+    {
+      "month": "2026-05",
+      "provisional": false,
+      "temperature": {
+        "mean": 17.19,
+        "reference": 15.574,
+        "year_before": 15.99,
+        "forecast": 15.248
+      },
+      "against_forecast": {
+        "actual": 32.546,
+        "reference": 32.054,
+        "gap": 0.492,
+        "climate": 0.639,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": 0.075,
+        "residual": -0.223
+      },
+      "against_year_before": {
+        "actual": 32.546,
+        "reference": 31.209,
+        "gap": 1.337,
+        "climate": 0.965,
+        "calendar": -0.107,
+        "lockdown": 0.0,
+        "structural": 0.041,
+        "residual": 0.438
+      }
+    },
+    {
+      "month": "2026-06",
+      "provisional": false,
+      "temperature": {
+        "mean": 22.467,
+        "reference": 19.097,
+        "year_before": 21.793,
+        "forecast": 18.91
+      },
+      "against_forecast": {
+        "actual": 32.996,
+        "reference": 30.959,
+        "gap": 2.038,
+        "climate": 1.345,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": 0.123,
+        "residual": 0.57
+      },
+      "against_year_before": {
+        "actual": 32.996,
+        "reference": 31.636,
+        "gap": 1.36,
+        "climate": 0.654,
+        "calendar": 0.249,
+        "lockdown": 0.0,
+        "structural": 0.033,
+        "residual": 0.423
+      }
+    },
+    {
+      "month": "2026-07",
+      "provisional": false,
+      "temperature": {
+        "mean": 24.248,
+        "reference": 21.287,
+        "year_before": 21.4,
+        "forecast": 21.158
+      },
+      "against_forecast": {
+        "actual": 34.431,
+        "reference": 32.531,
+        "gap": 1.9,
+        "climate": 1.271,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": -0.133,
+        "residual": 0.762
+      },
+      "against_year_before": {
+        "actual": 34.431,
+        "reference": 32.925,
+        "gap": 1.506,
+        "climate": 1.116,
+        "calendar": -0.087,
+        "lockdown": 0.0,
+        "structural": 0.031,
+        "residual": 0.446
+      }
+    },
+    {
+      "month": "2026-08",
+      "provisional": false,
+      "temperature": {
+        "mean": 23.571,
+        "reference": 20.9,
+        "year_before": 21.735,
+        "forecast": 21.069
+      },
+      "against_forecast": {
+        "actual": 32.078,
+        "reference": 31.849,
+        "gap": 0.229,
+        "climate": 0.978,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": -0.305,
+        "residual": -0.444
+      },
+      "against_year_before": {
+        "actual": 32.078,
+        "reference": 30.934,
+        "gap": 1.144,
+        "climate": 0.792,
+        "calendar": 0.09,
+        "lockdown": 0.0,
+        "structural": 0.024,
+        "residual": 0.237
+      }
+    },
+    {
+      "month": "2026-09",
+      "provisional": true,
+      "temperature": {
+        "mean": 19.9,
+        "reference": 17.757,
+        "year_before": 16.59,
+        "forecast": 17.225
+      },
+      "against_forecast": {
+        "actual": 31.209,
+        "reference": 31.44,
+        "gap": -0.231,
+        "climate": -0.02,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": -0.162,
+        "residual": -0.049
+      },
+      "against_year_before": {
+        "actual": 31.209,
+        "reference": 31.41,
+        "gap": -0.201,
+        "climate": -0.131,
+        "calendar": 0.024,
+        "lockdown": 0.0,
+        "structural": 0.013,
+        "residual": -0.107
+      }
+    },
+    {
+      "month": "2026-10",
+      "provisional": true,
+      "temperature": {
+        "mean": 13.913,
+        "reference": 13.771,
+        "year_before": 13.31,
+        "forecast": 13.721
+      },
+      "against_forecast": {
+        "actual": 34.377,
+        "reference": 34.298,
+        "gap": 0.079,
+        "climate": 0.285,
+        "calendar": 0.0,
+        "lockdown": 0.0,
+        "structural": -0.074,
+        "residual": -0.133
+      },
+      "against_year_before": {
+        "actual": 34.377,
+        "reference": 35.023,
+        "gap": -0.646,
+        "climate": -0.061,
+        "calendar": -0.114,
+        "lockdown": 0.0,
+        "structural": 0.001,
+        "residual": -0.473
+      }
+    }
+  ]
+}

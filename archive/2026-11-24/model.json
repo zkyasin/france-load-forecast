@@ -1,0 +1,39 @@
+{
+  "published": "2026-11-24",
+  "model_id": "baseline",
+  "fitted_from": "2023-11-01",
+  "fitted_until": "2026-10-31",
+  "thermosensitivity": {
+    "winter": 2.002,
+    "by_temperature": [
+      {
+        "temperature": 0.0,
+        "gw_per_c": 2.387
+      },
+      {
+        "temperature": 5.0,
+        "gw_per_c": 2.147
+      },
+      {
+        "temperature": 10.0,
+        "gw_per_c": 1.731
+      },
+      {
+        "temperature": 15.0,
+        "gw_per_c": 0.647
+      },
+      {
+        "temperature": 20.0,
+        "gw_per_c": -0.385
+      },
+      {
+        "temperature": 25.0,
+        "gw_per_c": -0.703
+      },
+      {
+        "temperature": 30.0,
+        "gw_per_c": -0.881
+      }
+    ]
+  }
+}

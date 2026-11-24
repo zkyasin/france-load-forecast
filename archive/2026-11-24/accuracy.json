@@ -1,0 +1,41 @@
+{
+  "published": "2026-11-24",
+  "model_id": "baseline",
+  "first_origin": "2016-01",
+  "last_origin": "2026-09",
+  "mape": {
+    "1 month": 2.957,
+    "2-3 months": 3.449,
+    "4-6 months": 3.539,
+    "7-12 months": 3.574
+  },
+  "mape_naive": {
+    "1 month": 4.408,
+    "2-3 months": 4.404,
+    "4-6 months": 4.41,
+    "7-12 months": 4.485
+  },
+  "mape_naive_corrected": {
+    "1 month": 3.56,
+    "2-3 months": 3.572,
+    "4-6 months": 3.567,
+    "7-12 months": 3.624
+  },
+  "mape_since_2023": {
+    "1 month": 2.268,
+    "2-3 months": 2.489,
+    "4-6 months": 2.514,
+    "7-12 months": 2.392
+  },
+  "coverage_first_origin": "2018-01",
+  "coverage": {
+    "all months": 78.934,
+    "December to February": 77.663,
+    "June to August": 83.819
+  },
+  "coverage_since_2023": {
+    "all months": 88.312,
+    "December to February": 92.793,
+    "June to August": 78.295
+  }
+}

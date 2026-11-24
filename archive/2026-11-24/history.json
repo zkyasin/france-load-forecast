@@ -1,0 +1,1006 @@
+{
+  "published": "2026-11-24",
+  "model_id": "baseline",
+  "months": [
+    {
+      "month": "2012-01",
+      "energy": 50.787,
+      "provisional": false
+    },
+    {
+      "month": "2012-02",
+      "energy": 54.182,
+      "provisional": false
+    },
+    {
+      "month": "2012-03",
+      "energy": 42.901,
+      "provisional": false
+    },
+    {
+      "month": "2012-04",
+      "energy": 39.95,
+      "provisional": false
+    },
+    {
+      "month": "2012-05",
+      "energy": 35.039,
+      "provisional": false
+    },
+    {
+      "month": "2012-06",
+      "energy": 33.005,
+      "provisional": false
+    },
+    {
+      "month": "2012-07",
+      "energy": 33.897,
+      "provisional": false
+    },
+    {
+      "month": "2012-08",
+      "energy": 31.99,
+      "provisional": false
+    },
+    {
+      "month": "2012-09",
+      "energy": 33.067,
+      "provisional": false
+    },
+    {
+      "month": "2012-10",
+      "energy": 38.439,
+      "provisional": false
+    },
+    {
+      "month": "2012-11",
+      "energy": 44.035,
+      "provisional": false
+    },
+    {
+      "month": "2012-12",
+      "energy": 49.325,
+      "provisional": false
+    },
+    {
+      "month": "2013-01",
+      "energy": 53.296,
+      "provisional": false
+    },
+    {
+      "month": "2013-02",
+      "energy": 49.336,
+      "provisional": false
+    },
+    {
+      "month": "2013-03",
+      "energy": 49.194,
+      "provisional": false
+    },
+    {
+      "month": "2013-04",
+      "energy": 40.142,
+      "provisional": false
+    },
+    {
+      "month": "2013-05",
+      "energy": 36.669,
+      "provisional": false
+    },
+    {
+      "month": "2013-06",
+      "energy": 32.835,
+      "provisional": false
+    },
+    {
+      "month": "2013-07",
+      "energy": 34.553,
+      "provisional": false
+    },
+    {
+      "month": "2013-08",
+      "energy": 31.39,
+      "provisional": false
+    },
+    {
+      "month": "2013-09",
+      "energy": 33.033,
+      "provisional": false
+    },
+    {
+      "month": "2013-10",
+      "energy": 36.865,
+      "provisional": false
+    },
+    {
+      "month": "2013-11",
+      "energy": 45.054,
+      "provisional": false
+    },
+    {
+      "month": "2013-12",
+      "energy": 49.801,
+      "provisional": false
+    },
+    {
+      "month": "2014-01",
+      "energy": 49.047,
+      "provisional": false
+    },
+    {
+      "month": "2014-02",
+      "energy": 44.278,
+      "provisional": false
+    },
+    {
+      "month": "2014-03",
+      "energy": 42.876,
+      "provisional": false
+    },
+    {
+      "month": "2014-04",
+      "energy": 36.098,
+      "provisional": false
+    },
+    {
+      "month": "2014-05",
+      "energy": 34.484,
+      "provisional": false
+    },
+    {
+      "month": "2014-06",
+      "energy": 32.387,
+      "provisional": false
+    },
+    {
+      "month": "2014-07",
+      "energy": 33.691,
+      "provisional": false
+    },
+    {
+      "month": "2014-08",
+      "energy": 30.749,
+      "provisional": false
+    },
+    {
+      "month": "2014-09",
+      "energy": 33.039,
+      "provisional": false
+    },
+    {
+      "month": "2014-10",
+      "energy": 36.144,
+      "provisional": false
+    },
+    {
+      "month": "2014-11",
+      "energy": 40.401,
+      "provisional": false
+    },
+    {
+      "month": "2014-12",
+      "energy": 49.15,
+      "provisional": false
+    },
+    {
+      "month": "2015-01",
+      "energy": 52.237,
+      "provisional": false
+    },
+    {
+      "month": "2015-02",
+      "energy": 48.395,
+      "provisional": false
+    },
+    {
+      "month": "2015-03",
+      "energy": 45.47,
+      "provisional": false
+    },
+    {
+      "month": "2015-04",
+      "energy": 36.681,
+      "provisional": false
+    },
+    {
+      "month": "2015-05",
+      "energy": 33.732,
+      "provisional": false
+    },
+    {
+      "month": "2015-06",
+      "energy": 33.051,
+      "provisional": false
+    },
+    {
+      "month": "2015-07",
+      "energy": 34.662,
+      "provisional": false
+    },
+    {
+      "month": "2015-08",
+      "energy": 31.346,
+      "provisional": false
+    },
+    {
+      "month": "2015-09",
+      "energy": 33.317,
+      "provisional": false
+    },
+    {
+      "month": "2015-10",
+      "energy": 38.966,
+      "provisional": false
+    },
+    {
+      "month": "2015-11",
+      "energy": 40.846,
+      "provisional": false
+    },
+    {
+      "month": "2015-12",
+      "energy": 44.445,
+      "provisional": false
+    },
+    {
+      "month": "2016-01",
+      "energy": 49.871,
+      "provisional": false
+    },
+    {
+      "month": "2016-02",
+      "energy": 46.177,
+      "provisional": false
+    },
+    {
+      "month": "2016-03",
+      "energy": 47.004,
+      "provisional": false
+    },
+    {
+      "month": "2016-04",
+      "energy": 38.886,
+      "provisional": false
+    },
+    {
+      "month": "2016-05",
+      "energy": 34.539,
+      "provisional": false
+    },
+    {
+      "month": "2016-06",
+      "energy": 32.65,
+      "provisional": false
+    },
+    {
+      "month": "2016-07",
+      "energy": 33.479,
+      "provisional": false
+    },
+    {
+      "month": "2016-08",
+      "energy": 31.887,
+      "provisional": false
+    },
+    {
+      "month": "2016-09",
+      "energy": 33.035,
+      "provisional": false
+    },
+    {
+      "month": "2016-10",
+      "energy": 38.362,
+      "provisional": false
+    },
+    {
+      "month": "2016-11",
+      "energy": 44.042,
+      "provisional": false
+    },
+    {
+      "month": "2016-12",
+      "energy": 50.384,
+      "provisional": false
+    },
+    {
+      "month": "2017-01",
+      "energy": 57.082,
+      "provisional": false
+    },
+    {
+      "month": "2017-02",
+      "energy": 43.609,
+      "provisional": false
+    },
+    {
+      "month": "2017-03",
+      "energy": 42.48,
+      "provisional": false
+    },
+    {
+      "month": "2017-04",
+      "energy": 36.429,
+      "provisional": false
+    },
+    {
+      "month": "2017-05",
+      "energy": 34.828,
+      "provisional": false
+    },
+    {
+      "month": "2017-06",
+      "energy": 33.156,
+      "provisional": false
+    },
+    {
+      "month": "2017-07",
+      "energy": 33.629,
+      "provisional": false
+    },
+    {
+      "month": "2017-08",
+      "energy": 31.851,
+      "provisional": false
+    },
+    {
+      "month": "2017-09",
+      "energy": 33.427,
+      "provisional": false
+    },
+    {
+      "month": "2017-10",
+      "energy": 36.41,
+      "provisional": false
+    },
+    {
+      "month": "2017-11",
+      "energy": 44.701,
+      "provisional": false
+    },
+    {
+      "month": "2017-12",
+      "energy": 51.441,
+      "provisional": false
+    },
+    {
+      "month": "2018-01",
+      "energy": 48.436,
+      "provisional": false
+    },
+    {
+      "month": "2018-02",
+      "energy": 49.908,
+      "provisional": false
+    },
+    {
+      "month": "2018-03",
+      "energy": 48.214,
+      "provisional": false
+    },
+    {
+      "month": "2018-04",
+      "energy": 36.057,
+      "provisional": false
+    },
+    {
+      "month": "2018-05",
+      "energy": 33.783,
+      "provisional": false
+    },
+    {
+      "month": "2018-06",
+      "energy": 32.412,
+      "provisional": false
+    },
+    {
+      "month": "2018-07",
+      "energy": 34.356,
+      "provisional": false
+    },
+    {
+      "month": "2018-08",
+      "energy": 32.196,
+      "provisional": false
+    },
+    {
+      "month": "2018-09",
+      "energy": 32.478,
+      "provisional": false
+    },
+    {
+      "month": "2018-10",
+      "energy": 36.906,
+      "provisional": false
+    },
+    {
+      "month": "2018-11",
+      "energy": 43.502,
+      "provisional": false
+    },
+    {
+      "month": "2018-12",
+      "energy": 47.27,
+      "provisional": false
+    },
+    {
+      "month": "2019-01",
+      "energy": 53.797,
+      "provisional": false
+    },
+    {
+      "month": "2019-02",
+      "energy": 44.042,
+      "provisional": false
+    },
+    {
+      "month": "2019-03",
+      "energy": 42.896,
+      "provisional": false
+    },
+    {
+      "month": "2019-04",
+      "energy": 37.689,
+      "provisional": false
+    },
+    {
+      "month": "2019-05",
+      "energy": 35.385,
+      "provisional": false
+    },
+    {
+      "month": "2019-06",
+      "energy": 32.386,
+      "provisional": false
+    },
+    {
+      "month": "2019-07",
+      "energy": 34.379,
+      "provisional": false
+    },
+    {
+      "month": "2019-08",
+      "energy": 31.317,
+      "provisional": false
+    },
+    {
+      "month": "2019-09",
+      "energy": 32.008,
+      "provisional": false
+    },
+    {
+      "month": "2019-10",
+      "energy": 36.173,
+      "provisional": false
+    },
+    {
+      "month": "2019-11",
+      "energy": 43.699,
+      "provisional": false
+    },
+    {
+      "month": "2019-12",
+      "energy": 46.704,
+      "provisional": false
+    },
+    {
+      "month": "2020-01",
+      "energy": 49.44,
+      "provisional": false
+    },
+    {
+      "month": "2020-02",
+      "energy": 43.116,
+      "provisional": false
+    },
+    {
+      "month": "2020-03",
+      "energy": 41.235,
+      "provisional": false
+    },
+    {
+      "month": "2020-04",
+      "energy": 30.472,
+      "provisional": false
+    },
+    {
+      "month": "2020-05",
+      "energy": 30.474,
+      "provisional": false
+    },
+    {
+      "month": "2020-06",
+      "energy": 30.607,
+      "provisional": false
+    },
+    {
+      "month": "2020-07",
+      "energy": 32.759,
+      "provisional": false
+    },
+    {
+      "month": "2020-08",
+      "energy": 31.189,
+      "provisional": false
+    },
+    {
+      "month": "2020-09",
+      "energy": 32.111,
+      "provisional": false
+    },
+    {
+      "month": "2020-10",
+      "energy": 38.148,
+      "provisional": false
+    },
+    {
+      "month": "2020-11",
+      "energy": 39.636,
+      "provisional": false
+    },
+    {
+      "month": "2020-12",
+      "energy": 47.393,
+      "provisional": false
+    },
+    {
+      "month": "2021-01",
+      "energy": 52.613,
+      "provisional": false
+    },
+    {
+      "month": "2021-02",
+      "energy": 42.718,
+      "provisional": false
+    },
+    {
+      "month": "2021-03",
+      "energy": 43.562,
+      "provisional": false
+    },
+    {
+      "month": "2021-04",
+      "energy": 37.448,
+      "provisional": false
+    },
+    {
+      "month": "2021-05",
+      "energy": 34.739,
+      "provisional": false
+    },
+    {
+      "month": "2021-06",
+      "energy": 31.787,
+      "provisional": false
+    },
+    {
+      "month": "2021-07",
+      "energy": 32.656,
+      "provisional": false
+    },
+    {
+      "month": "2021-08",
+      "energy": 30.897,
+      "provisional": false
+    },
+    {
+      "month": "2021-09",
+      "energy": 32.105,
+      "provisional": false
+    },
+    {
+      "month": "2021-10",
+      "energy": 36.609,
+      "provisional": false
+    },
+    {
+      "month": "2021-11",
+      "energy": 44.271,
+      "provisional": false
+    },
+    {
+      "month": "2021-12",
+      "energy": 49.182,
+      "provisional": false
+    },
+    {
+      "month": "2022-01",
+      "energy": 52.165,
+      "provisional": false
+    },
+    {
+      "month": "2022-02",
+      "energy": 42.859,
+      "provisional": false
+    },
+    {
+      "month": "2022-03",
+      "energy": 42.625,
+      "provisional": false
+    },
+    {
+      "month": "2022-04",
+      "energy": 36.852,
+      "provisional": false
+    },
+    {
+      "month": "2022-05",
+      "energy": 32.59,
+      "provisional": false
+    },
+    {
+      "month": "2022-06",
+      "energy": 32.031,
+      "provisional": false
+    },
+    {
+      "month": "2022-07",
+      "energy": 33.336,
+      "provisional": false
+    },
+    {
+      "month": "2022-08",
+      "energy": 31.487,
+      "provisional": false
+    },
+    {
+      "month": "2022-09",
+      "energy": 31.437,
+      "provisional": false
+    },
+    {
+      "month": "2022-10",
+      "energy": 32.098,
+      "provisional": false
+    },
+    {
+      "month": "2022-11",
+      "energy": 36.841,
+      "provisional": false
+    },
+    {
+      "month": "2022-12",
+      "energy": 45.824,
+      "provisional": false
+    },
+    {
+      "month": "2023-01",
+      "energy": 46.648,
+      "provisional": false
+    },
+    {
+      "month": "2023-02",
+      "energy": 41.547,
+      "provisional": false
+    },
+    {
+      "month": "2023-03",
+      "energy": 40.571,
+      "provisional": false
+    },
+    {
+      "month": "2023-04",
+      "energy": 35.032,
+      "provisional": false
+    },
+    {
+      "month": "2023-05",
+      "energy": 31.412,
+      "provisional": false
+    },
+    {
+      "month": "2023-06",
+      "energy": 30.585,
+      "provisional": false
+    },
+    {
+      "month": "2023-07",
+      "energy": 31.923,
+      "provisional": false
+    },
+    {
+      "month": "2023-08",
+      "energy": 30.567,
+      "provisional": false
+    },
+    {
+      "month": "2023-09",
+      "energy": 30.905,
+      "provisional": false
+    },
+    {
+      "month": "2023-10",
+      "energy": 32.959,
+      "provisional": false
+    },
+    {
+      "month": "2023-11",
+      "energy": 39.267,
+      "provisional": false
+    },
+    {
+      "month": "2023-12",
+      "energy": 44.154,
+      "provisional": false
+    },
+    {
+      "month": "2024-01",
+      "energy": 48.558,
+      "provisional": false
+    },
+    {
+      "month": "2024-02",
+      "energy": 39.884,
+      "provisional": false
+    },
+    {
+      "month": "2024-03",
+      "energy": 39.59,
+      "provisional": false
+    },
+    {
+      "month": "2024-04",
+      "energy": 35.034,
+      "provisional": false
+    },
+    {
+      "month": "2024-05",
+      "energy": 31.991,
+      "provisional": false
+    },
+    {
+      "month": "2024-06",
+      "energy": 30.619,
+      "provisional": false
+    },
+    {
+      "month": "2024-07",
+      "energy": 32.473,
+      "provisional": false
+    },
+    {
+      "month": "2024-08",
+      "energy": 31.072,
+      "provisional": false
+    },
+    {
+      "month": "2024-09",
+      "energy": 31.14,
+      "provisional": false
+    },
+    {
+      "month": "2024-10",
+      "energy": 34.274,
+      "provisional": false
+    },
+    {
+      "month": "2024-11",
+      "energy": 39.333,
+      "provisional": false
+    },
+    {
+      "month": "2024-12",
+      "energy": 46.113,
+      "provisional": false
+    },
+    {
+      "month": "2025-01",
+      "energy": 49.512,
+      "provisional": false
+    },
+    {
+      "month": "2025-02",
+      "energy": 42.286,
+      "provisional": false
+    },
+    {
+      "month": "2025-03",
+      "energy": 40.732,
+      "provisional": false
+    },
+    {
+      "month": "2025-04",
+      "energy": 33.289,
+      "provisional": false
+    },
+    {
+      "month": "2025-05",
+      "energy": 31.209,
+      "provisional": false
+    },
+    {
+      "month": "2025-06",
+      "energy": 31.636,
+      "provisional": false
+    },
+    {
+      "month": "2025-07",
+      "energy": 32.925,
+      "provisional": false
+    },
+    {
+      "month": "2025-08",
+      "energy": 30.934,
+      "provisional": false
+    },
+    {
+      "month": "2025-09",
+      "energy": 31.41,
+      "provisional": false
+    },
+    {
+      "month": "2025-10",
+      "energy": 35.023,
+      "provisional": false
+    },
+    {
+      "month": "2025-11",
+      "energy": 39.973,
+      "provisional": false
+    },
+    {
+      "month": "2025-12",
+      "energy": 44.947,
+      "provisional": false
+    },
+    {
+      "month": "2026-01",
+      "energy": 49.987,
+      "provisional": false
+    },
+    {
+      "month": "2026-02",
+      "energy": 39.948,
+      "provisional": false
+    },
+    {
+      "month": "2026-03",
+      "energy": 39.918,
+      "provisional": false
+    },
+    {
+      "month": "2026-04",
+      "energy": 33.545,
+      "provisional": false
+    },
+    {
+      "month": "2026-05",
+      "energy": 32.546,
+      "provisional": false
+    },
+    {
+      "month": "2026-06",
+      "energy": 32.996,
+      "provisional": false
+    },
+    {
+      "month": "2026-07",
+      "energy": 34.431,
+      "provisional": false
+    },
+    {
+      "month": "2026-08",
+      "energy": 32.078,
+      "provisional": false
+    },
+    {
+      "month": "2026-09",
+      "energy": 31.209,
+      "provisional": true
+    },
+    {
+      "month": "2026-10",
+      "energy": 34.377,
+      "provisional": true
+    }
+  ],
+  "years": [
+    {
+      "year": 2014,
+      "gross": 462.345,
+      "gross_rte": 462.697,
+      "gross_gap_pct": -0.076,
+      "corrected": 468.602,
+      "corrected_rte": 470.207,
+      "corrected_gap_pct": -0.341
+    },
+    {
+      "year": 2015,
+      "gross": 473.147,
+      "gross_rte": 474.05,
+      "gross_gap_pct": -0.191,
+      "corrected": 471.406,
+      "corrected_rte": 472.31,
+      "corrected_gap_pct": -0.191
+    },
+    {
+      "year": 2016,
+      "gross": 480.317,
+      "gross_rte": 482.389,
+      "gross_gap_pct": -0.43,
+      "corrected": 470.863,
+      "corrected_rte": 471.912,
+      "corrected_gap_pct": -0.222
+    },
+    {
+      "year": 2017,
+      "gross": 479.042,
+      "gross_rte": 480.776,
+      "gross_gap_pct": -0.361,
+      "corrected": 471.437,
+      "corrected_rte": 472.463,
+      "corrected_gap_pct": -0.217
+    },
+    {
+      "year": 2018,
+      "gross": 475.518,
+      "gross_rte": 477.184,
+      "gross_gap_pct": -0.349,
+      "corrected": 470.622,
+      "corrected_rte": 472.524,
+      "corrected_gap_pct": -0.402
+    },
+    {
+      "year": 2019,
+      "gross": 470.475,
+      "gross_rte": 471.972,
+      "gross_gap_pct": -0.317,
+      "corrected": 467.464,
+      "corrected_rte": 468.762,
+      "corrected_gap_pct": -0.277
+    },
+    {
+      "year": 2020,
+      "gross": 446.58,
+      "gross_rte": 448.482,
+      "gross_gap_pct": -0.424,
+      "corrected": 449.259,
+      "corrected_rte": 451.902,
+      "corrected_gap_pct": -0.585
+    },
+    {
+      "year": 2021,
+      "gross": 468.589,
+      "gross_rte": 471.494,
+      "gross_gap_pct": -0.616,
+      "corrected": 459.985,
+      "corrected_rte": 461.105,
+      "corrected_gap_pct": -0.243
+    },
+    {
+      "year": 2022,
+      "gross": 450.145,
+      "gross_rte": 454.009,
+      "gross_gap_pct": -0.851,
+      "corrected": 449.284,
+      "corrected_rte": 454.521,
+      "corrected_gap_pct": -1.152
+    },
+    {
+      "year": 2023,
+      "gross": 435.569,
+      "gross_rte": 438.697,
+      "gross_gap_pct": -0.713,
+      "corrected": 436.643,
+      "corrected_rte": 438.817,
+      "corrected_gap_pct": -0.495
+    },
+    {
+      "year": 2024,
+      "gross": 440.081,
+      "gross_rte": 441.721,
+      "gross_gap_pct": -0.371,
+      "corrected": 441.928,
+      "corrected_rte": 442.014,
+      "corrected_gap_pct": -0.019
+    },
+    {
+      "year": 2025,
+      "gross": 443.878,
+      "gross_rte": 446.146,
+      "gross_gap_pct": -0.508,
+      "corrected": 442.763,
+      "corrected_rte": 444.767,
+      "corrected_gap_pct": -0.45
+    }
+  ]
+}

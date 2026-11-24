@@ -1,0 +1,11 @@
+{
+  "published": "2026-11-24",
+  "model_id": "baseline",
+  "consolidated_until": "2026-08-31",
+  "temperature_until": "2026-10-31",
+  "measured_until": "2026-11-23",
+  "revision": {
+    "gw": 0.758,
+    "days": 30
+  }
+}
