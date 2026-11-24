@@ -1,0 +1,26 @@
+# What changed climate-corrected consumption since a year before the crises, see
+# src/france_load_forecast/drivers.py and docs/methodology.md.
+
+# The last year before the health crisis of 2020 and the energy crisis of 2022-2023.
+base_year = 2019
+
+# Production index of INSEE standing for the sectors of RTE's industry series, which weigh on it by
+# their consumption in the base year.
+[branches]
+production_metals = ["steel_gwh", "metallurgy_gwh"]
+production_chemistry = ["chemistry_gwh"]
+production_paper = ["paper_gwh"]
+production_vehicles = ["automotive_gwh"]
+
+[industry]
+# Index of the industry RTE names no sector for.
+other_branch = "production_manufacturing"
+# Rail transport, which RTE counts in its industry series, is not industry.
+left_out = ["rail_gwh"]
+
+# Energy of the electric cars of a year, as RTE estimates it, for light vehicles, fully electric
+# and plug-in hybrid.
+[cars]
+year = 2025
+twh = 4.9
+source = "RTE, Tableau de bord de suivi de l'électrification, 2026, p. 15"

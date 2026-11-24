@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import driversFile from "../../tests/fixtures/bundle/drivers.json";
 import forecastFile from "../../tests/fixtures/bundle/forecast.json";
 import gapsFile from "../../tests/fixtures/bundle/gaps.json";
 import { AskError, type Reply } from "../src/ask";
@@ -16,10 +17,11 @@ import {
   verdict,
   viewOf,
 } from "../src/conversation";
-import type { Forecast, Gaps } from "../src/data";
+import type { Drivers, Forecast, Gaps } from "../src/data";
 
 const forecast: Forecast = forecastFile;
 const gaps: Gaps = gapsFile;
+const drivers: Drivers = driversFile;
 const MINUS = String.fromCharCode(0x2212);
 
 const reply: Reply = {
@@ -43,6 +45,14 @@ test("the first questions come from the months the data cover", () => {
     },
     { theme: "Méthode", question: "Comment la prévision est-elle construite ?" },
   ]);
+});
+
+test("the change since the base year is suggested once the bundle has it", () => {
+  expect(suggestions(forecast, gaps, drivers)[3]).toEqual({
+    theme: "Évolution",
+    question: "Pourquoi la consommation a-t-elle baissé depuis 2019 ?",
+  });
+  expect(suggestions(forecast, gaps, drivers)).toHaveLength(6);
 });
 
 test("follow-ups depend on what was read and skip what was asked", () => {
@@ -88,6 +98,7 @@ test("an answer points to the sections of the page it read", () => {
     { anchor: "gaps-title", label: "Voir les écarts" },
   ]);
   expect(sections(["peak"])).toEqual([{ anchor: "peak-title", label: "Voir la pointe" }]);
+  expect(sections(["drivers"])).toEqual([{ anchor: "drivers-title", label: "Voir l'évolution" }]);
 });
 
 test("each outcome has its label and its mood", () => {
@@ -130,6 +141,7 @@ test("each step says what the agent reads", () => {
   expect(step("scenario")).toBe("les scénarios");
   expect(step("peak", { month: "2027-01" })).toBe("la pointe de janvier 2027");
   expect(step("peak")).toBe("la pointe des mois à venir");
+  expect(step("drivers")).toBe("ce qui a changé la consommation depuis avant les crises");
   expect(step("unknown")).toBe("les données publiées");
 });
 

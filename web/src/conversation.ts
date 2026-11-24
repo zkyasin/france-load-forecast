@@ -1,7 +1,7 @@
 /** What the question panel says around the answers of the API: none of it calls the model. */
 
 import { AskError, type Call, type Left, type Previous, type Reply } from "./ask";
-import type { Forecast, Gaps } from "./data";
+import type { Drivers, Forecast, Gaps } from "./data";
 import { monthName, of } from "./format";
 import type { View } from "./gaps";
 import type { Mood } from "./pylon";
@@ -18,7 +18,11 @@ function largest<T>(items: T[], size: (item: T) => number): T | undefined {
 }
 
 /** Questions to start with, one per theme, about the months the data cover now. */
-export function suggestions(forecast: Forecast, gaps: Gaps): Suggestion[] {
+export function suggestions(
+  forecast: Forecast,
+  gaps: Gaps,
+  drivers: Drivers | null = null,
+): Suggestion[] {
   const list: Suggestion[] = [];
   const ahead = forecast.months.filter((month) => month.month >= forecast.current_month);
   const peak = largest(ahead, (month) => month.p50);
@@ -35,6 +39,13 @@ export function suggestions(forecast: Forecast, gaps: Gaps): Suggestion[] {
     list.push({
       theme: "Écarts",
       question: `Pourquoi la consommation ${of(monthName(gap.month))} a-t-elle été plus ${direction} que prévu ?`,
+    });
+  }
+  if (drivers !== null) {
+    const moved = drivers.now.consumption < drivers.base.consumption ? "baissé" : "augmenté";
+    list.push({
+      theme: "Évolution",
+      question: `Pourquoi la consommation a-t-elle ${moved} depuis ${drivers.base_year} ?`,
     });
   }
   list.push(
@@ -77,6 +88,10 @@ const NEXT: Record<string, string[]> = {
   peak: [
     "De combien augmente la consommation quand il fait un degré de moins en hiver ?",
     "Que se passerait-il lors d'un hiver froid comme il en arrive un sur dix ?",
+  ],
+  drivers: [
+    "Corrigée du climat, la consommation augmente-t-elle depuis 2023 ?",
+    "Quel serait l'effet d'une électrification rapide sur la consommation de l'an prochain ?",
   ],
 };
 
@@ -166,6 +181,8 @@ export function stepText({ tool, args }: Call): string {
       return isMonth(args.month)
         ? `la pointe ${of(monthName(args.month))}`
         : "la pointe des mois à venir";
+    case "drivers":
+      return "ce qui a changé la consommation depuis avant les crises";
     case "thermosensitivity":
       return "la réponse à la température";
     case "accuracy":
@@ -220,6 +237,7 @@ const SECTIONS: Record<string, { anchor: string; label: string }> = {
   scenario: { anchor: "scenarios-title", label: "Voir les scénarios" },
   fact: { anchor: "method-title", label: "Voir la méthode" },
   peak: { anchor: "peak-title", label: "Voir la pointe" },
+  drivers: { anchor: "drivers-title", label: "Voir l'évolution" },
 };
 
 /** The sections of the page where the data of an answer are drawn, once each. */

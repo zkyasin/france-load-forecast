@@ -7,11 +7,45 @@ from typing import Any
 import pandas as pd
 import pytest
 
-from france_load_forecast import correction, model, publish, scenarios
+from france_load_forecast import bundle as schema
+from france_load_forecast import correction, drivers, model, publish, scenarios
 
 SCENARIOS = Path(__file__).parents[1] / "config" / "scenarios.toml"
 
 TOTALS = {"actual", "reference", "gap"}
+
+
+def changes() -> publish.DriversInputs:
+    """Large industry draws 100 GWh a day from 2022, the car stock doubles each year, and 2022 is
+    the base year."""
+    months = pd.date_range("2022-01-01", "2024-12-01", freq="MS")
+    inputs = drivers.Inputs(
+        industry=pd.Series(100_000.0, index=pd.date_range("2022-01-01", "2024-11-30", freq="D")),
+        sectors=pd.DataFrame(
+            {"industry_gwh": 100.0, "steel_gwh": 30.0, "rail_gwh": 10.0}, index=months[:12]
+        ),
+        insee=pd.DataFrame(
+            {
+                "production_metals": 100.0,
+                "production_manufacturing": 100.0,
+                "prices_all": 100.0,
+                "prices_electricity": 100.0,
+            },
+            index=months,
+        ),
+        cars=pd.Series(
+            [1e5, 2e5, 4e5, 8e5],
+            index=pd.DatetimeIndex(["2021-12-31", "2022-12-31", "2023-12-31", "2024-12-31"]),
+        ),
+    )
+    spec = drivers.DriversSpec(
+        base_year=2022,
+        branches={"production_metals": ["steel_gwh"]},
+        other_branch="production_manufacturing",
+        left_out=["rail_gwh"],
+        cars=drivers.CarsReference(year=2023, twh=1.0, source="a test"),
+    )
+    return publish.DriversInputs(inputs, spec)
 
 
 @pytest.fixture(scope="module")
@@ -38,6 +72,7 @@ def bundle(
         scenario_spec,
         date(2025, 1, 6),
         publish.PeakInputs(history, peak_spec, past_forecasts, observed_peak),
+        changes(),
     )
 
 
@@ -149,3 +184,20 @@ def test_peak_history_gives_each_whole_month_its_day(
         "day": day.strftime("%Y-%m-%d"),
         "provisional": True,
     }
+
+
+def test_drivers_compare_the_base_year_with_the_last_consolidated_year(
+    bundle: dict[str, dict[str, Any]],
+) -> None:
+    changed = bundle["drivers"]
+
+    # December 2024 comes from real-time data, so the last twelve months end in November.
+    assert (changed["base_year"], changed["first_month"], changed["last_month"]) == (
+        2022,
+        "2023-12",
+        "2024-11",
+    )
+    assert [year["year"] for year in changed["years"]] == [2022, 2023]
+    assert changed["now"]["industry"] == pytest.approx(36.5)
+    assert changed["cars"]["reference_twh"] == 1.0
+    assert schema.check({"drivers": changed}, required=["drivers"]) == []

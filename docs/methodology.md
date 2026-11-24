@@ -249,6 +249,65 @@ from 2024. A third comes from the source: RTE's trajectories do not grow at the 
 year, the slow one rising mostly from 2027 (figure 2.5 of the chapter), so a mean growth from
 2024 understates their growth over the years the scenarios cover.
 
+## What changed consumption since 2019
+
+`flf drivers` compares the climate-corrected consumption of 2019, the last year before the health
+crisis and the energy crisis, with that of the last twelve months that every source covers, 29
+February left out. The change splits into three parts, set in
+[`config/drivers.toml`](../config/drivers.toml):
+
+- **Large industry**: the energy RTE's grid delivers each day to large industrial sites
+  (`soutirages-quotidiens-consolides-rpt`, since 2018). Its change splits into activity and
+  intensity by the logarithmic mean Divisia index, so that both add up to it exactly. Activity is
+  INSEE's industrial production index of each branch, seasonally and working-day adjusted, weighted
+  by the branch's consumption in 2019 in RTE's industry series by sector
+  (`conso-finale-corrigee-par-secteur`): metals for steel and metallurgy, chemistry, paper,
+  transport equipment for the automotive industry, and all manufacturing for the industry that
+  series names no sector for. Rail transport, which RTE counts in it, is left out. Intensity is
+  the energy per unit produced.
+- **Electric cars**: the stock of rechargeable cars of mainland France without Corsica, which
+  Agence ORE publishes by commune every quarter since the end of 2020, interpolated on its
+  logarithm, times the energy of a car over a year. That energy, 2.30 MWh, is set so that 2025
+  gives RTE's estimate of 4.9 TWh for light vehicles, fully electric and plug-in hybrid
+  ([Tableau de bord de suivi de l'électrification](https://assets.rte-france.com/analyse-et-donnees/2026-07/Tableau-de-bord-de-lelectrification.pdf),
+  p. 15), so it also covers the light commercial vehicles the stock leaves out. Before December
+  2020, the stock goes back at its growth of 2021.
+- **The rest**: households, businesses and services on the distribution networks with their
+  losses, and the other sites on RTE's grid.
+
+| | 2019 | September 2025 to August 2026 | Change |
+|---|---|---|---|
+| Climate-corrected consumption | 467.5 TWh | 447.0 TWh | -20.5 TWh (-4.4 %) |
+| Large industry | 39.4 TWh | 33.9 TWh | -5.4 TWh: production -4.3, energy per unit produced -1.1 |
+| Electric cars | 0.4 TWh | 5.6 TWh | +5.2 TWh |
+| The rest | 427.7 TWh | 407.4 TWh | -20.2 TWh (-4.7 %) |
+
+From 2014 to 2019, climate-corrected consumption stayed between 467 and 472 TWh: the fall is no
+older trend. The production index of large industry stands 11.1 % below 2019, and large industry
+has not recovered: it drew 33.8 TWh in 2023, 34.8 TWh in 2024 and 34.3 TWh in 2025. The rest was
+lowest in 2023, at 399.9 TWh, and has risen by 7.5 TWh since. The public data do not tell
+prices, sobriety, efficiency and heat pumps apart in it. The real price of electricity for
+households, INSEE's consumer price index of electricity over that of all items, peaked in 2024 at
+33 % above 2019 and stands 12 % above it over the last twelve months: the rise of the rest as that
+price fell fits a price effect, but does not measure one.
+
+RTE's own view by sector, in the same dashboard (p. 33-35), sets the corrected consumption of 2024
+against 2014-2019: industry -16 %, tertiary -7 % and residential -4 %, the last two without
+electric mobility.
+
+Limits:
+
+- Large industry is not climate-corrected, as it hardly depends on the weather: the rest holds the
+  whole climate correction. Calendar effects stay in both periods, which differ by a working day
+  or two.
+- RTE leaves a row of the daily withdrawals out when too few sites share it, so the data checks
+  require every day to have the same voltage levels. RTE overstated May 2022 to April 2025 for a
+  time, and corrected them on 29 July 2025.
+- RTE raised its annual consumption of 2022 to 2024 after recalculating solar self-consumption,
+  so that series counts it, and it differs from the éCO2mix series by about the consumption of
+  Corsica in 2024 and 2025. The éCO2mix series likely counts it too, in which case
+  self-consumption takes no part in the change.
+
 ## Results on data up to August 2026
 
 - Winter thermosensitivity, December to February: 2.00 GW/°C.

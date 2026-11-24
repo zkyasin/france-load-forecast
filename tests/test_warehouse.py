@@ -153,6 +153,48 @@ def test_checks_report_consecutive_missing_temperatures(con: duckdb.DuckDBPyConn
     assert any(f.startswith("temperature missing two days in a row") for f in failures)
 
 
+def test_large_industry_comes_by_day_and_voltage_level(con: duckdb.DuckDBPyConnection) -> None:
+    rows = con.execute(
+        "SELECT date, count(*), sum(energy_mwh) FROM industry_daily GROUP BY date ORDER BY date"
+    ).fetchall()
+
+    assert [(date, levels) for date, levels, _ in rows] == [
+        (dt.date(2026, 8, 30), 4),
+        (dt.date(2026, 8, 31), 4),
+    ]
+    assert rows[0][2] == pytest.approx(1084.49525 + 28490.1890655 + 10345.4141535 + 56608.808411)
+
+
+def test_checks_report_a_large_industry_day_short_of_a_level(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    con.execute("DELETE FROM industry_daily WHERE date = '2026-08-31' AND voltage = '2'")
+
+    failures = warehouse.run_checks(con)
+
+    assert any(f.startswith("large industry days with fewer voltage levels") for f in failures)
+
+
+def test_checks_report_a_missing_month_of_an_insee_series(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    con.execute(
+        "DELETE FROM insee_monthly WHERE series = 'production_paper' AND month = '2026-08-01'"
+    )
+
+    failures = warehouse.run_checks(con)
+
+    assert any(f.startswith("INSEE series with missing months") for f in failures)
+
+
+def test_insee_series_and_car_stock_are_loaded(con: duckdb.DuckDBPyConnection) -> None:
+    series = {row[0] for row in con.execute("SELECT series FROM insee_monthly").fetchall()}
+    cars = con.execute("SELECT date, cars FROM car_stock ORDER BY date").fetchall()
+
+    assert series == set(warehouse.INSEE_SERIES)
+    assert cars[-1] == (dt.date(2026, 8, 31), 2693367)
+
+
 def test_realtime_snapshot_is_a_parquet_file(
     con: duckdb.DuckDBPyConnection, tmp_path: Path
 ) -> None:

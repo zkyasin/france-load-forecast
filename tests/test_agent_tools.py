@@ -136,3 +136,21 @@ def test_scenario_compares_with_the_reference(by_name: dict[str, Any]) -> None:
     assert content["winter_energy"] > content["reference"]["winter_energy"]
     assert content["replays_the_winter_months_of"] in range(2012, 2026)
     assert "2020" in call(by_name, "scenario", year=2020)["error"]
+
+
+def test_drivers_give_each_part_its_change_since_the_base_year(by_name: dict[str, Any]) -> None:
+    content = call(by_name, "drivers")
+    industry, cars, rest = content["large_industry"], content["electric_cars"], content["rest"]
+
+    assert (content["base_year"], content["last_twelve_months"]) == (2019, "2025-09 to 2026-08")
+    assert content["consumption"]["change"] == pytest.approx(446.975 - 467.464, abs=0.001)
+    split = (
+        industry["change_due_to_production"] + industry["change_due_to_energy_per_unit_produced"]
+    )
+    assert industry["change"] == pytest.approx(split, abs=0.001)
+    assert industry["change"] + cars["change"] + rest["change"] == pytest.approx(
+        content["consumption"]["change"], abs=0.01
+    )
+    assert [year["year"] for year in content["years"]][:2] == [2018, 2019]
+    # Prices stay out of the scope of the agent.
+    assert "price" not in json.dumps(content)

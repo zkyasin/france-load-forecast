@@ -91,7 +91,56 @@ SOURCES = (
         },
         date_format="%Y-%m",
     ),
+    # Energy drawn each day from RTE's grid by large industrial sites, one row per voltage level.
+    Source(
+        table="industry_daily",
+        dataset="soutirages-quotidiens-consolides-rpt",
+        columns={
+            "date": ("date_de_la_courbe", "DATE"),
+            "voltage": ("code_tension", "VARCHAR"),
+            "energy_mwh": ("energie_journaliere", "DOUBLE"),
+        },
+        where="secteur_activite_economique = 'Grande Industrie'",
+    ),
+    # Monthly consumption of the industry on RTE's grid, seasonally adjusted, in all and for the
+    # sectors RTE names, 2014 to 2024. Rail transport is one of them.
+    Source(
+        table="industry_sectors",
+        dataset="conso-finale-corrigee-par-secteur",
+        columns={
+            "month": ("mois", "DATE"),
+            "industry_gwh": ("consommation_rpt_grande_industrie", "DOUBLE"),
+            "metallurgy_gwh": ("consommation_rpt_metallurgie", "DOUBLE"),
+            "steel_gwh": ("consommation_rpt_siderurgie", "DOUBLE"),
+            "chemistry_gwh": ("consommation_rpt_chimie", "DOUBLE"),
+            "automotive_gwh": ("consommation_rpt_automobile", "DOUBLE"),
+            "paper_gwh": ("consommation_rpt_papier_carton", "DOUBLE"),
+            "rail_gwh": ("consommation_rpt_transport_ferroviaire", "DOUBLE"),
+        },
+        date_format="%Y-%m",
+    ),
 )
+
+# Monthly series of INSEE, by name: SDMX flow and key. The production indices are seasonally and
+# working-day adjusted, base 100 in 2021; the consumer price indices cover all households in
+# France, base 100 in 2025.
+INSEE_SERIES = {
+    "production_metals": ("IPI-2021", "M.BDM.IPI.SO.A38-CH.INDICE.FM.SO.CVS-CJO.2021"),
+    "production_chemistry": ("IPI-2021", "M.BDM.IPI.SO.A38-CE.INDICE.FM.SO.CVS-CJO.2021"),
+    "production_paper": ("IPI-2021", "M.BDM.IPI.SO.A38-CC.INDICE.FM.SO.CVS-CJO.2021"),
+    "production_vehicles": ("IPI-2021", "M.BDM.IPI.SO.A38-CL.INDICE.FM.SO.CVS-CJO.2021"),
+    "production_manufacturing": ("IPI-2021", "M.BDM.IPI.SO.A10-CZ.INDICE.FM.SO.CVS-CJO.2021"),
+    "prices_all": ("IPC-2025", "M.IPC.SO.00.SO.INDICE.ENSEMBLE.FE.SO.BRUT.2025.FALSE"),
+    "prices_electricity": ("IPC-2025", "M.IPC.SO.0451.SO.INDICE.ENSEMBLE.FE.SO.BRUT.2025.FALSE"),
+}
+INSEE_FIRST_MONTH = "2014-01"
+
+# Tables loaded from the files that `flf ingest` writes from the APIs of INSEE and Agence ORE, with
+# their columns, the date first.
+API_TABLES: dict[str, dict[str, str]] = {
+    "insee_monthly": {"month": "DATE", "series": "VARCHAR", "value": "DOUBLE"},
+    "car_stock": {"date": "DATE", "cars": "DOUBLE"},
+}
 
 # Real-time values are instantaneous telemetry; consolidated values are means of meter readings
 # and sit higher. The revision is measured on the days covered by both real-time and revised data.
@@ -182,26 +231,51 @@ CHECKS = {
         ) AS months(month)
         WHERE month::DATE NOT IN (SELECT month FROM rte_monthly)
     """,
+    "missing days in large industry": """
+        SELECT day::DATE AS date
+        FROM range(
+            (SELECT min(date) FROM industry_daily), (SELECT max(date) FROM industry_daily),
+            INTERVAL 1 DAY
+        ) AS days(day)
+        WHERE day::DATE NOT IN (SELECT date FROM industry_daily)
+    """,
+    # RTE leaves out a row when too few sites share it, which would lower the energy of that day.
+    "large industry days with fewer voltage levels than the others": """
+        WITH levels AS (SELECT date, count(*) AS n FROM industry_daily GROUP BY date)
+        SELECT date, n FROM levels WHERE n < (SELECT max(n) FROM levels)
+    """,
+    "INSEE series with missing months": """
+        SELECT series, count(*) AS n FROM insee_monthly GROUP BY series
+        HAVING n <> datediff('month', min(month), max(month)) + 1
+    """,
 }
 
 
 def build(con: duckdb.DuckDBPyConnection, files: Mapping[str, Path]) -> None:
-    """Load one export file per source table, then create the derived views."""
+    """Load one file per table, then create the derived views."""
     for source in SOURCES:
         con.execute(
             f"CREATE OR REPLACE TABLE {source.table} AS "
             "SELECT * FROM read_csv(?, delim=';', header=true, columns=?, dateformat=?)",
             [str(files[source.table]), source.column_types, source.date_format],
         )
+    for table, columns in API_TABLES.items():
+        con.execute(
+            f"CREATE OR REPLACE TABLE {table} AS "
+            "SELECT * FROM read_csv(?, delim=';', header=true, columns=?)",
+            [str(files[table]), columns],
+        )
     con.execute(REVISION)
     con.execute(LOAD_DAILY)
 
 
 def summarize(con: duckdb.DuckDBPyConnection) -> list[tuple[str, int, date, date]]:
-    """Row count and date range of each source table."""
+    """Row count and date range of each table."""
+    tables = [(s.table, s.date_column) for s in SOURCES]
+    tables += [(table, next(iter(columns))) for table, columns in API_TABLES.items()]
     query = " UNION ALL ".join(
-        f"SELECT '{s.table}', count(*), min({s.date_column}), max({s.date_column}) FROM {s.table}"
-        for s in SOURCES
+        f"SELECT '{table}', count(*), min({column}), max({column}) FROM {table}"
+        for table, column in tables
     )
     return con.execute(query).fetchall()
 

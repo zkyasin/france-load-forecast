@@ -242,6 +242,70 @@ class Scenarios(File):
         return self
 
 
+class DriverPeriod(Strict):
+    """Climate-corrected consumption of a period in TWh and its parts, the stock of rechargeable
+    cars in millions, and the production index of large industry and the real price of
+    electricity at 100 in the base year."""
+
+    consumption: AnnualEnergy
+    industry: float = Field(gt=0, le=100)
+    electric_cars: float = Field(ge=0, le=100)
+    rest: AnnualEnergy
+    cars_millions: float = Field(ge=0, le=50)
+    activity_index: float = Field(gt=0, le=200)
+    real_price_index: float = Field(gt=0, le=300)
+
+    @model_validator(mode="after")
+    def parts_add_up(self) -> "DriverPeriod":
+        if abs(self.industry + self.electric_cars + self.rest - self.consumption) > ROUNDING:
+            raise ValueError("large industry, electric cars and the rest do not add up")
+        return self
+
+
+class DriverYear(DriverPeriod):
+    year: int
+
+
+class Contributions(Strict):
+    """The change of consumption from the base year to the last twelve months, by part."""
+
+    industry_activity: float
+    industry_intensity: float
+    electric_cars: float
+    rest: float
+
+
+class CarEnergy(Strict):
+    """Energy of an electric car over a year, set so that a reference year gives RTE's estimate."""
+
+    mwh_per_car: float = Field(gt=0, le=10)
+    reference_year: int
+    reference_twh: float = Field(gt=0)
+    source: str
+
+
+class Drivers(File):
+    base_year: int
+    first_month: Month
+    last_month: Month
+    base: DriverPeriod
+    now: DriverPeriod
+    contributions: Contributions
+    cars: CarEnergy
+    years: list[DriverYear] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def contributions_add_up(self) -> "Drivers":
+        parts = self.contributions
+        industry = parts.industry_activity + parts.industry_intensity
+        if abs(industry - (self.now.industry - self.base.industry)) > ROUNDING:
+            raise ValueError("activity and intensity do not add up to the change of industry")
+        total = industry + parts.electric_cars + parts.rest
+        if abs(total - (self.now.consumption - self.base.consumption)) > ROUNDING:
+            raise ValueError("the contributions do not add up to the change of consumption")
+        return self
+
+
 FILES: dict[str, type[File]] = {
     "meta": Meta,
     "forecast": Forecast,
@@ -251,6 +315,7 @@ FILES: dict[str, type[File]] = {
     "model": ModelFile,
     "scenarios": Scenarios,
     "peak": Peak,
+    "drivers": Drivers,
 }
 
 

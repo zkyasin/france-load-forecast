@@ -14,14 +14,18 @@ horizon, à la part de la P50 encore à venir ; l'énergie déjà mesurée du mo
 quelle."""
 
 [sources]
-date = 2026-11-22
-source = "https://odre.opendatasoft.com"
+date = 2026-11-24
+source = "docs/methodology.md"
 text = """
 Jeux de données de RTE publiés sur ODRÉ sous Licence Ouverte 2.0 : éCO2mix consolidé \
 (eco2mix-national-cons-def) et temps réel (eco2mix-national-tr), consommation quotidienne brute \
 (consommation-quotidienne-brute), pic journalier et température moyenne nationale publiée par \
 RTE (pic-journalier-consommation-brute), consommation mensuelle brute et corrigée \
-(conso_brute_corrigee_client_direct)."""
+(conso_brute_corrigee_client_direct), énergie soutirée chaque jour par la grande industrie sur \
+le réseau de RTE (soutirages-quotidiens-consolides-rpt) et consommation de l'industrie par \
+secteur (conso-finale-corrigee-par-secteur). Pour expliquer l'évolution depuis 2019 : indices de \
+la production industrielle et des prix à la consommation de l'Insee, et parc de voitures \
+rechargeables de l'Agence ORE, sous Licence Ouverte 2.0."""
 
 [perimeter]
 date = 2026-11-22

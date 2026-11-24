@@ -15,12 +15,15 @@ import httpx
 import pandas as pd
 
 from france_load_forecast import (
+    agenceore,
     backtest,
     bundle,
     conformal,
     correction,
     decomposition,
+    drivers,
     forecast,
+    insee,
     model,
     odre,
     outlook,
@@ -42,6 +45,12 @@ def ingest(data_dir: Path) -> int:
                 client, source.dataset, path, select=source.select, where=source.where
             )
             files[source.table] = path
+        files["insee_monthly"] = data_dir / "raw" / "insee" / f"{today}.csv"
+        insee.download_series(
+            client, warehouse.INSEE_SERIES, files["insee_monthly"], warehouse.INSEE_FIRST_MONTH
+        )
+        files["car_stock"] = data_dir / "raw" / "agenceore" / f"{today}.csv"
+        agenceore.download_car_stock(client, files["car_stock"])
 
     with duckdb.connect(data_dir / "warehouse.duckdb") as con:
         warehouse.build(con, files)
@@ -208,16 +217,48 @@ def decompose(data_dir: Path, config: Path, months: int) -> int:
     return 0
 
 
-def run_publish(
-    data_dir: Path, config: Path, peak_config: Path, scenario_config: Path, out: Path
-) -> int:
-    """Write the weekly bundle of JSON files."""
-    spec, peak_spec = model.load_spec(config), model.load_spec(peak_config)
+def consolidated_correction(history: pd.DataFrame, spec: model.ModelSpec) -> pd.Series:
+    """Climate-corrected daily load of the consolidated days, in GW."""
+    corrected = correction.corrected_load(model.fit(history, spec), history)
+    return corrected[history["source"] == "consolidated"]
+
+
+def explain_change(data_dir: Path, config: Path, drivers_config: Path) -> int:
+    """Explain the change of climate-corrected consumption since the base year."""
+    spec, drivers_spec = model.load_spec(config), drivers.load_spec(drivers_config)
+    with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
+        history = model.daily_frame(con, spec.smoothing)
+        inputs = drivers.read(con)
+    found = drivers.compute(consolidated_correction(history, spec), inputs, drivers_spec)
+
+    print("energy in TWh, 29 February left out; cars in millions; indices at 100 in the base year")
+    print(drivers.years(found).to_string(float_format=lambda value: f"{value:.2f}"))
+    base, now = found.base, found.now
+    change = now["consumption"] - base["consumption"]
+    print(
+        f"from {found.base_year} to {found.first_month:%Y-%m} - {found.last_month:%Y-%m}:"
+        f" {change:+.2f} TWh ({100 * change / base['consumption']:+.1f} %)"
+    )
+    for part, value in drivers.contributions(base, now).items():
+        print(f"  {part:<20} {value:+.2f}")
+    print(
+        f"production index {now['activity'] - 100:+.1f} %,"
+        f" {base['cars']:.2f} then {now['cars']:.2f} million rechargeable cars"
+        f" of {found.mwh_per_car:.2f} MWh a year ({drivers_spec.cars.source})"
+    )
+    return 0
+
+
+def run_publish(data_dir: Path, config: Path, configs: dict[str, Path], out: Path) -> int:
+    """Write the weekly bundle of JSON files. `configs` gives the configuration of the peak
+    model, of the scenarios and of the drivers."""
+    spec, peak_spec = model.load_spec(config), model.load_spec(configs["peak"])
     past_forecasts, past_peaks = read_backtest(data_dir, spec), read_backtest(data_dir, peak_spec)
     if past_forecasts is None or past_peaks is None:
         return 1
 
-    scenario_spec = scenarios.load_spec(scenario_config)
+    scenario_spec = scenarios.load_spec(configs["scenarios"])
+    drivers_spec = drivers.load_spec(configs["drivers"])
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
         observed = model.load_after(con, history.index[-1], spec.target)
@@ -230,9 +271,19 @@ def run_publish(
         )
         rte = correction.rte_monthly(con)
         revision = warehouse.mean_revision(con)
+        changes = publish.DriversInputs(drivers.read(con), drivers_spec)
     published = datetime.now(UTC).date()
     files = publish.build(
-        history, observed, spec, past_forecasts, rte, revision, scenario_spec, published, peak
+        history,
+        observed,
+        spec,
+        past_forecasts,
+        rte,
+        revision,
+        scenario_spec,
+        published,
+        peak,
+        changes,
     )
     problems = bundle.check(files)
     for problem in problems:
@@ -403,12 +454,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     decompose_parser.add_argument(
         "--months", type=int, default=12, help="number of recent complete months"
     )
+    drivers_parser = commands.add_parser(
+        "drivers",
+        parents=[model_options],
+        help="explain the change of climate-corrected consumption since the base year",
+    )
+    drivers_parser.add_argument("--drivers-config", type=Path, default=Path("config/drivers.toml"))
     publish_parser = commands.add_parser(
         "publish", parents=[model_options], help="write the weekly bundle of JSON files"
     )
     publish_parser.add_argument("--out", type=Path, default=Path("data/bundle"))
     publish_parser.add_argument("--peak-config", type=Path, default=Path("config/peak.toml"))
     publish_parser.add_argument("--scenarios", type=Path, default=Path("config/scenarios.toml"))
+    publish_parser.add_argument("--drivers-config", type=Path, default=Path("config/drivers.toml"))
     snapshot_parser = commands.add_parser(
         "snapshot", parents=[common], help="save the real-time load as a Parquet file"
     )
@@ -456,8 +514,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_backtest(args.data_dir, args.config, args.first)
     if args.command == "decompose":
         return decompose(args.data_dir, args.config, args.months)
+    if args.command == "drivers":
+        return explain_change(args.data_dir, args.config, args.drivers_config)
     if args.command == "publish":
-        return run_publish(args.data_dir, args.config, args.peak_config, args.scenarios, args.out)
+        configs = {
+            "peak": args.peak_config,
+            "scenarios": args.scenarios,
+            "drivers": args.drivers_config,
+        }
+        return run_publish(args.data_dir, args.config, configs, args.out)
     if args.command == "snapshot":
         return snapshot(args.data_dir, args.out)
     if args.command == "ask":
