@@ -289,12 +289,23 @@ a:hover {
     font-size: 0.6875rem;
   }
 }
-/* The narrowest phones: a smaller title, then two lines rather than under the button. */
+/* The narrowest phones: a smaller title and button, then two lines rather than under the button. */
 @media (max-width: 24rem) {
+  .masthead {
+    gap: 0.5rem;
+  }
+
   .brand {
     font-size: 0.875rem;
   }
+
+  .masthead .chapters-toggle {
+    gap: 0.25rem;
+    padding-inline: 0.625rem;
+    font-size: 0.8125rem;
+  }
 }
+
 
 @media (max-width: 21.5rem) {
   .masthead-title {
