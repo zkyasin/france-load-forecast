@@ -337,15 +337,8 @@ export function render(bundle: Bundle): void {
     }
   }
 
+  // No greeting: the suggested questions open the thread, and leave it the room.
   function greet(): void {
-    show(
-      element(
-        "p",
-        "chat-greeting",
-        "Posez une question sur la consommation d'électricité en France. Chaque nombre de la " +
-          "réponse vient des données publiées.",
-      ),
-    );
     chips(suggestions(bundle.forecast, bundle.gaps), "Pour commencer");
   }
 
