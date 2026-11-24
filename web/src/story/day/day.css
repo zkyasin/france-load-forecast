@@ -1,0 +1,128 @@
+/*
+ * Une journée, heure par heure: the map of the hourly mix in a rounded frame on the paper, held below
+ * the masthead while its cards scroll past.
+ */
+
+.v-day {
+  --v-masthead: 4rem;
+  --v-day-top: calc(var(--v-masthead) + 1rem);
+  --v-day-h: min(calc(100svh - var(--v-masthead) - 2rem), 56rem);
+
+  scroll-margin-top: var(--v-masthead);
+}
+
+.v-day .chapter-head {
+  margin-bottom: 2rem;
+}
+
+.v-day-story {
+  position: relative;
+}
+
+.v-day .v-day-stage {
+  position: sticky;
+  top: var(--v-day-top);
+  height: var(--v-day-h);
+  border-radius: 1rem;
+  background: #e4e2dc;
+  box-shadow: 0 24px 60px -36px rgb(20 22 26 / 0.45);
+}
+
+.v-day .v-day-stage .stage-canvas {
+  opacity: 0;
+  transition: opacity 600ms var(--ease-out);
+}
+
+.v-day .is-ready .v-day-stage .stage-canvas {
+  opacity: 1;
+}
+
+.v-day .v-day-stage .stage-credit {
+  right: 1.25rem;
+}
+
+.v-day .v-day-stage .v-panel {
+  top: 1.25rem;
+  right: 1.25rem;
+}
+
+.v-day .v-day-stage .v-legend {
+  right: 1.25rem;
+}
+
+.v-day .v-day-steps {
+  margin-top: calc(-1 * var(--v-day-h));
+}
+
+.v-day .v-day-steps .step {
+  min-height: 115svh;
+  padding: 1.5rem;
+}
+
+.v-day .v-day-steps .step-card {
+  top: calc(var(--v-day-top) + 1.5rem);
+  max-width: 23rem;
+}
+
+.v-day .v-day-steps .step-title {
+  font-size: 2rem;
+}
+
+/* The legend and the credit stop short of the pylon of the question panel, in the same corner. */
+body:has(.chat-corner) .v-day .v-day-stage :is(.stage-credit, .v-legend) {
+  right: calc(clamp(150px, 14vw, 216px) - var(--gutter) + 1rem);
+}
+
+@media (max-width: 44rem) {
+  .v-day {
+    --v-day-top: calc(var(--v-masthead) + 0.5rem);
+    --v-day-h: calc(100svh - var(--v-masthead) - 1rem);
+  }
+
+  .v-day .v-day-stage {
+    margin-inline: calc(-0.5 * var(--gutter));
+    border-radius: 0.75rem;
+  }
+
+  /* On a phone the pylon fills the bottom corner: the credit goes to the top of the frame. */
+  .v-day .v-day-stage .stage-credit,
+  body:has(.chat-corner) .v-day .v-day-stage .stage-credit {
+    top: 0.5rem;
+    right: 0.75rem;
+    bottom: auto;
+    left: 0.75rem;
+    font-size: 0.625rem;
+    text-align: left;
+  }
+
+  .v-day .v-day-stage .v-panel {
+    top: 2.5rem;
+    right: 0.75rem;
+    left: 0.75rem;
+  }
+
+  .v-day .v-day-steps .step {
+    padding: 0.75rem 0.25rem 3.25rem;
+  }
+
+  .v-day .v-day-steps .step-card {
+    top: auto;
+    bottom: 3.25rem;
+    padding: 1rem 1.125rem 1.125rem;
+  }
+
+  .v-day .v-day-steps .step-title {
+    font-size: 1.5rem;
+  }
+
+  .v-day .v-day-steps .step-card p {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v-day .v-day-stage .stage-canvas {
+    transition: none;
+  }
+}
