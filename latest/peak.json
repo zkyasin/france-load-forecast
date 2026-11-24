@@ -7,106 +7,106 @@
       "month": "2026-11",
       "p10": 69.711,
       "p50": 72.982,
-      "p90": 79.261,
+      "p90": 79.32,
       "measured": 68.449,
       "horizon": 1,
       "provisional": true
     },
     {
       "month": "2026-12",
-      "p10": 74.873,
-      "p50": 79.718,
-      "p90": 87.773,
+      "p10": 74.729,
+      "p50": 79.717,
+      "p90": 87.689,
       "measured": 0.0,
       "horizon": 2,
       "provisional": false
     },
     {
       "month": "2027-01",
-      "p10": 77.51,
+      "p10": 77.361,
       "p50": 82.525,
-      "p90": 90.865,
+      "p90": 90.778,
       "measured": 0.0,
       "horizon": 3,
       "provisional": false
     },
     {
       "month": "2027-02",
-      "p10": 73.741,
+      "p10": 73.746,
       "p50": 78.78,
-      "p90": 86.121,
+      "p90": 86.376,
       "measured": 0.0,
       "horizon": 4,
       "provisional": false
     },
     {
       "month": "2027-03",
-      "p10": 65.689,
+      "p10": 65.693,
       "p50": 70.177,
-      "p90": 76.717,
+      "p90": 76.944,
       "measured": 0.0,
       "horizon": 5,
       "provisional": false
     },
     {
       "month": "2027-04",
-      "p10": 58.846,
+      "p10": 58.85,
       "p50": 62.867,
-      "p90": 68.725,
+      "p90": 68.929,
       "measured": 0.0,
       "horizon": 6,
       "provisional": false
     },
     {
       "month": "2027-05",
-      "p10": 51.834,
+      "p10": 51.835,
       "p50": 55.267,
-      "p90": 60.35,
+      "p90": 60.042,
       "measured": 0.0,
       "horizon": 7,
       "provisional": false
     },
     {
       "month": "2027-06",
-      "p10": 50.386,
+      "p10": 50.387,
       "p50": 53.723,
-      "p90": 58.665,
+      "p90": 58.364,
       "measured": 0.0,
       "horizon": 8,
       "provisional": false
     },
     {
       "month": "2027-07",
-      "p10": 51.2,
+      "p10": 51.202,
       "p50": 54.592,
-      "p90": 59.613,
+      "p90": 59.308,
       "measured": 0.0,
       "horizon": 9,
       "provisional": false
     },
     {
       "month": "2027-08",
-      "p10": 50.576,
+      "p10": 50.578,
       "p50": 53.926,
-      "p90": 58.886,
+      "p90": 58.585,
       "measured": 0.0,
       "horizon": 10,
       "provisional": false
     },
     {
       "month": "2027-09",
-      "p10": 49.343,
-      "p50": 52.611,
-      "p90": 57.451,
+      "p10": 49.345,
+      "p50": 52.612,
+      "p90": 57.157,
       "measured": 0.0,
       "horizon": 11,
       "provisional": false
     },
     {
       "month": "2027-10",
-      "p10": 54.551,
+      "p10": 54.553,
       "p50": 58.165,
-      "p90": 63.515,
+      "p90": 63.19,
       "measured": 0.0,
       "horizon": 12,
       "provisional": false
@@ -1187,10 +1187,10 @@
     "first_origin": "2016-01",
     "last_origin": "2026-09",
     "mape": {
-      "1 month": 4.155,
-      "2-3 months": 5.088,
-      "4-6 months": 4.875,
-      "7-12 months": 4.818
+      "1 month": 4.097,
+      "2-3 months": 5.065,
+      "4-6 months": 4.792,
+      "7-12 months": 4.683
     },
     "mape_naive": {
       "1 month": 5.658,
@@ -1201,25 +1201,25 @@
     "mape_naive_corrected": {
       "1 month": 5.136,
       "2-3 months": 5.14,
-      "4-6 months": 5.172,
-      "7-12 months": 5.283
+      "4-6 months": 5.17,
+      "7-12 months": 5.281
     },
     "mape_since_2023": {
-      "1 month": 4.406,
-      "2-3 months": 5.004,
-      "4-6 months": 4.992,
-      "7-12 months": 4.751
+      "1 month": 4.236,
+      "2-3 months": 4.934,
+      "4-6 months": 4.735,
+      "7-12 months": 4.297
     },
     "coverage_first_origin": "2018-01",
     "coverage": {
-      "all months": 72.42,
-      "December to February": 72.852,
-      "June to August": 78.317
+      "all months": 72.843,
+      "December to February": 73.196,
+      "June to August": 77.67
     },
     "coverage_since_2023": {
-      "all months": 74.892,
-      "December to February": 67.568,
-      "June to August": 71.318
+      "all months": 75.974,
+      "December to February": 68.468,
+      "June to August": 69.767
     }
   }
 }
