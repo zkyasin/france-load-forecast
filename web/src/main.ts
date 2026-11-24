@@ -12,6 +12,7 @@ import * as gaps from "./gaps";
 import * as notes from "./notes";
 import * as peak from "./peak";
 import * as scenarios from "./scenarios";
+import { boot } from "./story";
 import * as temperature from "./temperature";
 
 // The bundle is published every Monday: an older one means that an update did not run.
@@ -71,6 +72,10 @@ async function main(): Promise<void> {
       notify(`La section « ${name} » n'a pas pu être affichée : ${reason(error)}.`);
     }
   }
+  // The story last: its scroll measures the chapters once they are drawn.
+  await boot(bundle).catch((error: unknown) => {
+    notify(`L'animation de la page n'a pas pu être affichée : ${reason(error)}.`);
+  });
 }
 
 main().catch((error: unknown) => {
