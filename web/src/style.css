@@ -1144,22 +1144,23 @@ tbody th {
 }
 
 /*
- * The height of the pylon of the question panel in its corner, with a margin: what sits at the
- * bottom of the screen on a phone stops above it, and the end of the page scrolls clear of it.
+ * The height of the pylon of the question panel in its corner and of its bubble above, with a
+ * margin: what sits at the bottom of the screen on a phone stops above it, and the end of the
+ * page scrolls clear of it.
  * On a screen as low as a phone on its side, the pylon takes its phone size.
  */
 :root {
   --chat-lift: calc(
     clamp(150px, 14vw, 216px) *
     182 / 236 +
-    0.5rem +
+    2rem +
     env(safe-area-inset-bottom, 0px)
   );
 }
 
 @media (max-width: 600px), (max-height: 30rem) {
   :root {
-    --chat-lift: calc(116px * 182 / 236 + 0.5rem + env(safe-area-inset-bottom, 0px));
+    --chat-lift: calc(116px * 182 / 236 + 2rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
