@@ -12,8 +12,6 @@ import type { Context } from "../types";
 
 export const LABEL =
   "Carte des centrales dont la hauteur suit, heure par heure, la production de leur filière";
-export const CREDIT =
-  "Production : RTE, éCO2mix (ODRÉ), Licence Ouverte 2.0 · Carte : OpenStreetMap (ODbL)";
 export const CARDS = [
   { title: "Un samedi d'automne, 4 h" },
   { title: "Le même jour, 19 h" },

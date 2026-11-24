@@ -277,59 +277,8 @@
   }
 }
 
-/* The credit of the stage stops short of the pylon of the question panel, in the same corner. */
-body:has(.chat-corner) .stage-credit {
-  right: calc(clamp(150px, 14vw, 216px) + 1.5rem);
-  text-align: right;
-}
-
-/*
- * On a phone the cards and the pylon take the bottom of the screen: the credit goes to the top,
- * under the masthead, with the colour key below it, and both wait over the headline.
- */
-@media (max-width: 44rem) {
-  body:has(.chat-corner) #story .stage-credit {
-    top: calc(4.5rem + env(safe-area-inset-top, 0px));
-    right: 0.75rem;
-    bottom: auto;
-    left: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    background: color-mix(in srgb, #fff 80%, transparent);
-    font-size: 0.625rem;
-    text-align: left;
-    transition: opacity 300ms var(--ease-out);
-  }
-
-  #story .stage-credit[data-off] {
-    opacity: 0;
-  }
-
-  #story .v-key {
-    top: calc(7.75rem + env(safe-area-inset-top, 0px));
-  }
-}
-
-/* A phone on its side: the credit waits over the headline too, where the summary reaches it. */
-@media (max-height: 30rem) {
-  #story .stage-credit {
-    transition: opacity 300ms var(--ease-out);
-  }
-
-  #story .stage-credit[data-off] {
-    opacity: 0;
-  }
-
-  body:has(.chat-corner) #story .stage-credit {
-    top: auto;
-    right: calc(116px + 1.5rem);
-    bottom: 0.5rem;
-    left: var(--gutter);
-    width: fit-content;
-    padding: 0.25rem 0.5rem;
-    background: color-mix(in srgb, #fff 80%, transparent);
-    text-align: left;
-  }
-
+/* On a phone, and on a phone on its side, the colour key sits under the masthead. */
+@media (max-width: 44rem), (max-height: 30rem) {
   #story .v-key {
     top: calc(4.5rem + env(safe-area-inset-top, 0px));
   }

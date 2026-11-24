@@ -8,7 +8,7 @@ import type { Card } from "../kit";
 import { activeSteps, type Scope, stageCanvas, whileVisible } from "../scope";
 import type { Context } from "../types";
 import "./day.css";
-import { CARDS, CREDIT, LABEL, tellMix } from "./mix";
+import { CARDS, LABEL, tellMix } from "./mix";
 
 /** With reduced motion, the hour shown before a card is reached: the autumn evening peak. */
 const STILL = 1.7;
@@ -22,7 +22,6 @@ export function mountDay(s: Scope, ctx: Context): void {
   const canvas = stageCanvas(s, stage, LABEL);
   const layer = s.element(stage, "div", "stage-labels v-labels");
   layer.setAttribute("aria-hidden", "true");
-  s.element(stage, "p", "stage-credit", CREDIT);
   const cards: Card[] = CARDS.map((spec) => {
     const step = s.element(steps, "article", "step");
     const card = s.element(step, "div", "step-card");
