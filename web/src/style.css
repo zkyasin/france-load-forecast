@@ -31,6 +31,7 @@
   --muted: #676d75;
   --rule: #d2d4ce;
   --paper: var(--bg);
+  --navy: #24305e;
   --measured: #1d4f91;
   --forecast: #d1401f;
   --third: #1d8a6f;
@@ -68,6 +69,7 @@
   --ink-2: #b6bbc1;
   --muted: #8a9098;
   --rule: #2b2f35;
+  --navy: #a9b8e8;
   --measured: #80b1ff;
   --forecast: #ff7a4d;
   --third: #45c9a5;
@@ -605,10 +607,15 @@ h1 {
  * other charts, and narrower still for text alone, so that titles, text and charts share one axis.
  */
 
+main {
+  counter-reset: chapter;
+}
+
 .chapter {
   position: relative;
   z-index: 3;
   padding: clamp(5rem, 11vw, 10rem) var(--gutter) clamp(3rem, 6vw, 5rem);
+  counter-increment: chapter;
 }
 
 .chapter-inner {
@@ -663,6 +670,23 @@ h2 {
 
 .chapter-text .chapter-head {
   grid-template-columns: minmax(0, 1fr);
+}
+
+/*
+ * Each chapter opens on its number and a hairline in navy, so that chapters of the same color stay
+ * apart; a hidden chapter is not counted. The number is decoration: the title names the chapter.
+ */
+.chapter-head::before {
+  grid-column: 1 / -1;
+  padding-top: 0.875rem;
+  border-top: 1px solid color-mix(in srgb, var(--navy) 35%, transparent);
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  content: counter(chapter, decimal-leading-zero) / "";
 }
 
 @media (min-width: 52.0625rem) {
