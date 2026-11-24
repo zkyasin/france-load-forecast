@@ -22,6 +22,8 @@ def bundle(
     history = synthetic_frame.copy()
     history.loc[history.index >= pd.Timestamp("2024-12-01"), "source"] = "realtime"
     observed = pd.Series(60.0, index=pd.date_range("2025-01-01", "2025-01-05"))
+    peak_spec = replace(synthetic_spec, model_id="synthetic-peak", target="peak_gw")
+    observed_peak = pd.Series(70.0, index=observed.index)
     energy = correction.monthly_energy(synthetic_frame["load_gw"])
     rte = pd.DataFrame({"gross": 1.005 * energy, "corrected": 1.005 * energy})
     # The synthetic history ends in 2024, so the scenarios cover 2025 and 2026.
@@ -35,12 +37,14 @@ def bundle(
         (0.8, 30),
         scenario_spec,
         date(2025, 1, 6),
+        publish.PeakInputs(history, peak_spec, past_forecasts, observed_peak),
     )
 
 
 def test_every_file_carries_the_date_and_the_model(bundle: dict[str, dict[str, Any]]) -> None:
-    for content in bundle.values():
-        assert (content["published"], content["model_id"]) == ("2025-01-06", "synthetic")
+    for name, content in bundle.items():
+        model_id = "synthetic-peak" if name == "peak" else "synthetic"
+        assert (content["published"], content["model_id"]) == ("2025-01-06", model_id)
     assert bundle["meta"]["consolidated_until"] == "2024-11-30"
     assert bundle["meta"]["measured_until"] == "2025-01-05"
 
@@ -116,3 +120,32 @@ def test_scenarios_cover_each_year_trajectory_and_winter(bundle: dict[str, dict[
         if (c["year"], c["trajectory"], c["winter"]) == (2026, "stagnation", "normal")
     )
     assert rapid["annual_energy"] > flat["annual_energy"]
+
+
+def test_peak_starts_with_the_current_month(bundle: dict[str, dict[str, Any]]) -> None:
+    peak = bundle["peak"]
+    first = peak["months"][0]
+
+    assert peak["current_month"] == first["month"] == "2025-01"
+    assert len(peak["months"]) == 12
+    assert first["measured"] == 70.0
+    assert 70.0 <= first["p10"] <= first["p50"] <= first["p90"]
+    assert peak["winter_gw_per_c"] > 0
+    assert peak["accuracy"]["first_origin"] == "2016-01"
+
+
+def test_peak_history_gives_each_whole_month_its_day(
+    bundle: dict[str, dict[str, Any]], synthetic_frame: pd.DataFrame
+) -> None:
+    history = bundle["peak"]["history"]
+    peaks = synthetic_frame["peak_gw"]
+    december = peaks[peaks.index >= pd.Timestamp("2024-12-01")]
+    day = pd.DatetimeIndex(december.index)[int(december.to_numpy().argmax())]
+
+    assert (history[0]["month"], history[-1]["month"]) == ("2022-01", "2024-12")
+    assert history[-1] == {
+        "month": "2024-12",
+        "peak": pytest.approx(december.max(), abs=0.001),
+        "day": day.strftime("%Y-%m-%d"),
+        "provisional": True,
+    }

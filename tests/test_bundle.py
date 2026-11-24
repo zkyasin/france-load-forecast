@@ -44,6 +44,13 @@ def test_implausible_energy_fails(files: dict[str, dict[str, Any]]) -> None:
     assert bundle.check(broken)[0].startswith("history:")
 
 
+def test_implausible_peak_fails(files: dict[str, dict[str, Any]]) -> None:
+    broken = copy.deepcopy(files)
+    broken["peak"]["history"][-1]["peak"] = 184.4
+
+    assert bundle.check(broken)[0].startswith("peak:")
+
+
 def test_scenarios_without_a_winter_or_the_reference_fail(files: dict[str, dict[str, Any]]) -> None:
     without_mild = copy.deepcopy(files)
     scenarios = without_mild["scenarios"]

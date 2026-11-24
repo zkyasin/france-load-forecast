@@ -216,6 +216,12 @@ def test_bundle_is_read_again_after_its_ttl_and_kept_when_it_cannot_be(
     assert reads == [0.0, 11]
 
 
+def test_the_files_of_the_page_alone_do_not_hold_the_answers_back(bundle: tools.Bundle) -> None:
+    agent_files = {name: bundle[name] for name in tools.FILES}
+
+    assert api.BundleSource(lambda: agent_files, ttl=3600).get() is agent_files
+
+
 def test_data_that_break_their_schema_are_not_used(
     bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
 ) -> None:

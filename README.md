@@ -51,8 +51,9 @@ uv run flf publish
 ```
 
 writes the weekly bundle to `data/bundle/`, one JSON file per subject, from the warehouse and the
-results of `flf backtest`. Every file carries the publication date and the model id (`model_id` in
-[`config/model.toml`](config/model.toml)).
+results of `flf backtest` for both models. Every file carries the publication date and the model
+id (`model_id` in [`config/model.toml`](config/model.toml), or in
+[`config/peak.toml`](config/peak.toml) for `peak.json`).
 
 | File | Content |
 |---|---|
@@ -63,6 +64,7 @@ results of `flf backtest`. Every file carries the publication date and the model
 | `accuracy.json` | Backtest errors by horizon and coverage of the P10-P90 band |
 | `model.json` | Estimation window and response to temperature of the forecasting model |
 | `scenarios.json` | Energy of each year from 2027 to 2031 by BP2025 trajectory and winter, month by month |
+| `peak.json` | Monthly peak P10, P50 and P90 from the current month, the peak of each whole month and its day, the winter gradient of the peak and its backtest scores |
 
 ## Publication
 

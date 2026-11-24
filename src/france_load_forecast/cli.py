@@ -208,22 +208,31 @@ def decompose(data_dir: Path, config: Path, months: int) -> int:
     return 0
 
 
-def run_publish(data_dir: Path, config: Path, scenario_config: Path, out: Path) -> int:
+def run_publish(
+    data_dir: Path, config: Path, peak_config: Path, scenario_config: Path, out: Path
+) -> int:
     """Write the weekly bundle of JSON files."""
-    spec = model.load_spec(config)
-    past_forecasts = read_backtest(data_dir, spec)
-    if past_forecasts is None:
+    spec, peak_spec = model.load_spec(config), model.load_spec(peak_config)
+    past_forecasts, past_peaks = read_backtest(data_dir, spec), read_backtest(data_dir, peak_spec)
+    if past_forecasts is None or past_peaks is None:
         return 1
 
     scenario_spec = scenarios.load_spec(scenario_config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
         observed = model.load_after(con, history.index[-1], spec.target)
+        peak_history = model.daily_frame(con, peak_spec.smoothing)
+        peak = publish.PeakInputs(
+            peak_history,
+            peak_spec,
+            past_peaks,
+            model.load_after(con, peak_history.index[-1], peak_spec.target),
+        )
         rte = correction.rte_monthly(con)
         revision = warehouse.mean_revision(con)
     published = datetime.now(UTC).date()
     files = publish.build(
-        history, observed, spec, past_forecasts, rte, revision, scenario_spec, published
+        history, observed, spec, past_forecasts, rte, revision, scenario_spec, published, peak
     )
     problems = bundle.check(files)
     for problem in problems:
@@ -398,6 +407,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "publish", parents=[model_options], help="write the weekly bundle of JSON files"
     )
     publish_parser.add_argument("--out", type=Path, default=Path("data/bundle"))
+    publish_parser.add_argument("--peak-config", type=Path, default=Path("config/peak.toml"))
     publish_parser.add_argument("--scenarios", type=Path, default=Path("config/scenarios.toml"))
     snapshot_parser = commands.add_parser(
         "snapshot", parents=[common], help="save the real-time load as a Parquet file"
@@ -447,7 +457,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "decompose":
         return decompose(args.data_dir, args.config, args.months)
     if args.command == "publish":
-        return run_publish(args.data_dir, args.config, args.scenarios, args.out)
+        return run_publish(args.data_dir, args.config, args.peak_config, args.scenarios, args.out)
     if args.command == "snapshot":
         return snapshot(args.data_dir, args.out)
     if args.command == "ask":
