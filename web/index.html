@@ -26,6 +26,7 @@
             <li><a href="#questions">Questions</a></li>
             <li><a href="#temperature-title">Température</a></li>
             <li><a href="#history-title">Historique</a></li>
+            <li id="drivers-nav" hidden><a href="#drivers-title">Évolution</a></li>
             <li><a href="#scenarios-title">Scénarios</a></li>
             <li><a href="#method-title">Méthode</a></li>
             <li><a href="#sources-title">Sources</a></li>
@@ -315,6 +316,28 @@
           <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
           <section class="table-scroll" tabindex="0" aria-labelledby="history-values">
             <table id="history-table"></table>
+          </section>
+        </details>
+      </section>
+
+      <section id="drivers" aria-labelledby="drivers-title" hidden>
+        <h2 id="drivers-title">Évolution</h2>
+        <p class="prose" id="drivers-summary"></p>
+        <figure class="chart narrow">
+          <div
+            class="plot"
+            id="drivers-plot"
+            role="img"
+            aria-label="Variation de la consommation corrigée de la météo depuis l'année de référence, par partie"
+          ></div>
+          <figcaption id="drivers-caption"></figcaption>
+        </figure>
+        <div class="prose" id="drivers-parts"></div>
+        <details>
+          <summary id="drivers-values">Valeurs par période, en TWh</summary>
+          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the keyboard must reach a table that scrolls -->
+          <section class="table-scroll" tabindex="0" aria-labelledby="drivers-values">
+            <table id="drivers-table"></table>
           </section>
         </details>
       </section>

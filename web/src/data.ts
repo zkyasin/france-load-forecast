@@ -163,6 +163,40 @@ export interface Peak {
   accuracy: Omit<Accuracy, "published" | "model_id">;
 }
 
+/** Climate-corrected consumption of a period, in TWh, and its parts; the stock of rechargeable cars
+ * in millions; the production index of large industry and the real price of electricity, at 100 in
+ * the base year. */
+export interface DriverPeriod {
+  consumption: number;
+  industry: number;
+  electric_cars: number;
+  rest: number;
+  cars_millions: number;
+  activity_index: number;
+  real_price_index: number;
+}
+
+/** What changed consumption between the base year and the last twelve months. */
+export interface Drivers {
+  published: string;
+  model_id: string;
+  base_year: number;
+  first_month: string;
+  last_month: string;
+  base: DriverPeriod;
+  now: DriverPeriod;
+  // The change of consumption, in TWh, by part: they add up to it.
+  contributions: {
+    industry_activity: number;
+    industry_intensity: number;
+    electric_cars: number;
+    rest: number;
+  };
+  // The energy of a car over a year, set so that a reference year gives RTE's estimate.
+  cars: { mwh_per_car: number; reference_year: number; reference_twh: number; source: string };
+  years: (DriverPeriod & { year: number })[];
+}
+
 export interface Bundle {
   meta: Meta;
   forecast: Forecast;
@@ -173,6 +207,8 @@ export interface Bundle {
   scenarios: Scenarios;
   // Missing from the bundles published before the peak was.
   peak: Peak | null;
+  // Missing from the bundles published before the drivers were.
+  drivers: Drivers | null;
 }
 
 async function get<T>(path: string): Promise<T> {
@@ -185,17 +221,19 @@ async function get<T>(path: string): Promise<T> {
 
 /** The last published bundle. */
 export async function latest(): Promise<Bundle> {
-  const [meta, forecast, history, accuracy, gaps, model, scenarios, peak] = await Promise.all([
-    get<Meta>("data/latest/meta.json"),
-    get<Forecast>("data/latest/forecast.json"),
-    get<History>("data/latest/history.json"),
-    get<Accuracy>("data/latest/accuracy.json"),
-    get<Gaps>("data/latest/gaps.json"),
-    get<Model>("data/latest/model.json"),
-    get<Scenarios>("data/latest/scenarios.json"),
-    get<Peak>("data/latest/peak.json").catch(() => null),
-  ]);
-  return { meta, forecast, history, accuracy, gaps, model, scenarios, peak };
+  const [meta, forecast, history, accuracy, gaps, model, scenarios, peak, drivers] =
+    await Promise.all([
+      get<Meta>("data/latest/meta.json"),
+      get<Forecast>("data/latest/forecast.json"),
+      get<History>("data/latest/history.json"),
+      get<Accuracy>("data/latest/accuracy.json"),
+      get<Gaps>("data/latest/gaps.json"),
+      get<Model>("data/latest/model.json"),
+      get<Scenarios>("data/latest/scenarios.json"),
+      get<Peak>("data/latest/peak.json").catch(() => null),
+      get<Drivers>("data/latest/drivers.json").catch(() => null),
+    ]);
+  return { meta, forecast, history, accuracy, gaps, model, scenarios, peak, drivers };
 }
 
 /** Dates of all publications, oldest first. */

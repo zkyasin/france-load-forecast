@@ -346,7 +346,7 @@ export function render(bundle: Bundle): void {
           "réponse vient des données publiées.",
       ),
     );
-    chips(suggestions(bundle.forecast, bundle.gaps), "Pour commencer");
+    chips(suggestions(bundle.forecast, bundle.gaps, bundle.drivers), "Pour commencer");
   }
 
   greet();
