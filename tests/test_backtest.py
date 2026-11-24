@@ -17,7 +17,9 @@ def test_run_scores_twelve_months_per_origin(
 ) -> None:
     origins = pd.DatetimeIndex(["2024-01-01", "2024-02-01"])
 
-    results = backtest.run(synthetic_frame, synthetic_spec, origins)
+    results = backtest.run(
+        synthetic_frame, synthetic_frame["temperature_c"], synthetic_spec, origins
+    )
 
     first = results[results["origin"] == origins[0]]
     assert first["horizon"].tolist() == list(range(1, 13))
@@ -34,7 +36,9 @@ def test_run_scores_the_monthly_peak_of_a_peak_model(
 ) -> None:
     spec = replace(synthetic_spec, target="peak_gw")
 
-    results = backtest.run(synthetic_frame, spec, pd.DatetimeIndex(["2024-01-01"]))
+    results = backtest.run(
+        synthetic_frame, synthetic_frame["temperature_c"], spec, pd.DatetimeIndex(["2024-01-01"])
+    )
 
     april = results[results["month"] == pd.Timestamp("2024-04-01")].iloc[0]
     peaks = forecast.monthly_peak(synthetic_frame["peak_gw"])

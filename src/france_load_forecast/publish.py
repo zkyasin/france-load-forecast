@@ -233,11 +233,13 @@ class PeakInputs:
     observed: pd.Series
 
 
-def peak_file(peak: PeakInputs, current: pd.Timestamp, provisional: pd.Index) -> dict[str, Any]:
+def peak_file(
+    peak: PeakInputs, weather: pd.Series, current: pd.Timestamp, provisional: pd.Index
+) -> dict[str, Any]:
     """Monthly peak forecast with its band, the peak of each whole month measured and the day it
     fell on, the winter gradient of the peak model and its backtest scores."""
     fitted = model.fit_recent(peak.history, peak.spec)
-    table = outlook.table(fitted, peak.history, peak.observed, peak.past_forecasts)
+    table = outlook.table(fitted, peak.history, weather, peak.observed, peak.past_forecasts)
     daily = pd.concat([peak.history["peak_gw"], peak.observed])
     by_month = daily.groupby(pd.DatetimeIndex(daily.index).to_period("M").to_timestamp())
     peaks, days = by_month.max(), by_month.idxmax()
@@ -263,6 +265,7 @@ def peak_file(peak: PeakInputs, current: pd.Timestamp, provisional: pd.Index) ->
 
 def build(
     history: pd.DataFrame,
+    weather: pd.Series,
     observed: pd.Series,
     spec: model.ModelSpec,
     past_forecasts: pd.DataFrame,
@@ -274,10 +277,10 @@ def build(
 ) -> dict[str, dict[str, Any]]:
     """Every file of the bundle, by name.
 
-    `history` is the daily frame, `observed` the load measured after it, `past_forecasts` the
-    backtest results, `rte` RTE's monthly series, `revision` the revision of real-time load,
-    `scenario_spec` the trajectories and winters of the scenarios and `peak` what the peak file
-    is made from.
+    `history` is the daily frame, `weather` the daily national temperature since 1950,
+    `observed` the load measured after `history`, `past_forecasts` the backtest results, `rte`
+    RTE's monthly series, `revision` the revision of real-time load, `scenario_spec` the
+    trajectories and winters of the scenarios and `peak` what the peak file is made from.
     """
     latest = model.fit_recent(history, spec)
     current = outlook.current_month(history, observed)
@@ -286,11 +289,15 @@ def build(
     realtime = history.index[history["source"] == "realtime"].append(observed.index)
     provisional = pd.DatetimeIndex(realtime).to_period("M").to_timestamp().unique()
     corrected = correction.corrected_load(model.fit(history, spec), history)
-    to_forecast, forecast_temperature = decomposition.against_forecast(history, spec, months)
+    to_forecast, forecast_temperature = decomposition.against_forecast(
+        history, weather, spec, months
+    )
     files = {
         "meta": meta_file(history, observed, revision),
         "forecast": forecast_file(
-            outlook.table(latest, history, observed, past_forecasts), current, provisional
+            outlook.table(latest, history, weather, observed, past_forecasts),
+            current,
+            provisional,
         ),
         "gaps": gaps_file(
             to_forecast,
@@ -304,12 +311,14 @@ def build(
         ),
         "accuracy": accuracy_file(past_forecasts),
         "model": model_file(latest, history),
-        "scenarios": scenarios_file(*scenarios.grid(latest, history, scenario_spec), scenario_spec),
+        "scenarios": scenarios_file(
+            *scenarios.grid(latest, history, weather, scenario_spec), scenario_spec
+        ),
     }
     header = {"published": published.isoformat(), "model_id": spec.model_id}
     bundle = {name: header | content for name, content in files.items()}
     bundle["peak"] = (
-        header | {"model_id": peak.spec.model_id} | peak_file(peak, current, provisional)
+        header | {"model_id": peak.spec.model_id} | peak_file(peak, weather, current, provisional)
     )
     return bundle
 

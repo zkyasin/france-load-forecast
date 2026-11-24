@@ -1,8 +1,16 @@
-"""Temperature scenarios: the weather of past years replayed on the reference climate."""
+"""Temperature scenarios: the weather of every year since 1950, replayed in today's climate."""
 
 from collections.abc import Iterable
+from pathlib import Path
 
 import pandas as pd
+from statsmodels.nonparametric.smoothers_lowess import lowess
+
+# Share of the years that the trend of annual mean temperature draws on at each year: about 40 of
+# the years since 1950, so that a few warm or cold years do not bend it. With fewer than
+# TREND_MIN_YEARS years, there is no trend to draw, and the years are replayed as observed.
+TREND_SPAN = 0.5
+TREND_MIN_YEARS = 30
 
 
 def _calendar_days(dates: pd.DatetimeIndex) -> pd.Index:
@@ -23,22 +31,46 @@ def normal(history: pd.DataFrame, dates: pd.DatetimeIndex) -> pd.Series:
     return pd.Series(reference.reindex(_calendar_days(dates)).to_numpy(), index=dates)
 
 
+def read_rebuilt(path: Path) -> pd.Series:
+    """The national temperature rebuilt before RTE's series by `flf rebuild-temperature`."""
+    frame = pd.read_csv(path, parse_dates=["date"])
+    return pd.Series(frame["temperature_c"].to_numpy(), index=pd.DatetimeIndex(frame["date"]))
+
+
+def since_1950(history: pd.DataFrame, rebuilt: pd.Series) -> pd.Series:
+    """Daily national temperature: the rebuilt one before `history`, RTE's from its first day."""
+    first = pd.Timestamp(history.index[0])
+    weather: pd.Series = pd.concat([rebuilt[rebuilt.index < first], history["temperature_c"]])
+    return weather
+
+
+def moves(history: pd.DataFrame, weather: pd.Series, years: Iterable[int]) -> pd.Series:
+    """By how much the temperature of each of `years` moves to today's climate, in °C: the mean
+    reference temperature over the last 365 days of `history`, less the trend of the annual mean
+    temperature of `weather` in that year, a locally weighted regression over `years`."""
+    annual = weather.groupby(pd.DatetimeIndex(weather.index).year).mean().loc[list(years)]
+    if len(annual) < TREND_MIN_YEARS:
+        return pd.Series(0.0, index=annual.index)
+    trend = lowess(annual.to_numpy(), annual.index.to_numpy(), frac=TREND_SPAN, return_sorted=False)
+    today = history["reference_c"].iloc[-365:].mean()
+    return pd.Series(today - trend, index=annual.index)
+
+
 def members(
-    history: pd.DataFrame, weather: pd.DataFrame, dates: pd.DatetimeIndex, years: Iterable[int]
+    history: pd.DataFrame, weather: pd.Series, dates: pd.DatetimeIndex, years: Iterable[int]
 ) -> pd.DataFrame:
     """Temperature on `dates` under the weather of each of `years`, one column per year.
 
-    A member is the reference temperature of each calendar day, taken from the latest year of
-    `history`, plus the anomaly to the reference observed on that calendar day in a past year of
-    `weather`. Both frames hold daily `temperature_c` and `reference_c`.
+    A member replays the temperature of `weather` on each calendar day of a past year, moved to
+    today's climate as `moves` says.
     """
-    reference = _by_calendar_day(history["reference_c"])
-    anomaly = weather["temperature_c"] - weather["reference_c"]
+    years = list(years)
+    move = moves(history, weather, years)
     days = _calendar_days(dates)
     columns = {}
     for year in years:
-        in_year = anomaly[pd.DatetimeIndex(anomaly.index).year == year]
-        columns[year] = (reference + _by_calendar_day(in_year)).reindex(days).to_numpy()
+        in_year = weather[pd.DatetimeIndex(weather.index).year == year] + move[year]
+        columns[year] = _by_calendar_day(in_year).reindex(days).to_numpy()
     return pd.DataFrame(columns, index=dates)
 
 

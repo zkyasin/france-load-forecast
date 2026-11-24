@@ -49,7 +49,9 @@ def test_grid_grows_the_reference_and_changes_winter_months_only(
 ) -> None:
     short = replace(spec, first_year=2025, last_year=2026)
 
-    table, replayed = scenarios.grid(synthetic_model, synthetic_frame, short)
+    table, replayed = scenarios.grid(
+        synthetic_model, synthetic_frame, synthetic_frame["temperature_c"], short
+    )
 
     energy = table.set_index(["year", "trajectory", "winter", "month"])["energy"].sort_index()
     reference = energy.loc[(2026, "stagnation", "normal")]

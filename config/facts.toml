@@ -2,14 +2,15 @@
 # that change with each publication come from the bundle instead.
 
 [method]
-date = 2026-11-22
+date = 2026-11-24
 source = "docs/methodology.md"
 text = """
 Un modèle journalier relie la consommation à la température nationale lissée publiée par RTE, \
 au calendrier (types de jours, ponts, fin d'année, août) et à des états structurels (niveau et \
 saisonnalité) estimés par un filtre de Kalman. Chaque trajectoire de prévision rejoue la météo \
-d'une année passée complète autour de la température de référence ; la P50 est la médiane des \
-trajectoires. La bande P10-P90 applique les erreurs relatives des prévisions passées, par \
+d'une année complète depuis 1950, ramenée au climat d'aujourd'hui : ses températures sont \
+décalées de l'écart entre la température de référence et la tendance des températures de cette \
+année-là. La P50 est la médiane des trajectoires. La bande P10-P90 applique les erreurs relatives des prévisions passées, par \
 horizon, à la part de la P50 encore à venir ; l'énergie déjà mesurée du mois s'y ajoute telle \
 quelle."""
 

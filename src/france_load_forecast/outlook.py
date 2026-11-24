@@ -18,21 +18,25 @@ def current_month(history: pd.DataFrame, observed: pd.Series) -> pd.Timestamp:
 
 
 def table(
-    model: DailyModel, history: pd.DataFrame, observed: pd.Series, past_forecasts: pd.DataFrame
+    model: DailyModel,
+    history: pd.DataFrame,
+    weather: pd.Series,
+    observed: pd.Series,
+    past_forecasts: pd.DataFrame,
 ) -> pd.DataFrame:
     """P10, P50 and P90 from the month after `history` to the 11th month after the current one,
     with what is measured so far and the horizon of each month: energy in TWh, or peak in GW for
     the peak model.
 
-    `observed` holds the daily values measured after `history`, and `past_forecasts` the backtest
-    results the band is calibrated on.
+    `weather` is the daily national temperature since 1950, `observed` holds the daily values
+    measured after `history`, and `past_forecasts` the backtest results the band is calibrated on.
     """
     start = pd.Timestamp(history.index[-1]) + pd.Timedelta(days=1)
     current = current_month(history, observed)
     months = 12 + (current.year - start.year) * 12 + current.month - start.month
-    years = forecast.complete_years(pd.DatetimeIndex(history.index))
+    years = forecast.years_before(weather, start)
     # The forecast of the days still to come: the days measured so far count as zero.
-    rest = forecast.paths(model, history, history, years, months, observed * 0.0).median(axis=1)
+    rest = forecast.paths(model, history, weather, years, months, observed * 0.0).median(axis=1)
     measured = forecast.MONTHLY[model.spec.target](observed).reindex(rest.index, fill_value=0.0)
     # Horizons count from the last day the model knows; the backtest stops at 12 months.
     horizon = pd.Series(range(1, months + 1), index=rest.index)

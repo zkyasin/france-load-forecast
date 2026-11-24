@@ -30,6 +30,7 @@ def bundle(
     scenario_spec = replace(scenarios.load_spec(SCENARIOS), first_year=2025, last_year=2026)
     return publish.build(
         history,
+        history["temperature_c"],
         observed,
         synthetic_spec,
         past_forecasts,

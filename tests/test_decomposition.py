@@ -12,7 +12,9 @@ TOTALS = ["actual", "reference", "gap"]
 def forecast_view(
     synthetic_frame: pd.DataFrame, synthetic_spec: model.ModelSpec
 ) -> tuple[pd.DataFrame, pd.Series]:
-    return decomposition.against_forecast(synthetic_frame, synthetic_spec, MONTHS)
+    return decomposition.against_forecast(
+        synthetic_frame, synthetic_frame["temperature_c"], synthetic_spec, MONTHS
+    )
 
 
 @pytest.fixture(scope="module")
@@ -37,7 +39,9 @@ def test_recent_months_are_complete(synthetic_frame: pd.DataFrame) -> None:
 def test_reference_is_the_backtest_forecast_one_month_ahead(
     against_forecast: pd.DataFrame, synthetic_frame: pd.DataFrame, synthetic_spec: model.ModelSpec
 ) -> None:
-    results = backtest.run(synthetic_frame, synthetic_spec, MONTHS)
+    results = backtest.run(
+        synthetic_frame, synthetic_frame["temperature_c"], synthetic_spec, MONTHS
+    )
     one_month_ahead = results[results["horizon"] == 1].set_index("month")
 
     np.testing.assert_allclose(against_forecast["reference"], one_month_ahead["p50"])
@@ -78,7 +82,9 @@ def test_a_colder_month_shows_as_climate(
     colder_by = synthetic_frame["temperature_smooth"] - cold["temperature_smooth"]
     cold["load_gw"] += 2 * colder_by
 
-    december_gap = decomposition.against_forecast(cold, synthetic_spec, MONTHS[1:])[0].iloc[0]
+    december_gap = decomposition.against_forecast(
+        cold, cold["temperature_c"], synthetic_spec, MONTHS[1:]
+    )[0].iloc[0]
 
     extra_heating = correction.monthly_energy(2 * colder_by)[MONTHS[1]]
     climate = december_gap["climate"] - against_forecast.at[MONTHS[1], "climate"]
@@ -93,7 +99,7 @@ def test_the_forecast_assumed_the_weather_of_its_median_paths(
     origin = MONTHS[1]
     days = pd.date_range(origin, periods=origin.days_in_month, freq="D")
     past = synthetic_frame[synthetic_frame.index < origin]
-    replayed = climate.members(past, synthetic_frame, days, [2022, 2023])
+    replayed = climate.members(past, synthetic_frame["temperature_c"], days, [2022, 2023])
 
     assert forecast_view[1][origin] == pytest.approx(replayed.to_numpy().mean())
 
@@ -106,7 +112,9 @@ def test_the_weather_the_forecast_assumed_ignores_the_month(
     cold = synthetic_frame.copy()
     cold.loc[cold.index >= MONTHS[1], "temperature_c"] -= 3.0
 
-    _, assumed = decomposition.against_forecast(cold, synthetic_spec, MONTHS[1:])
+    _, assumed = decomposition.against_forecast(
+        cold, cold["temperature_c"], synthetic_spec, MONTHS[1:]
+    )
 
     assert assumed[MONTHS[1]] == pytest.approx(forecast_view[1][MONTHS[1]])
 

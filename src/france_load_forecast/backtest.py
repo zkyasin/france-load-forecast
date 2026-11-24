@@ -2,8 +2,8 @@
 
 At each origin, the forecast only uses the days before it: the model is re-estimated on 1 January
 of each year, over the preceding `window_years` years, then filtered day by day up to the origin.
-Weather paths come from every complete year outside the forecast window, so the target months
-never replay their own weather.
+Weather paths replay every complete year before the origin, so the backtest knows no weather
+of the months it scores, nor of the years after them.
 """
 
 from collections.abc import Iterable, Iterator
@@ -40,25 +40,22 @@ def models_at(
             yield origin, model.extend(fitted, history[history.index < origin])
 
 
-def weather_years(complete_years: Iterable[int], origin: pd.Timestamp) -> list[int]:
-    """Complete years outside the 12 months from `origin`."""
-    window = pd.date_range(origin, periods=12, freq="MS")
-    return [year for year in complete_years if year not in set(window.year)]
-
-
 def run(
-    history: pd.DataFrame, spec: model.ModelSpec, origins: Iterable[pd.Timestamp]
+    history: pd.DataFrame,
+    weather: pd.Series,
+    spec: model.ModelSpec,
+    origins: Iterable[pd.Timestamp],
 ) -> pd.DataFrame:
     """One row per origin and forecast month: P50 and spread across weather paths, the actual
     energy or peak, and two naive forecasts (same month a year earlier, raw and
-    climate-corrected)."""
+    climate-corrected). `weather` is the daily national temperature since 1950."""
     monthly = forecast.MONTHLY[spec.target]
     actual = monthly(history[spec.target])
-    all_years = forecast.complete_years(pd.DatetimeIndex(history.index))
     rows = []
     for origin, at_origin in models_at(history, spec, origins):
         past = history[history.index < origin]
-        paths = forecast.paths(at_origin, past, history, weather_years(all_years, origin))
+        years = forecast.years_before(weather, origin)
+        paths = forecast.paths(at_origin, past, weather, years)
         corrected = monthly(correction.corrected_load(at_origin, past))
         window = pd.date_range(origin, periods=12, freq="MS")
         year_before = window - pd.DateOffset(years=1)

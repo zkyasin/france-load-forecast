@@ -17,6 +17,7 @@ import pandas as pd
 from france_load_forecast import (
     backtest,
     bundle,
+    climate,
     conformal,
     correction,
     decomposition,
@@ -127,7 +128,7 @@ def read_backtest(data_dir: Path, spec: model.ModelSpec) -> pd.DataFrame | None:
     return pd.read_csv(path, parse_dates=["origin", "month"])
 
 
-def run_forecast(data_dir: Path, config: Path) -> int:
+def run_forecast(data_dir: Path, config: Path, rebuilt: Path) -> int:
     """Forecast monthly energy, or peak, over the current month and the 11 after, with a P10-P90
     band calibrated on the backtest errors. Days already measured replace the forecast."""
     spec = model.load_spec(config)
@@ -140,18 +141,22 @@ def run_forecast(data_dir: Path, config: Path) -> int:
         observed = model.load_after(con, history.index[-1], spec.target)
         note = realtime_note(con, history)
     fitted = model.fit_recent(history, spec)
-    summary = outlook.table(fitted, history, observed, past_forecasts)
+    weather = climate.since_1950(history, climate.read_rebuilt(rebuilt))
+    summary = outlook.table(fitted, history, weather, observed, past_forecasts)
 
     start = pd.Timestamp(summary.index[0])
     last_measured = observed.index[-1] if not observed.empty else history.index[-1]
-    years = forecast.complete_years(pd.DatetimeIndex(history.index))
+    years = forecast.years_before(weather, start)
     name, unit = MONTHLY_NAMES[spec.target]
     print(
         f"{name} in {unit}: model up to {start - pd.Timedelta(days=1):%Y-%m-%d},"
         f" measured load up to {last_measured:%Y-%m-%d}"
     )
     print(note)
-    print(f"P50 over {len(years)} weather years, P10-P90 from backtest errors before {start:%Y-%m}")
+    print(
+        f"P50 over the weather of {years[0]} to {years[-1]} in today's climate,"
+        f" P10-P90 from backtest errors before {start:%Y-%m}"
+    )
     summary.index = pd.DatetimeIndex(summary.index).strftime("%Y-%m")
     print(summary.drop(columns="horizon").to_string(float_format=lambda value: f"{value:.1f}"))
     if spec.target == "load_gw":
@@ -160,14 +165,15 @@ def run_forecast(data_dir: Path, config: Path) -> int:
     return 0
 
 
-def run_backtest(data_dir: Path, config: Path, first: str) -> int:
+def run_backtest(data_dir: Path, config: Path, first: str, rebuilt: Path) -> int:
     """Forecast from each month since `first` with the data known then, and score the forecasts."""
     spec = model.load_spec(config)
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         frame = model.daily_frame(con, spec.smoothing)
     # Past forecasts are scored against consolidated data only.
     history = frame[frame["source"] == "consolidated"]
-    results = backtest.run(history, spec, backtest.monthly_origins(history, first))
+    weather = climate.since_1950(history, climate.read_rebuilt(rebuilt))
+    results = backtest.run(history, weather, spec, backtest.monthly_origins(history, first))
     results.to_csv(backtest_path(data_dir, spec), index=False)
 
     recent = results[results["origin"] >= backtest.RECENT_ORIGINS]
@@ -182,7 +188,7 @@ def run_backtest(data_dir: Path, config: Path, first: str) -> int:
     return 0
 
 
-def decompose(data_dir: Path, config: Path, months: int) -> int:
+def decompose(data_dir: Path, config: Path, months: int, rebuilt: Path) -> int:
     """Explain the energy of the last complete months against the forecast made at their start and
     against the same month a year earlier."""
     spec = model.load_spec(config)
@@ -191,7 +197,10 @@ def decompose(data_dir: Path, config: Path, months: int) -> int:
         print(realtime_note(con, history))
     recent = decomposition.recent_months(history, months)
     latest = model.fit_recent(history, spec)
-    to_forecast, forecast_temperature = decomposition.against_forecast(history, spec, recent)
+    weather = climate.since_1950(history, climate.read_rebuilt(rebuilt))
+    to_forecast, forecast_temperature = decomposition.against_forecast(
+        history, weather, spec, recent
+    )
     views = {
         "the forecast made at the start of the month": to_forecast,
         "the same month a year earlier": decomposition.against_year_before(latest, history, recent),
@@ -210,7 +219,12 @@ def decompose(data_dir: Path, config: Path, months: int) -> int:
 
 
 def run_publish(
-    data_dir: Path, config: Path, peak_config: Path, scenario_config: Path, out: Path
+    data_dir: Path,
+    config: Path,
+    peak_config: Path,
+    scenario_config: Path,
+    rebuilt: Path,
+    out: Path,
 ) -> int:
     """Write the weekly bundle of JSON files."""
     spec, peak_spec = model.load_spec(config), model.load_spec(peak_config)
@@ -232,8 +246,18 @@ def run_publish(
         rte = correction.rte_monthly(con)
         revision = warehouse.mean_revision(con)
     published = datetime.now(UTC).date()
+    weather = climate.since_1950(history, climate.read_rebuilt(rebuilt))
     files = publish.build(
-        history, observed, spec, past_forecasts, rte, revision, scenario_spec, published, peak
+        history,
+        weather,
+        observed,
+        spec,
+        past_forecasts,
+        rte,
+        revision,
+        scenario_spec,
+        published,
+        peak,
     )
     problems = bundle.check(files)
     for problem in problems:
@@ -423,6 +447,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     model_options = argparse.ArgumentParser(add_help=False, parents=[common])
     model_options.add_argument("--config", type=Path, default=Path("config/model.toml"))
+    model_options.add_argument(
+        "--rebuilt",
+        type=Path,
+        default=Path("climate/national-temperature.csv"),
+        help="national temperature before RTE's series, from `flf rebuild-temperature`",
+    )
     commands.add_parser("fit", parents=[model_options], help="fit the daily load model")
     commands.add_parser(
         "correct",
@@ -499,13 +529,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "correct":
         return correct(args.data_dir, args.config)
     if args.command == "forecast":
-        return run_forecast(args.data_dir, args.config)
+        return run_forecast(args.data_dir, args.config, args.rebuilt)
     if args.command == "backtest":
-        return run_backtest(args.data_dir, args.config, args.first)
+        return run_backtest(args.data_dir, args.config, args.first, args.rebuilt)
     if args.command == "decompose":
-        return decompose(args.data_dir, args.config, args.months)
+        return decompose(args.data_dir, args.config, args.months, args.rebuilt)
     if args.command == "publish":
-        return run_publish(args.data_dir, args.config, args.peak_config, args.scenarios, args.out)
+        return run_publish(
+            args.data_dir, args.config, args.peak_config, args.scenarios, args.rebuilt, args.out
+        )
     if args.command == "snapshot":
         return snapshot(args.data_dir, args.out)
     if args.command == "rebuild-temperature":

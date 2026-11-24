@@ -14,7 +14,9 @@ def test_complete_years_need_every_day() -> None:
 def test_paths_cover_twelve_months_per_weather_year(
     synthetic_model: model.DailyModel, synthetic_frame: pd.DataFrame
 ) -> None:
-    paths = forecast.paths(synthetic_model, synthetic_frame, synthetic_frame, [2022, 2023])
+    paths = forecast.paths(
+        synthetic_model, synthetic_frame, synthetic_frame["temperature_c"], [2022, 2023]
+    )
 
     assert paths.shape == (12, 2)
     assert paths.index.tolist() == list(pd.date_range("2025-01-01", periods=12, freq="MS"))
@@ -28,7 +30,7 @@ def test_a_colder_year_needs_more_energy_in_winter(
     year = pd.DatetimeIndex(weather.index).year
     weather["temperature_c"] = weather["reference_c"] + np.where(year == 2022, -3.0, 3.0)
 
-    paths = forecast.paths(synthetic_model, synthetic_frame, weather, [2022, 2023])
+    paths = forecast.paths(synthetic_model, synthetic_frame, weather["temperature_c"], [2022, 2023])
 
     january = paths.loc["2025-01-01"]
     # 31 days at 2 GW/°C for a 6 °C difference.
@@ -39,7 +41,9 @@ def test_history_must_end_with_a_month(
     synthetic_model: model.DailyModel, synthetic_frame: pd.DataFrame
 ) -> None:
     with pytest.raises(ValueError, match="last day of a month"):
-        forecast.paths(synthetic_model, synthetic_frame.iloc[:-1], synthetic_frame, [2022])
+        forecast.paths(
+            synthetic_model, synthetic_frame.iloc[:-1], synthetic_frame["temperature_c"], [2022]
+        )
 
 
 def test_measured_days_replace_the_forecast(
@@ -48,9 +52,15 @@ def test_measured_days_replace_the_forecast(
     january = pd.date_range("2025-01-01", "2025-01-31")
     observed = pd.Series(60.0, index=january)
 
-    forecast_only = forecast.paths(synthetic_model, synthetic_frame, synthetic_frame, [2022, 2023])
+    forecast_only = forecast.paths(
+        synthetic_model, synthetic_frame, synthetic_frame["temperature_c"], [2022, 2023]
+    )
     with_observed = forecast.paths(
-        synthetic_model, synthetic_frame, synthetic_frame, [2022, 2023], observed=observed
+        synthetic_model,
+        synthetic_frame,
+        synthetic_frame["temperature_c"],
+        [2022, 2023],
+        observed=observed,
     )
 
     np.testing.assert_allclose(with_observed.loc["2025-01-01"], 60 * 744 / 1000)
@@ -64,7 +74,7 @@ def test_normal_climate_lies_between_a_cold_and_a_warm_year(
     year = pd.DatetimeIndex(weather.index).year
     weather["temperature_c"] = weather["reference_c"] + np.where(year == 2022, -3.0, 3.0)
 
-    paths = forecast.paths(synthetic_model, synthetic_frame, weather, [2022, 2023])
+    paths = forecast.paths(synthetic_model, synthetic_frame, weather["temperature_c"], [2022, 2023])
     normal = forecast.normal(synthetic_model, synthetic_frame, 12)
 
     january = pd.Timestamp("2025-01-01")
@@ -88,7 +98,11 @@ def test_a_peak_path_keeps_the_highest_day(
     record = pd.Series(100.0, index=[pd.Timestamp("2025-01-15")])
 
     paths = forecast.paths(
-        synthetic_peak_model, synthetic_frame, synthetic_frame, [2022, 2023], observed=record
+        synthetic_peak_model,
+        synthetic_frame,
+        synthetic_frame["temperature_c"],
+        [2022, 2023],
+        observed=record,
     )
 
     np.testing.assert_allclose(paths.loc["2025-01-01"], 100.0)

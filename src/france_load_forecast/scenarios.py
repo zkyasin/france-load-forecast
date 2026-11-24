@@ -88,20 +88,20 @@ def winter_year(effects: pd.DataFrame, share: float) -> int:
 
 
 def grid(
-    model: DailyModel, history: pd.DataFrame, spec: ScenarioSpec
+    model: DailyModel, history: pd.DataFrame, weather: pd.Series, spec: ScenarioSpec
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Monthly energy in TWh of each year, trajectory and winter, and the weather year that each
     cold or mild winter replays.
 
-    `model` is the forecasting model fitted on `history`. Returns one row per month, year,
-    trajectory and winter, with its energy; and one row per year and winter, with its weather
-    year.
+    `model` is the forecasting model fitted on `history`, and `weather` the daily national
+    temperature since 1950. Returns one row per month, year, trajectory and winter, with its
+    energy; and one row per year and winter, with its weather year.
     """
     end = pd.Timestamp(history.index[-1])
     months = (spec.last_year - end.year) * 12 + 12 - end.month
     normal = forecast.normal(model, history, months)
-    weather_years = forecast.complete_years(pd.DatetimeIndex(history.index))
-    effects = forecast.paths(model, history, history, weather_years, months).sub(normal, axis=0)
+    weather_years = forecast.years_before(weather, end + pd.Timedelta(days=1))
+    effects = forecast.paths(model, history, weather, weather_years, months).sub(normal, axis=0)
     dates = pd.DatetimeIndex(normal.index)
     in_winter = dates.month.isin(WINTER)
     energies, replayed = [], []

@@ -371,8 +371,10 @@
           ></div>
         </figure>
         <p class="prose">
-          Ce sont des ordres de grandeur, pas des prévisions. Les hivers observés depuis 2012 sont
-          peu nombreux pour estimer un hiver qui revient une année sur dix. Les trajectoires de RTE
+          Ce sont des ordres de grandeur, pas des prévisions. L'hiver froid et l'hiver doux sont
+          ceux qui reviennent une année sur dix parmi les hivers depuis 1950, ramenés au climat
+          d'aujourd'hui par la seule hausse moyenne des températures : les vagues de froid d'autrefois
+          y gardent sans doute plus de force qu'elles n'en auraient aujourd'hui. Les trajectoires de RTE
           ne croissent pas au même rythme chaque année : la lente monte surtout à partir de 2027,
           et une croissance moyenne depuis 2024 sous-estime alors celle des années 2027 à 2031.
           Enfin, les scénarios partent du niveau d'aujourd'hui, alors que les niveaux du Bilan
@@ -396,9 +398,10 @@
           par un filtre de Kalman sur les trois dernières années.
         </p>
         <p>
-          Chaque trajectoire de prévision rejoue la météo d'une année passée complète, depuis 2012,
-          autour des températures de référence. La prévision médiane est la médiane de ces
-          trajectoires. La bande P10–P90 applique à la part de cette médiane encore à venir les
+          Chaque trajectoire de prévision rejoue la météo d'une année complète depuis 1950, ramenée
+          au climat d'aujourd'hui : ses températures sont décalées de l'écart entre la température
+          de référence de RTE et la tendance des températures de cette année-là, environ 2 °C pour
+          les années 1950. La prévision médiane est la médiane de ces trajectoires. La bande P10–P90 applique à la part de cette médiane encore à venir les
           erreurs relatives des prévisions passées au même horizon, puis ajoute l'énergie déjà
           mesurée du mois. Elle couvre la météo, les erreurs du modèle et les changements de
           structure.
@@ -459,12 +462,19 @@
             >Bilan prévisionnel 2025-2035 de RTE, chapitre « La consommation d'électricité »</a
           >, publié le 23 décembre 2025, p. 10, 11 et 35.
         </p>
+        <p>
+          Avant 2012, la température nationale est reconstituée à partir des
+          <a href="https://www.data.gouv.fr/datasets/donnees-climatologiques-de-base-quotidiennes"
+            >données climatologiques quotidiennes de Météo-France</a
+          >
+          de 23 stations, sous la même licence.
+        </p>
       </section>
     </main>
 
     <footer class="colophon">
       <div class="wrap">
-        Code sous licence MIT. Données RTE sous Licence Ouverte 2.0. Modèle
+        Code sous licence MIT. Données RTE et Météo-France sous Licence Ouverte 2.0. Modèle
         <span id="model-id"></span>.
       </div>
     </footer>

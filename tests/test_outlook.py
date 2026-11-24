@@ -10,7 +10,9 @@ def test_current_month_adds_the_measured_days(
 ) -> None:
     observed = pd.Series(60.0, index=pd.date_range("2025-01-01", "2025-01-10"))
 
-    table = outlook.table(synthetic_model, synthetic_frame, observed, past_forecasts)
+    table = outlook.table(
+        synthetic_model, synthetic_frame, synthetic_frame["temperature_c"], observed, past_forecasts
+    )
 
     january = table.iloc[0]
     assert table.index[0] == pd.Timestamp("2025-01-01")
@@ -27,7 +29,9 @@ def test_months_measured_in_full_have_no_band(
 ) -> None:
     observed = pd.Series(60.0, index=pd.date_range("2025-01-01", "2025-02-05"))
 
-    table = outlook.table(synthetic_model, synthetic_frame, observed, past_forecasts)
+    table = outlook.table(
+        synthetic_model, synthetic_frame, synthetic_frame["temperature_c"], observed, past_forecasts
+    )
 
     assert outlook.current_month(synthetic_frame, observed) == pd.Timestamp("2025-02-01")
     assert table["horizon"].tolist() == list(range(1, 14))
@@ -43,7 +47,13 @@ def test_the_peak_of_a_month_is_at_least_its_highest_measured_day(
     observed = pd.Series(70.0, index=pd.date_range("2025-01-01", "2025-01-10"))
     observed["2025-01-05"] = 100.0
 
-    table = outlook.table(synthetic_peak_model, synthetic_frame, observed, past_forecasts)
+    table = outlook.table(
+        synthetic_peak_model,
+        synthetic_frame,
+        synthetic_frame["temperature_c"],
+        observed,
+        past_forecasts,
+    )
 
     january, february = table.iloc[0], table.iloc[1]
     assert january["measured"] == 100.0

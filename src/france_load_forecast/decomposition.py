@@ -69,20 +69,20 @@ def _median_paths(paths: pd.DataFrame) -> pd.Index:
 
 
 def against_forecast(
-    history: pd.DataFrame, spec: ModelSpec, months: pd.DatetimeIndex
+    history: pd.DataFrame, weather: pd.Series, spec: ModelSpec, months: pd.DatetimeIndex
 ) -> tuple[pd.DataFrame, pd.Series]:
     """Gap between the energy of each month and the forecast made at its start, split into terms,
     and the mean temperature of the weather that the forecast assumed, in °C.
 
-    The forecast is the one of the backtest, one month ahead.
+    The forecast is the one of the backtest, one month ahead, on the daily national temperature
+    `weather`.
     """
-    complete_years = forecast.complete_years(pd.DatetimeIndex(history.index))
     actual_terms, planned_terms, planned_temperature = {}, {}, {}
     for origin, at_origin in backtest.models_at(history, spec, months):
         days = pd.date_range(origin, periods=origin.days_in_month, freq="D")
         past = history[history.index < origin]
-        years = backtest.weather_years(complete_years, origin)
-        scenarios = forecast.scenarios(past, history, years, days, spec.smoothing)
+        years = forecast.years_before(weather, origin)
+        scenarios = forecast.scenarios(past, weather, years, days, spec.smoothing)
         states = _projection(at_origin, scenarios[years[0]])
         paths = pd.DataFrame.from_dict(
             {

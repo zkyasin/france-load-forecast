@@ -29,15 +29,22 @@ def complete_years(dates: pd.DatetimeIndex) -> list[int]:
     ]
 
 
+def years_before(weather: pd.Series, day: pd.Timestamp) -> list[int]:
+    """Complete years of `weather` before the year of `day`: the weather years that a forecast
+    made on `day` replays."""
+    return [year for year in complete_years(pd.DatetimeIndex(weather.index)) if year < day.year]
+
+
 def scenarios(
     history: pd.DataFrame,
-    weather: pd.DataFrame,
+    weather: pd.Series,
     years: Iterable[int],
     dates: pd.DatetimeIndex,
     smoothing: float,
 ) -> dict[int, pd.DataFrame]:
     """Calendar features, temperature and smoothed temperature on `dates`, the days right after
-    `history`, under the weather of each of `years`."""
+    `history`, under the weather of each of `years`, in today's climate. `weather` is the daily
+    national temperature."""
     years = list(years)
     temperatures = climate.members(history, weather, dates, years)
     smoothed = climate.smooth(temperatures, smoothing, history["temperature_smooth"].iloc[-1])
@@ -73,7 +80,7 @@ def normal(model: DailyModel, history: pd.DataFrame, months: int) -> pd.Series:
 def paths(
     model: DailyModel,
     history: pd.DataFrame,
-    weather: pd.DataFrame,
+    weather: pd.Series,
     years: Iterable[int],
     months: int = 12,
     observed: pd.Series | None = None,
@@ -82,8 +89,9 @@ def paths(
     per weather year.
 
     `history` is the frame the model was fitted on. It must end on the last day of a month, so
-    that the forecast covers whole months. The daily values in `observed`, measured after `history`
-    but not usable by the model yet, replace the forecast on their days.
+    that the forecast covers whole months. `weather` is the daily national temperature whose
+    `years` are replayed. The daily values in `observed`, measured after `history` but not usable
+    by the model yet, replace the forecast on their days.
     """
     dates = _horizon(history, months)
     known = pd.Series(np.nan, index=dates) if observed is None else observed.reindex(dates)
