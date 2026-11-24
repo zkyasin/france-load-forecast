@@ -190,6 +190,14 @@ export function render(bundle: Bundle): void {
 
   let opened = read(OPENED) !== null;
   bubble.hidden = opened;
+  // On a touch screen, focusing the field opens the keyboard over the suggested questions: the
+  // panel takes the focus instead, and the field waits for a tap.
+  const touch = window.matchMedia("(pointer: coarse)");
+  panel.tabIndex = -1;
+  function settle(): void {
+    if (touch.matches) panel.focus({ preventScroll: true });
+    else field.focus();
+  }
   function toggle(open: boolean): void {
     panel.hidden = !open;
     corner.setAttribute("aria-expanded", String(open));
@@ -199,7 +207,7 @@ export function render(bundle: Bundle): void {
       bubble.hidden = true;
       // The greeting first; the last exchange once there are some.
       thread.scrollTop = exchanges.length > 0 ? thread.scrollHeight : 0;
-      field.focus();
+      settle();
     } else {
       corner.focus();
     }
@@ -338,7 +346,7 @@ export function render(bundle: Bundle): void {
     write(SAVED, null);
     thread.replaceChildren();
     greet();
-    field.focus();
+    settle();
   });
 
   let pending: AbortController | null = null;
