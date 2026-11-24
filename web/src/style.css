@@ -1133,3 +1133,29 @@ tbody th {
   --third: #1d8a6f;
   --fourth: #a87810;
 }
+
+/*
+ * On a phone, running text is read at 1rem (17px) or more, and the keys and captions of the charts
+ * at 0.875rem.
+ */
+@media (max-width: 44rem) {
+  .step-card p {
+    font-size: 1rem;
+  }
+
+  .intro,
+  .chapter-body > p.prose,
+  .chapter-body .prose p,
+  .chapter-body .details-prose p,
+  .chapter-text .chapter-body p,
+  .chapter-text .chapter-body li {
+    font-size: 1rem;
+  }
+
+  .legend,
+  .chart figcaption,
+  .note-dates,
+  .note-credit {
+    font-size: 0.875rem;
+  }
+}
