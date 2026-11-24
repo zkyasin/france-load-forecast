@@ -69,6 +69,21 @@ def test_realtime_days_are_raised_by_the_mean_revision(
     assert 0.5 < revision < 1.5
 
 
+def test_daily_peak_is_the_highest_value_of_the_day(
+    con: duckdb.DuckDBPyConnection, fixtures: Path
+) -> None:
+    with (fixtures / "eco2mix-national-cons-def.csv").open(encoding="utf-8-sig") as file:
+        consolidated = [float(row["consommation"]) for row in csv.DictReader(file, delimiter=";")]
+    with (fixtures / "eco2mix-national-tr.csv").open(encoding="utf-8-sig") as file:
+        rows = csv.DictReader(file, delimiter=";")
+        realtime = [float(row["consommation"]) for row in rows if row["date"] == "2026-09-01"]
+    peaks = dict(con.execute("SELECT date, peak_gw FROM load_daily").fetchall())
+    revision, _ = warehouse.mean_revision(con)
+
+    assert peaks[dt.date(2026, 8, 30)] == pytest.approx(max(consolidated[:48]) / 1000)
+    assert peaks[dt.date(2026, 9, 1)] == pytest.approx(max(realtime) / 1000 + revision)
+
+
 def test_checks_report_realtime_days_without_revision(
     export_files: dict[str, Path], fixtures: Path, tmp_path: Path
 ) -> None:

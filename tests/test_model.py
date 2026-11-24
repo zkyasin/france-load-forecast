@@ -1,3 +1,4 @@
+from dataclasses import replace
 from pathlib import Path
 
 import duckdb
@@ -46,9 +47,34 @@ def test_fit_recent_keeps_the_last_years(
 def test_spec_reads_the_repository_config() -> None:
     spec = model.load_spec(Path(__file__).parents[1] / "config" / "model.toml")
 
-    assert spec.model_id == "baseline"
+    assert (spec.model_id, spec.target) == ("baseline", "load_gw")
     assert spec.components["climate"].startswith("cr(temperature_smooth")
     assert 0 < spec.smoothing <= 1
+
+
+def test_peak_spec_reads_its_config() -> None:
+    spec = model.load_spec(Path(__file__).parents[1] / "config" / "peak.toml")
+
+    assert (spec.model_id, spec.target) == ("peak", "peak_gw")
+
+
+def test_spec_refuses_an_unknown_target(tmp_path: Path) -> None:
+    config = (Path(__file__).parents[1] / "config" / "model.toml").read_text(encoding="utf-8")
+    path = tmp_path / "model.toml"
+    path.write_text(config.replace('target = "load_gw"', 'target = "price"'), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="target must be one of"):
+        model.load_spec(path)
+
+
+def test_fit_explains_the_target_of_the_spec(
+    synthetic_frame: pd.DataFrame, synthetic_spec: model.ModelSpec
+) -> None:
+    frame = synthetic_frame.assign(peak_gw=synthetic_frame["load_gw"] * 1.15)
+
+    fitted = model.fit(frame, replace(synthetic_spec, target="peak_gw"))
+
+    np.testing.assert_allclose(fitted.results.model.endog[:, 0], frame["peak_gw"])
 
 
 def test_daily_frame_continues_with_realtime_days(export_files: dict[str, Path]) -> None:
@@ -59,6 +85,7 @@ def test_daily_frame_continues_with_realtime_days(export_files: dict[str, Path])
 
     assert frame.index.tolist() == list(pd.date_range("2026-08-30", "2026-09-02"))
     assert frame["source"].tolist() == ["consolidated"] * 2 + ["realtime"] * 2
+    assert (frame["peak_gw"] > frame["load_gw"]).all()
     first, second = frame["temperature_c"].iloc[:2]
     assert frame["temperature_smooth"].iloc[1] == pytest.approx((first + second) / 2)
 
@@ -68,8 +95,10 @@ def test_load_after_returns_the_later_days(export_files: dict[str, Path]) -> Non
     warehouse.build(con, export_files)
     daily = con.execute("SELECT date, load_gw FROM load_daily WHERE date > '2026-08-31'").fetchall()
 
-    later = model.load_after(con, pd.Timestamp("2026-08-31"))
+    later = model.load_after(con, pd.Timestamp("2026-08-31"), "load_gw")
+    peaks = model.load_after(con, pd.Timestamp("2026-08-31"), "peak_gw")
 
     assert later.index.tolist() == list(pd.date_range("2026-09-01", "2026-09-02"))
     np.testing.assert_allclose(later, [load_gw for _, load_gw in sorted(daily)])
-    assert model.load_after(con, pd.Timestamp("2026-09-02")).empty
+    assert (peaks > later).all()
+    assert model.load_after(con, pd.Timestamp("2026-09-02"), "load_gw").empty

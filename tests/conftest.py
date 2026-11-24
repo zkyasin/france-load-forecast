@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,7 @@ from france_load_forecast.warehouse import SOURCES
 
 SYNTHETIC_SPEC = model.ModelSpec(
     model_id="synthetic",
+    target="load_gw",
     smoothing=0.5,
     seasonal_harmonics=2,
     window_years=2,
@@ -42,7 +44,8 @@ def export_files(fixtures: Path) -> dict[str, Path]:
 @pytest.fixture(scope="session")
 def synthetic_frame() -> pd.DataFrame:
     """Three years of daily load with a heating gradient of 2 GW/°C below 15 °C and a weekend
-    drop of 6 GW. The reference temperature is the seasonal cycle without weather noise."""
+    drop of 6 GW, and a daily peak 15 % above it. The reference temperature is the seasonal cycle
+    without weather noise."""
     rng = np.random.default_rng(0)
     dates = pd.date_range("2022-01-01", "2024-12-31", freq="D")
     season = 12 - 8 * np.cos(2 * np.pi * dates.day_of_year.to_numpy() / 365.25)
@@ -54,6 +57,7 @@ def synthetic_frame() -> pd.DataFrame:
     frame = pd.DataFrame(
         {
             "load_gw": load,
+            "peak_gw": 1.15 * load,
             "source": "consolidated",
             "temperature_c": temperature,
             "reference_c": season,
@@ -95,6 +99,11 @@ def past_forecasts() -> pd.DataFrame:
 @pytest.fixture(scope="session")
 def synthetic_model(synthetic_frame: pd.DataFrame) -> model.DailyModel:
     return model.fit(synthetic_frame, SYNTHETIC_SPEC)
+
+
+@pytest.fixture(scope="session")
+def synthetic_peak_model(synthetic_frame: pd.DataFrame) -> model.DailyModel:
+    return model.fit(synthetic_frame, replace(SYNTHETIC_SPEC, target="peak_gw"))
 
 
 class ScriptedModel(GenericFakeChatModel):

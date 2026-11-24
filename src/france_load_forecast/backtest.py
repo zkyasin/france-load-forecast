@@ -50,14 +50,16 @@ def run(
     history: pd.DataFrame, spec: model.ModelSpec, origins: Iterable[pd.Timestamp]
 ) -> pd.DataFrame:
     """One row per origin and forecast month: P50 and spread across weather paths, the actual
-    energy, and two naive forecasts (same month a year earlier, raw and climate-corrected)."""
-    actual = correction.monthly_energy(history["load_gw"])
+    energy or peak, and two naive forecasts (same month a year earlier, raw and
+    climate-corrected)."""
+    monthly = forecast.MONTHLY[spec.target]
+    actual = monthly(history[spec.target])
     all_years = forecast.complete_years(pd.DatetimeIndex(history.index))
     rows = []
     for origin, at_origin in models_at(history, spec, origins):
         past = history[history.index < origin]
         paths = forecast.paths(at_origin, past, history, weather_years(all_years, origin))
-        corrected = correction.monthly_energy(correction.corrected_load(at_origin, past))
+        corrected = monthly(correction.corrected_load(at_origin, past))
         window = pd.date_range(origin, periods=12, freq="MS")
         year_before = window - pd.DateOffset(years=1)
         rows.append(

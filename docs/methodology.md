@@ -109,6 +109,48 @@ June to August by about 5 %: the response to temperature and the shape of the ye
 the 2022 energy crisis. A drifting seasonal state and a three-year estimation window bring the
 error down at every horizon and the summer bias to about 3 %.
 
+## Daily peak
+
+The daily peak is the highest half-hour of the day in the same series, or the highest quarter-hour
+of a real-time day raised by the revision. RTE's daily peak (`pic-journalier-consommation-brute`) is
+not used: month by month it stands 0.1 to 0.5 GW above the highest half-hour on average, and on the
+clock-change days of October 2024 and 2025 it reads 76.9 and 84.4 GW for days whose highest
+half-hour was 47.5 and 52.4 GW.
+
+[`config/peak.toml`](../config/peak.toml) fits the daily model on the daily peak, with the same
+components. Its temperature smoothing is 0.55, which maximises the likelihood among 0.5 to 0.7: the
+peak follows the temperature of the day a little more than the mean load does. Fitted on 2012-2026,
+its one-day-ahead error is 1.19 GW and its winter gradient 1.91 GW/°C, close to the 2.00 GW/°C of
+the mean load.
+
+The forecast replays the same weather paths. The peak of a month is its highest day, P50 the median
+across paths, and the band is calibrated on the errors of the peak backtest as for energy. Days
+measured after the last day with a temperature set a floor under the peak of their month.
+
+`flf backtest --config config/peak.toml` scores the monthly peak as the energy is scored. Mean
+absolute percentage error, origins from January 2016 to September 2026:
+
+| Horizon | P50 | Same month a year earlier | Same, climate-corrected |
+|---|---|---|---|
+| 1 month | 4.16 % | 5.66 % | 5.14 % |
+| 2-3 months | 5.09 % | 5.66 % | 5.14 % |
+| 4-6 months | 4.88 % | 5.67 % | 5.17 % |
+| 7-12 months | 4.82 % | 5.77 % | 5.28 % |
+
+The model beats both naive forecasts at every horizon, by less on origins from 2023: 4.4 to 5.0 %
+against 5.1 to 5.3 %. P50 has no bias from December to February, where the median error is 0.0 %,
+and runs about 2 % low from June to August.
+
+Share of actual monthly peaks inside the P10-P90 band (target 80 %):
+
+| Origins | All months | December to February | June to August |
+|---|---|---|---|
+| 2018-2026 | 72 % | 73 % | 78 % |
+| 2023-2026 | 75 % | 68 % | 71 % |
+
+The band is too narrow: about three monthly peaks in four fall inside it, and two in three from
+December to February since 2023. Calibrating it by season instead does not help: 71 % from 2018.
+
 ## Monthly gap decomposition
 
 `flf decompose` explains the energy of each of the last twelve complete months twice: against the

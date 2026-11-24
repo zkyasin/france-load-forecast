@@ -1,0 +1,16 @@
+# Daily peak model: the model of config/model.toml fitted on the highest half-hour of each day.
+
+model_id = "peak"
+target = "peak_gw"
+
+# 0.55 maximises the likelihood of the peak model fitted on 2012-2026, among 0.5 to 0.7 in steps
+# of 0.05: the peak follows the temperature of the day a little more than the mean load does.
+smoothing = 0.55
+
+seasonal_harmonics = 2
+window_years = 3
+
+[components]
+climate = "cr(temperature_smooth, df=6, constraints='center', lower_bound=-15, upper_bound=35)"
+calendar = "C(day_type, Treatment('wed')) + bridge + christmas + august"
+lockdown = "lockdown_1 + lockdown_2 + lockdown_3"

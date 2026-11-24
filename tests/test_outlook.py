@@ -33,3 +33,20 @@ def test_months_measured_in_full_have_no_band(
     assert table["horizon"].tolist() == list(range(1, 14))
     np.testing.assert_allclose(table.iloc[0][["p10", "p50", "p90"]], 60 * 31 * 24 / 1000)
     assert table["p10"].notna().all()
+
+
+def test_the_peak_of_a_month_is_at_least_its_highest_measured_day(
+    synthetic_peak_model: model.DailyModel,
+    synthetic_frame: pd.DataFrame,
+    past_forecasts: pd.DataFrame,
+) -> None:
+    observed = pd.Series(70.0, index=pd.date_range("2025-01-01", "2025-01-10"))
+    observed["2025-01-05"] = 100.0
+
+    table = outlook.table(synthetic_peak_model, synthetic_frame, observed, past_forecasts)
+
+    january, february = table.iloc[0], table.iloc[1]
+    assert january["measured"] == 100.0
+    np.testing.assert_allclose(january[["p10", "p50", "p90"]], 100.0)
+    assert february["measured"] == 0.0
+    assert february["p10"] < february["p50"] < february["p90"] < 100.0

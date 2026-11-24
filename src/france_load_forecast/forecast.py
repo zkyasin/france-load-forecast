@@ -1,4 +1,4 @@
-"""Monthly energy forecast, one path per temperature scenario."""
+"""Monthly energy or peak forecast, one path per temperature scenario."""
 
 from collections.abc import Iterable
 
@@ -9,6 +9,16 @@ from france_load_forecast import climate
 from france_load_forecast.calendar import calendar_features
 from france_load_forecast.correction import monthly_energy
 from france_load_forecast.model import DailyModel, exog
+
+
+def monthly_peak(daily_gw: pd.Series) -> pd.Series:
+    """Highest daily peak of each month, in GW."""
+    return daily_gw.resample("MS").max()
+
+
+# How the days of a month add up, for each target of the model: energy in TWh for the mean load,
+# the highest day in GW for the peak.
+MONTHLY = {"load_gw": monthly_energy, "peak_gw": monthly_peak}
 
 
 def complete_years(dates: pd.DatetimeIndex) -> list[int]:
@@ -49,15 +59,15 @@ def _horizon(history: pd.DataFrame, months: int) -> pd.DatetimeIndex:
 
 
 def normal(model: DailyModel, history: pd.DataFrame, months: int) -> pd.Series:
-    """Monthly energy in TWh over the `months` months after `history`, at the reference
-    temperature."""
+    """Monthly energy in TWh, or peak in GW, over the `months` months after `history`, at the
+    reference temperature."""
     dates = _horizon(history, months)
     temperature = climate.normal(history, dates).to_frame("normal")
     start = history["temperature_smooth"].iloc[-1]
     smoothed = climate.smooth(temperature, model.spec.smoothing, start)["normal"]
     future = calendar_features(dates).assign(temperature_smooth=smoothed)
     daily = model.results.forecast(len(dates), exog=exog(model, future))
-    return monthly_energy(pd.Series(daily.to_numpy(), index=dates))
+    return MONTHLY[model.spec.target](pd.Series(daily.to_numpy(), index=dates))
 
 
 def paths(
@@ -68,16 +78,19 @@ def paths(
     months: int = 12,
     observed: pd.Series | None = None,
 ) -> pd.DataFrame:
-    """Monthly energy in TWh over the `months` months after `history`, one column per weather year.
+    """Monthly energy in TWh, or peak in GW, over the `months` months after `history`, one column
+    per weather year.
 
     `history` is the frame the model was fitted on. It must end on the last day of a month, so
-    that the forecast covers whole months. The daily load in `observed`, measured after `history`
-    but not usable by the model yet, replaces the forecast on its days.
+    that the forecast covers whole months. The daily values in `observed`, measured after `history`
+    but not usable by the model yet, replace the forecast on their days.
     """
     dates = _horizon(history, months)
     known = pd.Series(np.nan, index=dates) if observed is None else observed.reindex(dates)
-    energy = {}
+    monthly = {}
     for year, future in scenarios(history, weather, years, dates, model.spec.smoothing).items():
         daily = model.results.forecast(len(dates), exog=exog(model, future))
-        energy[year] = monthly_energy(known.fillna(pd.Series(daily.to_numpy(), index=dates)))
-    return pd.DataFrame(energy)
+        monthly[year] = MONTHLY[model.spec.target](
+            known.fillna(pd.Series(daily.to_numpy(), index=dates))
+        )
+    return pd.DataFrame(monthly)

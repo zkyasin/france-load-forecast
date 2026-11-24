@@ -109,14 +109,18 @@ JOIN (
 ) AS realtime USING (date)
 """
 
-# Real-time days after the last consolidated day, raised by the mean revision.
+# Real-time days after the last consolidated day, raised by the mean revision. The daily peak is
+# the highest value of the day: a half-hour for consolidated days, a quarter-hour for real-time
+# ones.
 LOAD_DAILY = """
 CREATE OR REPLACE VIEW load_daily AS
-SELECT date, avg(load_mw) / 1000 AS load_gw, count(*) AS n_values, 'consolidated' AS source
+SELECT date, avg(load_mw) / 1000 AS load_gw, max(load_mw) / 1000 AS peak_gw,
+    count(*) AS n_values, 'consolidated' AS source
 FROM load_consolidated
 GROUP BY date
 UNION ALL
-SELECT date, avg(load_mw) / 1000 + (SELECT avg(revision_gw) FROM revision), count(*), 'realtime'
+SELECT date, avg(load_mw) / 1000 + (SELECT avg(revision_gw) FROM revision),
+    max(load_mw) / 1000 + (SELECT avg(revision_gw) FROM revision), count(*), 'realtime'
 FROM load_realtime
 WHERE date > (SELECT max(date) FROM load_consolidated)
 GROUP BY date
