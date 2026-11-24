@@ -1,41 +1,48 @@
 /*
- * Colors: chart colors pass the colorblind and contrast checks on their background, in both
- * schemes. Copper is the forecast, blue the measured energy, green and ochre a third and a
- * fourth series. Blue, green and ochre also pass together, as the terms of a gap.
+ * Tokens. Charts read their colors from the page, through the custom properties of their
+ * element.
  */
 :root {
   color-scheme: light;
-  --paper: #f6f7f9;
+  --font-display: "Big Shoulders Display Variable", "Arial Narrow", sans-serif;
+  --font-text: "IBM Plex Sans Variable", system-ui, sans-serif;
+  --vermilion: #d1401f;
+  /* At least the safe area of a phone on its side, notch included. */
+  --gutter: max(
+    clamp(1.25rem, 0.25rem + 4vw, 4rem),
+    env(safe-area-inset-left, 0px),
+    env(safe-area-inset-right, 0px)
+  );
+  --max: 86rem;
+  --column: 64rem;
+  --text-column: 40rem;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  font-family: var(--font-text);
+  font-size: 106.25%;
+  line-height: 1.6;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * One background for the whole page, the light blue-grey it had before the story, with its ink
+ * and chart colors, which pass the contrast checks on it.
+ */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
   --ink: #15233b;
   --ink-2: #45536b;
   --muted: #5b687d;
   --rule: #dce1e8;
-  --forecast: #b4561f;
+  --paper: var(--bg);
+  --navy: #24305e;
   --measured: #2f5f9e;
+  --forecast: #b4561f;
   --third: #14917c;
   --fourth: #b5841c;
-
-  font-family: "Archivo Variable", system-ui, sans-serif;
-  font-size: 106.25%;
-  line-height: 1.55;
   color: var(--ink);
-  background: var(--paper);
-  text-size-adjust: 100%;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --paper: #0f1826;
-    --ink: #e6ebf2;
-    --ink-2: #aeb9ca;
-    --muted: #8f9cb1;
-    --rule: #26344a;
-    --forecast: #d9773f;
-    --measured: #5b8fd6;
-    --third: #1fa48c;
-    --fourth: #b98b2a;
-  }
 }
 
 *,
@@ -46,141 +53,647 @@
 
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--bg);
+}
+
+::selection {
+  color: #fff;
+  background: var(--vermilion);
 }
 
 a {
   color: inherit;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
+  transition: text-decoration-color 160ms ease;
 }
 
 a:hover {
-  text-decoration-thickness: 2px;
+  text-decoration-color: var(--forecast);
 }
 
 :focus-visible {
-  outline: 2px solid var(--forecast);
-  outline-offset: 2px;
+  outline: 2px solid var(--vermilion);
+  outline-offset: 3px;
 }
 
-.wrap {
-  max-width: 70rem;
-  margin-inline: auto;
-  padding-inline: 1rem;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-@media (min-width: 40rem) {
-  .wrap {
-    padding-inline: 2rem;
-  }
-}
-
-/* Masthead: the name of the page and the date of the publication shown. */
-
+/*
+ * Masthead: fixed over the story and the chapters, in the colors of the body. The title and the
+ * date of publication on the left, five chapters, then every chapter in a menu; on a phone, the
+ * menu only.
+ */
 .masthead {
-  border-bottom: 1px solid var(--rule);
-}
-
-.masthead .wrap {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 20;
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.25rem 2rem;
-  padding-block: 0.875rem;
+  align-items: center;
+  gap: 1.5rem;
+  padding: calc(0.625rem + env(safe-area-inset-top, 0px)) var(--gutter) 0.625rem;
+  color: var(--ink);
+  transition:
+    background-color 300ms ease,
+    color 300ms ease;
 }
 
-.site-name,
-.issue {
-  margin: 0;
+/* An open menu of chapters goes over the pylon of the question panel, which shares its corner. */
+.masthead:has(.chapters-toggle[aria-expanded="true"]) {
+  z-index: 45;
 }
 
-.site-name {
-  font-stretch: 125%;
-  font-weight: 700;
+/* Once the page scrolls, the masthead is solid: no line of text shows through it. */
+.masthead[data-scrolled] {
+  background: var(--bg);
 }
 
-.issue {
-  color: var(--ink-2);
-  font-size: 0.875rem;
+.masthead-title {
+  display: grid;
+  min-width: 0;
+  margin-right: auto;
 }
 
-/* Links to the sections below the forecast, on a line of their own. */
-.masthead nav {
-  flex-basis: 100%;
-}
-
-.masthead ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 1.25rem;
-  margin: 0;
-  padding: 0;
-  font-size: 0.875rem;
-  list-style: none;
-}
-
-.masthead a {
-  color: var(--ink-2);
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
   text-decoration: none;
 }
 
-.masthead a:hover {
+.brand-mark {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: var(--vermilion);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.issue {
+  margin: 0 0 0 1.75rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.masthead-nav ul {
+  display: flex;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.masthead a[aria-current] {
   color: var(--ink);
-  text-decoration: underline;
+  text-decoration: underline 2px var(--vermilion);
+  text-underline-offset: 0.45em;
+}
+
+.masthead-nav a {
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.masthead-nav a:hover {
+  color: var(--ink);
+}
+
+.chapters {
+  position: relative;
+  flex: none;
+}
+
+.chapters-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.chapters-toggle:hover,
+.chapters-toggle[aria-expanded="true"] {
+  border-color: var(--ink-2);
+}
+
+.chapters-caret {
+  font-size: 0.75em;
+  transition: transform 200ms var(--ease-out);
+}
+
+.chapters-toggle[aria-expanded="true"] .chapters-caret {
+  transform: rotate(180deg);
+}
+
+.chapters-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 14rem;
+  max-height: calc(100svh - 5rem);
+  margin: 0;
+  padding: 0.375rem;
+  overflow-y: auto;
+  border: 1px solid var(--rule);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgb(19 21 24 / 16%);
+  list-style: none;
+}
+
+.chapters-menu a {
+  display: block;
+  padding: 0.4375rem 0.75rem;
+  border-radius: 0.3125rem;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.chapters-menu a:hover,
+.chapters-menu a:focus-visible {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+
+.chapters-menu a:focus-visible {
+  outline-offset: -2px;
+}
+
+.chapters-menu a[aria-current] {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: inset 3px 0 var(--vermilion);
+}
+
+.progress {
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: var(--vermilion);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+@media (max-width: 56rem) {
+  .masthead-nav {
+    display: none;
+  }
+}
+
+/*
+ * On a phone the masthead keeps to one line of title: with large text, its sizes stop at a share of
+ * the width, so that it does not grow over the page it sits on.
+ */
+@media (max-width: 34rem) {
+  .masthead {
+    gap: 0.75rem;
+  }
+
+  .brand {
+    gap: 0.375rem;
+    font-size: min(0.9375rem, 4.1vw);
+  }
+
+  .brand-mark {
+    width: min(1rem, 4.1vw);
+    height: min(1rem, 4.1vw);
+  }
+
+  .chapters-toggle {
+    padding: 0.3125rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  .issue {
+    margin-left: calc(min(1rem, 4.1vw) + 0.375rem);
+    font-size: min(0.6875rem, 3vw);
+  }
+}
+/* The narrowest phones: a smaller title and button, then two lines rather than under the button. */
+@media (max-width: 24rem) {
+  .masthead {
+    gap: 0.5rem;
+  }
+
+  .brand {
+    font-size: min(0.8125rem, 3.7vw);
+  }
+
+  .masthead .chapters-toggle {
+    gap: 0.25rem;
+    padding-inline: 10px;
+    font-size: min(0.8125rem, 3.6vw);
+  }
+}
+
+@media (max-width: 21.5rem) {
+  .masthead-title {
+    flex: 1;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .brand,
+  .issue {
+    white-space: normal;
+  }
 }
 
 .notice {
-  margin: 1.5rem 0 0;
-  padding: 0.625rem 0.875rem;
-  border-left: 3px solid var(--ink-2);
-  background: var(--rule);
+  position: relative;
+  z-index: 5;
+  max-width: var(--max);
+  margin: 5rem auto 0;
+  padding: 0.75rem var(--gutter);
+  border-left: 3px solid var(--vermilion);
+  background: #fff;
 }
 
-/* Type: one family, wide for headings, narrow for figures. */
+/* The story: the model stays on screen while four steps scroll over it. */
 
-h1,
-h2 {
-  font-weight: 800;
-  line-height: 1.05;
-  text-wrap: balance;
+.story {
+  position: relative;
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.stage-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.story.no-model .stage-canvas {
+  display: none;
+}
+
+.stage-labels span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms var(--ease-out);
+}
+
+/* A mark stands on the relief: a rule up from the surface, its text on top. */
+.stage-labels .mark {
+  padding: 0 0 2.25rem 0.5rem;
+  border-left: 1px solid #15171a;
+  color: #15171a;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  translate: 0 -100%;
+}
+
+.stage-labels .label {
+  color: #5c5f63;
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  translate: -100% -50%;
+}
+
+.stage-labels .label-month {
+  translate: -50% 0.5rem;
+}
+
+.steps {
+  position: relative;
+  z-index: 2;
+  margin-top: -100svh;
+  pointer-events: none;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  min-height: 150svh;
+  padding: 6rem var(--gutter);
+}
+
+.step-hero {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100svh;
+}
+
+/* Each card holds still while its part of the relief plays. */
+.step-card {
+  position: sticky;
+  top: 32svh;
+  max-width: 25rem;
+  padding: 1.5rem 1.75rem 1.75rem;
+  border-top: 3px solid var(--vermilion);
+  background: #f4f4f1;
+  pointer-events: auto;
+  box-shadow: 0 18px 40px -24px rgb(20 22 26 / 0.45);
+  transition:
+    background-color 400ms ease,
+    color 400ms ease;
+}
+
+.step-title {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.005em;
+}
+
+/* Stepped stories show only the card of the step in view, so that two cards never meet. */
+.steps[data-stepped] .step-card {
+  opacity: 0;
+  transition: opacity 280ms var(--ease-out);
+}
+
+.steps[data-stepped] .step[data-active] .step-card {
+  opacity: 1;
+}
+
+.step-card p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+.step-card .readout {
+  min-height: 2.5em;
+  margin-top: 1rem;
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  color: var(--vermilion);
 }
 
 h1 {
-  max-width: 17ch;
-  margin: 2.5rem 0 1.25rem;
-  font-size: clamp(2.125rem, 1.25rem + 3.8vw, 4rem);
-  font-stretch: 125%;
-  letter-spacing: -0.02em;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  pointer-events: auto;
 }
 
-h2 {
-  margin: 0 0 1rem;
-  font-size: 1.75rem;
-  font-stretch: 112.5%;
+.headline-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.figure {
+  /* With large text, no wider than the screen allows. */
+  font-size: min(clamp(6.5rem, 3rem + 13vw, 15rem), 30vw);
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.8;
   letter-spacing: -0.01em;
 }
 
+.unit {
+  color: var(--vermilion);
+  font-size: clamp(2rem, 1.2rem + 2.5vw, 3.75rem);
+  font-weight: 600;
+}
+
+.headline-period {
+  display: block;
+  margin-top: 1rem;
+  font-size: min(clamp(1.75rem, 1.2rem + 1.6vw, 2.75rem), 8vw);
+  font-weight: 500;
+  line-height: 1.05;
+}
+
 .lead {
-  max-width: 38rem;
-  margin: 0 0 1.75rem;
+  max-width: 27rem;
+  margin: 1.5rem 0 0;
   color: var(--ink-2);
-  font-size: 1.1875rem;
-  line-height: 1.5;
+  font-size: 1rem;
+  pointer-events: auto;
 }
 
-.prose {
-  max-width: 40rem;
+.scroll-cue {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 3rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
 }
 
-p.prose,
-.prose p {
+.scroll-cue::after {
+  content: "";
+  width: 3rem;
+  height: 1px;
+  background: currentColor;
+  transform-origin: left;
+  animation: cue 2.4s var(--ease-out) infinite;
+}
+
+@keyframes cue {
+  from {
+    transform: scaleX(0);
+  }
+  60%,
+  to {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+/* On a phone, France fills the screen: the steps sit at the bottom. */
+@media (max-width: 44rem) {
+  .step {
+    align-items: flex-end;
+    padding-bottom: 2.5rem;
+  }
+
+  .step-hero {
+    justify-content: flex-start;
+    padding-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+  }
+
+  .step-card {
+    top: auto;
+    bottom: 1.5rem;
+    max-width: none;
+  }
+
+  .step-title {
+    font-size: 1.875rem;
+  }
+
+  .stage-labels {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue::after {
+    animation: none;
+  }
+
+  body {
+    transition: none;
+  }
+}
+
+/*
+ * Chapters: a large title, its summary beside it, then the chart across the width. Each chapter is
+ * one centred column: as wide as the page for the series by month and the map, narrower for the
+ * other charts, and narrower still for text alone, so that titles, text and charts share one axis.
+ */
+
+main {
+  counter-reset: chapter;
+}
+
+.chapter {
+  position: relative;
+  z-index: 3;
+  padding: clamp(5rem, 11vw, 10rem) var(--gutter) clamp(3rem, 6vw, 5rem);
+  counter-increment: chapter;
+}
+
+.chapter-inner {
+  max-width: var(--max);
+  margin-inline: auto;
+}
+
+.chapter-column .chapter-inner {
+  max-width: var(--column);
+}
+
+.chapter-text .chapter-inner {
+  max-width: var(--text-column);
+}
+
+.chapter-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, min(32rem, 45%));
+  align-items: end;
+  gap: 1.5rem clamp(2rem, 5vw, 5rem);
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: min(clamp(3.25rem, 1.5rem + 6vw, 7.5rem), 15vw);
+  font-weight: 600;
+  line-height: 0.88;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+
+.intro {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.chapter-body > p.prose,
+.chapter-body .prose p {
+  max-width: 68ch;
   margin: 0 0 1rem;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.7;
 }
 
-main > section + section {
-  margin-top: 4.5rem;
+.chapter-text .chapter-head {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/*
+ * Each chapter opens on its number and a hairline in navy, so that chapters of the same color stay
+ * apart; a hidden chapter is not counted. The number is decoration: the title names the chapter.
+ */
+.chapter-head::before {
+  grid-column: 1 / -1;
+  padding-top: 0.875rem;
+  border-top: 1px solid color-mix(in srgb, var(--navy) 35%, transparent);
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  content: counter(chapter, decimal-leading-zero) / "";
+}
+
+@media (min-width: 52.0625rem) {
+  .chapter-column .chapter-head {
+    grid-template-columns: minmax(0, 1fr) minmax(0, min(28rem, 45%));
+  }
+}
+
+@media (max-width: 52rem) {
+  .chapter-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The note of the month: written by the agent, so its origin is stated under it. */
+
+.note-month {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.note-dates,
+.note-credit {
+  max-width: 68ch;
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+  font-size: 0.875rem;
 }
 
 /* Charts. */
@@ -188,11 +701,12 @@ main > section + section {
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem 1.5rem;
-  margin: 0 0 0.5rem;
+  gap: 0.5rem 1.5rem;
+  margin: 0 0 1.25rem;
   padding: 0;
   color: var(--ink-2);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
   list-style: none;
 }
 
@@ -227,19 +741,18 @@ main > section + section {
   fill: var(--forecast);
 }
 
-/* The dashes of the forecast line in the chart. */
 .key line.forecast {
   stroke-dasharray: 4 5;
   stroke-linecap: round;
 }
 
 .key circle {
-  stroke: var(--paper);
+  stroke: var(--bg);
   stroke-width: 2;
 }
 
 .key .provisional {
-  fill: var(--paper);
+  fill: var(--bg);
   stroke: var(--measured);
 }
 
@@ -275,7 +788,7 @@ main > section + section {
 }
 
 .key .total.provisional {
-  fill: var(--paper);
+  fill: var(--bg);
   stroke: var(--ink);
   stroke-width: 1.5;
 }
@@ -284,12 +797,6 @@ main > section + section {
   margin: 0 0 1rem;
 }
 
-/* Four horizons need no more width than the text. */
-.chart.narrow {
-  max-width: 46rem;
-}
-
-/* The height of each plot, kept before it is drawn. */
 #forecast-plot {
   min-height: 300px;
 }
@@ -305,80 +812,134 @@ main > section + section {
   min-height: 280px;
 }
 
+.plot {
+  --draw: 1;
+}
+
 .plot svg {
   display: block;
-  font-stretch: 87.5%;
   font-variant-numeric: tabular-nums;
 }
 
-/* The tip's text takes the color of the text, not of the axes. */
+.plot [aria-label="y-grid"] {
+  stroke: var(--rule);
+  stroke-opacity: 1;
+}
+
+/* Lines are drawn by the scroll: --draw goes from 0 to 1 as the chart crosses the screen. */
+.plot path[pathLength] {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(1 - var(--draw));
+}
+
+.plot :is([aria-label="dot"], [aria-label="area"], [aria-label="bar"], [aria-label="text"]) {
+  opacity: clamp(0, calc(var(--draw) * 2 - 0.6), 1);
+}
+
 .plot [aria-label="tip"] {
   color: var(--ink);
+  font-size: 12.5px;
+}
+
+.plot [aria-label="tip"] tspan:first-child {
+  font-weight: 600;
 }
 
 .chart figcaption {
-  max-width: 40rem;
-  margin-top: 0.5rem;
+  max-width: 68ch;
+  margin-top: 0.75rem;
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
-/* Shown when there is more than one publication to choose from. */
 .archive:not([hidden]) {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.5rem;
-  margin: 1rem 0 0;
-  font-size: 0.9375rem;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+
+/* Controls: a select and segmented choices with soft edges, in the ink of their chapter. */
+
+.select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+}
+
+.select::after {
+  position: absolute;
+  right: 0.75rem;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  content: "";
+  transform: translateY(-25%) rotate(45deg);
+  pointer-events: none;
 }
 
 select {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--muted);
-  border-radius: 4px;
-  color: inherit;
-  background: var(--paper);
+  max-width: 100%;
+  appearance: none;
+  padding: 0.4375rem 2.25rem 0.4375rem 0.875rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.5rem;
+  color: var(--ink);
+  background: var(--surface);
   font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 160ms ease;
 }
 
-/* A choice between a few views of a chart: radio buttons drawn as one row of buttons. */
+select:hover {
+  border-color: var(--ink-2);
+}
 
 .controls {
   display: flex;
   flex-wrap: wrap;
-  column-gap: 2rem;
+  column-gap: 2.5rem;
 }
 
 .choice {
   min-width: 0;
-  margin: 0 0 1rem;
+  margin: 0 0 1.25rem;
   padding: 0;
   border: 0;
 }
 
 .choice legend {
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.5rem;
   padding: 0;
-  color: var(--ink-2);
-  font-size: 0.875rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .options {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 2px;
-  padding: 2px;
+  gap: 0.25rem;
+  padding: 0.25rem;
   border: 1px solid var(--rule);
-  border-radius: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
 }
 
 .options label {
   position: relative;
+  border-radius: 999px;
   cursor: pointer;
 }
 
-/* The input stays in place, invisible, so that the keyboard and screen readers use it. */
 .options input {
   position: absolute;
   inset: 0;
@@ -389,27 +950,36 @@ select {
 
 .options span {
   display: block;
-  padding: 0.3125rem 0.75rem;
-  border-radius: 4px;
+  padding: 0.3125rem 0.875rem;
+  border-radius: 999px;
   color: var(--ink-2);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
 }
 
 .options label:hover span {
   color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
 }
 
 .options input:checked + span {
-  color: var(--paper);
+  color: var(--bg);
   background: var(--ink);
 }
 
 .options input:focus-visible + span {
-  outline: 2px solid var(--forecast);
+  outline: 2px solid var(--vermilion);
   outline-offset: 2px;
 }
 
-/* Forced colors replace the fill of the chosen button: the system highlight marks it instead. */
+@media (prefers-reduced-motion: reduce) {
+  :is(select, summary, summary::before, .options span, a) {
+    transition: none;
+  }
+}
+
 @media (forced-colors: active) {
   .options input:checked + span {
     forced-color-adjust: none;
@@ -418,21 +988,73 @@ select {
   }
 }
 
-/* Tables behind each chart. */
+/* Folds: a chevron that turns as the fold opens, on a rule that closes the chapter. */
 
 details {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+details + details {
+  margin-top: 0;
 }
 
 summary {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
   width: fit-content;
+  margin-block: 0.375rem;
+  padding: 0.5rem 0.75rem 0.5rem 0.25rem;
+  border-radius: 0.375rem;
   color: var(--ink-2);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
+  list-style: none;
   cursor: pointer;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary::before {
+  flex: none;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  margin-inline: 0.25rem 0.125rem;
+  border-top: 1.5px solid var(--forecast);
+  border-right: 1.5px solid var(--forecast);
+  content: "";
+  transform: rotate(45deg);
+  transition: transform 200ms var(--ease-out);
+}
+
+details[open] > summary::before {
+  transform: translateY(-20%) rotate(135deg);
 }
 
 summary:hover {
   color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+summary:focus-visible {
+  outline-offset: 0;
+}
+
+.details-prose {
+  max-width: 68ch;
+  padding-bottom: 0.5rem;
+}
+
+.chapter-body .details-prose p {
+  margin: 0 0 0.875rem;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  line-height: 1.65;
 }
 
 .table-scroll {
@@ -440,16 +1062,15 @@ summary:hover {
 }
 
 table {
-  margin-top: 0.75rem;
+  margin: 0.25rem 0 1rem;
   border-collapse: collapse;
-  font-size: 0.9375rem;
-  font-stretch: 87.5%;
+  font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
 }
 
 th,
 td {
-  padding: 0.375rem 0 0.375rem 1.5rem;
+  padding: 0.4375rem 0 0.4375rem 1.5rem;
   border-bottom: 1px solid var(--rule);
   text-align: right;
   white-space: nowrap;
@@ -461,8 +1082,8 @@ th:first-child {
 }
 
 thead th {
-  color: var(--ink-2);
-  font-weight: 600;
+  color: var(--muted);
+  font-weight: 500;
   vertical-align: bottom;
   white-space: normal;
 }
@@ -471,42 +1092,16 @@ tbody th {
   font-weight: 400;
 }
 
-/* Short headers over narrow figures: kept on one line, the table scrolls on a phone. */
 #gaps-table thead th {
   white-space: nowrap;
 }
 
-/* The winter, a word, names the row with the year. */
 #scenarios-table :is(th, td):nth-child(2) {
   text-align: left;
 }
 
-/* The measured energy may be followed by a word: aligned left, its figures stay in line. */
 #forecast-table :is(th, td):last-child {
   text-align: left;
-}
-
-/* The note of the month: written by the agent, so its origin is stated under it. */
-
-.note-month {
-  margin: 0;
-  font-size: 1.25rem;
-  font-stretch: 112.5%;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.note-dates {
-  margin: 0.25rem 0 1rem;
-  color: var(--ink-2);
-  font-size: 0.9375rem;
-}
-
-.note-credit {
-  max-width: 40rem;
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.875rem;
 }
 
 .sources {
@@ -518,12 +1113,229 @@ tbody th {
 }
 
 .colophon {
-  margin-top: 5rem;
+  position: relative;
+  z-index: 3;
   border-top: 1px solid var(--rule);
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 .colophon .wrap {
-  padding-block: 1.5rem 2.5rem;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding: 1.75rem var(--gutter) 3rem;
+}
+
+/* Last, so that it wins over the generic list and paragraph rules. */
+.chapter-text .chapter-body p,
+.chapter-text .chapter-body li {
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+/*
+ * The question panel (chat.css) keeps its light tokens whatever the scheme of the system, since
+ * the page has a single one.
+ */
+.chat {
+  --chat-card: #fff;
+  --chat-shadow: 0 12px 32px rgb(21 35 59 / 16%);
+}
+
+/*
+ * The height of the pylon of the question panel in its corner and of its bubble above, with a
+ * margin: what sits at the bottom of the screen on a phone stops above it, and the end of the
+ * page scrolls clear of it.
+ * On a screen as low as a phone on its side, the pylon takes its phone size.
+ */
+:root {
+  --chat-lift: calc(
+    clamp(150px, 14vw, 216px) *
+    182 / 236 +
+    2rem +
+    env(safe-area-inset-bottom, 0px)
+  );
+}
+
+@media (max-width: 600px), (max-height: 30rem) {
+  :root {
+    --chat-lift: calc(116px * 182 / 236 + 2rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-height: 30rem) {
+  body .chat {
+    --chat-size: 116px;
+  }
+}
+
+.colophon .wrap {
+  padding-bottom: max(3rem, calc(var(--chat-lift) + 1rem));
+}
+
+@media (max-width: 44rem) {
+  /* Shorter steps than on a wide screen, for a thumb: the city plays in about seven screens. */
+  .step {
+    padding-bottom: var(--chat-lift);
+  }
+
+  .step:not(.step-hero) {
+    min-height: 120svh;
+  }
+
+  .step-card {
+    bottom: var(--chat-lift);
+  }
+}
+
+.chat-panel {
+  --paper: #fff;
+  --ink: #131518;
+  --ink-2: #464b52;
+  --muted: #676d75;
+  --rule: #d2d4ce;
+  --measured: #1d4f91;
+  --forecast: #d1401f;
+  --third: #1d8a6f;
+  --fourth: #a87810;
+}
+
+/*
+ * On a phone, running text is read at 1rem (17px) or more, and the keys and captions of the charts
+ * at 0.875rem.
+ */
+@media (max-width: 44rem) {
+  .step-card p {
+    font-size: 1rem;
+  }
+
+  .intro,
+  .chapter-body > p.prose,
+  .chapter-body .prose p,
+  .chapter-body .details-prose p,
+  .chapter-text .chapter-body p,
+  .chapter-text .chapter-body li {
+    font-size: 1rem;
+  }
+
+  .legend,
+  .chart figcaption,
+  .note-dates,
+  .note-credit {
+    font-size: 0.875rem;
+  }
+}
+
+/* On a touch screen, every control is at least 44px high. */
+@media (pointer: coarse), (max-width: 44rem) {
+  .brand {
+    position: relative;
+  }
+
+  .brand::after {
+    position: absolute;
+    inset: -0.75rem -0.5rem;
+    content: "";
+  }
+
+  .chapters-toggle {
+    min-height: 44px;
+    padding-inline: 14px;
+    font-size: min(0.875rem, 3.85vw);
+  }
+
+  .chapters-menu a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 0.9375rem;
+  }
+
+  select,
+  summary {
+    min-height: 44px;
+  }
+
+  .options span {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: 1rem;
+  }
+}
+
+/* On a phone, a choice of three is a list across the width rather than a row that breaks. */
+@media (max-width: 34rem) {
+  .options:has(> :nth-child(3)) {
+    display: grid;
+    border-radius: 0.875rem;
+  }
+
+  .options:has(> :nth-child(3)) span {
+    border-radius: 0.625rem;
+  }
+}
+
+/*
+ * A phone on its side: the headline is smaller and sits under the masthead, and the cards of the
+ * story hold below the masthead rather than at the bottom, which is too close.
+ */
+@media (max-height: 30rem) {
+  .step-hero {
+    justify-content: flex-start;
+    min-height: 100svh;
+    padding-top: calc(4.5rem + env(safe-area-inset-top, 0px));
+  }
+
+  .figure {
+    font-size: 5.5rem;
+  }
+
+  .unit {
+    font-size: 1.75rem;
+  }
+
+  .headline-period {
+    margin-top: 0.5rem;
+    font-size: 1.5rem;
+  }
+
+  .lead {
+    max-width: min(21rem, 46vw);
+    margin-top: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .step-hero .scroll-cue {
+    display: none;
+  }
+
+  .step {
+    align-items: flex-start;
+    padding-bottom: 2.5rem;
+  }
+
+  /* Long enough for a card that fills most of the height to hold still under the masthead. */
+  .step:not(.step-hero) {
+    min-height: 180svh;
+    padding-top: calc(4.5rem + env(safe-area-inset-top, 0px));
+  }
+
+  .step-card {
+    top: calc(4.5rem + env(safe-area-inset-top, 0px));
+    bottom: auto;
+    /* Short of the bubble and the pylon of the question panel, at the bottom right. */
+    max-width: min(26rem, calc(100vw - 17rem - var(--gutter)));
+    padding: 0.75rem 1rem 0.875rem;
+  }
+
+  .step-title {
+    margin-bottom: 0.375rem;
+    font-size: 1.375rem;
+  }
+
+  .step-card p {
+    line-height: 1.4;
+  }
 }

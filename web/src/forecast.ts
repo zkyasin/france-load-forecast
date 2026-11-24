@@ -84,6 +84,15 @@ export function headline(forecast: Forecast): string {
   return `${twh(forecast.total_p50, 0)} de ${monthName(forecast.current_month)} à ${monthName(last)}`;
 }
 
+/** The headline in two parts, the figure and the period, for the hero. */
+export function headlineParts(forecast: Forecast): { total: number; period: string } {
+  const last = forecast.months.at(-1)?.month ?? forecast.current_month;
+  return {
+    total: forecast.total_p50,
+    period: `de ${monthName(forecast.current_month)} à ${monthName(last)}`,
+  };
+}
+
 export function lead(forecast: Forecast, meta: Meta): string {
   const text =
     "C'est la consommation d'électricité attendue en France continentale, hors Corse, sur ces " +
@@ -100,11 +109,24 @@ function plot(history: HistoryMonth[], forecast: Forecast, width: number, colors
   const forecasted = forecastMonths(forecast);
   const months = rows(measured, forecasted);
   const dot = { x: "date", r: 4, stroke: colors.paper, strokeWidth: 2 };
+  // The forecast line leaves the last month measured.
+  const start = measured.at(-1)?.date ?? monthDate(forecast.current_month);
+  const side = (text: string, fill: string, right: boolean) =>
+    Plot.text([start], {
+      x: (d: Date) => d,
+      frameAnchor: "top",
+      text: () => text,
+      textAnchor: right ? "start" : "end",
+      dx: right ? 8 : -8,
+      fill,
+      fontWeight: 600,
+    });
   return Plot.plot({
     ...frame(width, colors),
     height: narrow ? 300 : 380,
     marginLeft: 32,
     marginRight: 12,
+    marginTop: 26,
     marginBottom: 40,
     x: { type: "utc", ticks: narrow ? "6 months" : "3 months", tickFormat: monthTick, label: null },
     y: {
@@ -117,6 +139,9 @@ function plot(history: HistoryMonth[], forecast: Forecast, width: number, colors
       tickFormat: (value: number) => number(value, 0),
     },
     marks: [
+      Plot.ruleX([start], { stroke: colors.rule }),
+      side("Mesuré", colors.measured, false),
+      side("Prévision", colors.forecast, true),
       Plot.areaY(forecasted, {
         x: "date",
         y1: "p10",
@@ -198,7 +223,10 @@ function showTable(table: HTMLTableElement, history: HistoryMonth[], forecast: F
 /** Fills the forecast section with the latest forecast, or one of `days` chosen in the archive. */
 export function render(bundle: Bundle, days: string[]): void {
   const { meta, forecast, history } = bundle;
-  byId("headline").textContent = headline(forecast);
+  const parts = headlineParts(forecast);
+  byId("headline-text").textContent = headline(forecast);
+  byId("headline-figure").textContent = number(parts.total, 0);
+  byId("headline-period").textContent = parts.period;
   byId("lead").textContent = lead(forecast, meta);
 
   let shown = forecast;

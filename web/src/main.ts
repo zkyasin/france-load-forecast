@@ -1,7 +1,9 @@
-import "@fontsource-variable/archivo/wdth.css";
+import "@fontsource-variable/big-shoulders-display";
+import "@fontsource-variable/ibm-plex-sans";
 import "./style.css";
 import * as accuracy from "./accuracy";
 import * as annual from "./annual";
+import * as chapters from "./chapters";
 import { byId } from "./chart";
 import * as chat from "./chat";
 import { latest, type Meta, publications } from "./data";
@@ -12,6 +14,7 @@ import * as gaps from "./gaps";
 import * as notes from "./notes";
 import * as peak from "./peak";
 import * as scenarios from "./scenarios";
+import { boot } from "./story";
 import * as temperature from "./temperature";
 
 // The bundle is published every Monday: an older one means that an update did not run.
@@ -47,6 +50,7 @@ function method(meta: Meta): void {
 }
 
 async function main(): Promise<void> {
+  chapters.render();
   const bundle = await latest();
   // Without the list of publications, the page shows the latest forecast only.
   const days = await publications().catch(() => [bundle.meta.published]);
@@ -72,6 +76,10 @@ async function main(): Promise<void> {
       notify(`La section « ${name} » n'a pas pu être affichée : ${reason(error)}.`);
     }
   }
+  // The story last: its scroll measures the chapters once they are drawn.
+  await boot(bundle).catch((error: unknown) => {
+    notify(`L'animation de la page n'a pas pu être affichée : ${reason(error)}.`);
+  });
 }
 
 main().catch((error: unknown) => {

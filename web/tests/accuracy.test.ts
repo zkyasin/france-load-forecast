@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import accuracyFile from "../../tests/fixtures/bundle/accuracy.json";
-import { coverage, scores, summary } from "../src/accuracy";
+import { coverage, replay, scores, summary } from "../src/accuracy";
 import type { Accuracy } from "../src/data";
 
 const accuracy: Accuracy = accuracyFile;
@@ -13,10 +13,16 @@ test("scores pair each method with each horizon", () => {
 
 test("the summary quotes the shortest and longest horizons and the naive forecast", () => {
   expect(summary(accuracy)).toBe(
-    "Le modèle a été rejoué au début de chaque mois, de janvier 2016 à septembre 2026, " +
-      "réestimé chaque 1er janvier sur les trois années précédentes. Son erreur moyenne sur " +
-      "l'énergie d'un mois va de 3,0\u00a0% (1 mois) à 3,6\u00a0% (7 à 12 mois). Reprendre le " +
-      "même mois de l'année précédente, corrigé du climat, donne une erreur de 3,6\u00a0%.",
+    "L'erreur moyenne du modèle sur l'énergie d'un mois va de 3,0\u00a0% (1 mois) à " +
+      "3,6\u00a0% (7 à 12 mois). Reprendre le même mois de l'année précédente, corrigé du " +
+      "climat, donne une erreur de 3,6\u00a0%.",
+  );
+});
+
+test("the replay of past forecasts is told under the chart", () => {
+  expect(replay(accuracy)).toBe(
+    "Prévisions rejouées au début de chaque mois, de janvier 2016 à septembre 2026, avec un " +
+      "modèle réestimé chaque 1er janvier sur les trois années précédentes.",
   );
 });
 

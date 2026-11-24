@@ -12,17 +12,25 @@ export function summary(years: HistoryYear[]): string {
   const last = years.at(-1);
   if (first === undefined || last === undefined) return "";
   const change = 100 * (last.corrected / first.corrected - 1);
+  return (
+    `En ${last.year}, la consommation a été de ${twh(last.gross)}. Corrigée de la météo, elle ` +
+    `est passée de ${twh(first.corrected)} en ${first.year} à ${twh(last.corrected)} en ` +
+    `${last.year}, soit ${signed(change)}${NBSP}%.`
+  );
+}
+
+/** How the corrected series compares with RTE's, under the chart. */
+export function againstRte(years: HistoryYear[]): string {
+  if (years.length === 0) return "";
   const gaps = years.map((year) => Math.abs(year.corrected_gap_pct));
   const widest = years.reduce((worst, year) =>
     Math.abs(year.corrected_gap_pct) > Math.abs(worst.corrected_gap_pct) ? year : worst,
   );
   return (
-    `En ${last.year}, la consommation a été de ${twh(last.gross)}. Corrigée de la météo, elle ` +
-    `est passée de ${twh(first.corrected)} en ${first.year} à ${twh(last.corrected)} en ` +
-    `${last.year}, soit ${signed(change)}${NBSP}%. Comme la série corrigée publiée par RTE, elle ` +
-    "laisse de côté le 29 février des années bissextiles. La série de RTE, Corse et pertes " +
-    `comprises, s'en écarte de ${percent(gaps.reduce((a, b) => a + b, 0) / gaps.length)} ` +
-    `en moyenne et de ${percent(Math.abs(widest.corrected_gap_pct))} au plus, en ${widest.year}.`
+    "Comme celle de RTE, la série corrigée laisse de côté le 29 février des années bissextiles. " +
+    "La série de RTE, Corse et pertes comprises, s'en écarte de " +
+    `${percent(gaps.reduce((a, b) => a + b, 0) / gaps.length)} en moyenne et de ` +
+    `${percent(Math.abs(widest.corrected_gap_pct))} au plus, en ${widest.year}.`
   );
 }
 
@@ -74,6 +82,7 @@ function plot(years: HistoryYear[], width: number, colors: Colors) {
 
 export function render(years: HistoryYear[]): void {
   byId("history-summary").textContent = summary(years);
+  byId("history-caption").textContent = againstRte(years);
   drawIn(byId("history-plot"), (width, colors) => plot(years, width, colors));
   fillTable(
     byId<HTMLTableElement>("history-table"),

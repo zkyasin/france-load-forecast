@@ -9,10 +9,8 @@ const MINUS = String.fromCharCode(0x2212);
 const TWH = `${NBSP}TWh`;
 const PCT = `${NBSP}%`;
 
-test("the title says which way consumption moved since the base year", () => {
-  expect(title(drivers)).toBe("Pourquoi la consommation a baissé depuis 2019");
-  const higher = { ...drivers, now: { ...drivers.now, consumption: 470 } };
-  expect(title(higher)).toBe("Pourquoi la consommation a augmenté depuis 2019");
+test("the title names the base year", () => {
+  expect(title(drivers)).toBe("Depuis 2019");
 });
 
 test("the summary compares the last twelve months with the base year", () => {

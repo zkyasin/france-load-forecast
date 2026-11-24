@@ -49,16 +49,21 @@ export function summary(accuracy: Accuracy): string {
   const model = Object.entries(accuracy.mape);
   const first = model[0];
   const last = model.at(-1);
-  const text =
-    `Le modèle a été rejoué au début de chaque mois, de ${monthName(accuracy.first_origin)} à ` +
-    `${monthName(accuracy.last_origin)}, réestimé chaque 1er janvier sur les trois années ` +
-    "précédentes.";
-  if (first === undefined || last === undefined) return text;
+  if (first === undefined || last === undefined) return "";
   const naive = Object.values(accuracy.mape_naive_corrected);
   return (
-    `${text} Son erreur moyenne sur l'énergie d'un mois va de ${percent(first[1])} ` +
+    `L'erreur moyenne du modèle sur l'énergie d'un mois va de ${percent(first[1])} ` +
     `(${horizonName(first[0])}) à ${percent(last[1])} (${horizonName(last[0])}). Reprendre le ` +
     `même mois de l'année précédente, corrigé du climat, donne une erreur ${range(naive)}.`
+  );
+}
+
+/** How the past forecasts were replayed, under the chart. */
+export function replay(accuracy: Accuracy): string {
+  return (
+    `Prévisions rejouées au début de chaque mois, de ${monthName(accuracy.first_origin)} à ` +
+    `${monthName(accuracy.last_origin)}, avec un modèle réestimé chaque 1er janvier sur les trois ` +
+    "années précédentes."
   );
 }
 
@@ -140,6 +145,7 @@ export function render(accuracy: Accuracy): void {
   const data = scores(accuracy);
   byId("accuracy-summary").textContent = summary(accuracy);
   byId("accuracy-coverage").textContent = coverage(accuracy);
+  byId("accuracy-caption").textContent = replay(accuracy);
   drawIn(byId("accuracy-plot"), (width, colors) => plot(data, width, colors));
   const horizons = Object.keys(accuracy.mape);
   fillTable(
