@@ -17,7 +17,17 @@ FactTopic = Literal["method", "sources", "perimeter", "revision", "temperature"]
 TOTALS = ("actual", "reference", "gap")
 DATES = ("published", "consolidated_until", "temperature_until", "measured_until")
 # Files of the bundle that the tools read.
-FILES = ("meta", "forecast", "gaps", "history", "accuracy", "model", "scenarios", "peak")
+FILES = (
+    "meta",
+    "forecast",
+    "gaps",
+    "history",
+    "accuracy",
+    "model",
+    "scenarios",
+    "peak",
+    "drivers",
+)
 # Percent of the time the P10-P90 band should hold the actual energy, as set by
 # conformal.QUANTILES. The question API runs without the forecasting stack, hence the copy.
 BAND_LEVEL_PCT = 80
@@ -295,4 +305,75 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
         first, last_month = content["history"][0]["month"], content["months"][-1]["month"]
         return _error(f"no peak for {month}: peaks cover {first} to {last_month}")
 
-    return [forecast, month_gap, annual_energy, thermosensitivity, accuracy, fact, scenario, peak]
+    @tool
+    def drivers() -> str:
+        """Energy of electric cars and of large industry, and what changed climate-corrected
+        consumption between the base year, before the crises, and the last twelve months, in TWh:
+        for consumption and for each of its parts, the energy of both periods and the change.
+        Electric cars are estimated from their stock. Large industry is the energy RTE's grid
+        delivers to large industrial sites; its change splits into the part due to its production
+        and the part due to its energy per unit produced. The rest is households, businesses and
+        services: the data do not tell prices, sobriety, efficiency or heat pumps apart in it.
+        Also the energy of each part in each whole year."""
+        content = bundle["drivers"]
+        base, now, parts = content["base"], content["now"], content["contributions"]
+        cars = content["cars"]
+        industry = parts["industry_activity"] + parts["industry_intensity"]
+
+        def energies(key: str, change: float) -> dict[str, float]:
+            return {
+                "base_year": base[key],
+                "last_twelve_months": now[key],
+                "change": round(change, 3),
+                "change_pct": round(100 * change / base[key], 2),
+            }
+
+        return _json(
+            published
+            | {
+                "base_year": content["base_year"],
+                "last_twelve_months": f"{content['first_month']} to {content['last_month']}",
+                "consumption": energies("consumption", now["consumption"] - base["consumption"]),
+                "large_industry": energies("industry", industry)
+                | {
+                    "change_due_to_production": parts["industry_activity"],
+                    "change_due_to_energy_per_unit_produced": parts["industry_intensity"],
+                    "production_change_pct": round(now["activity_index"] - 100, 2),
+                },
+                "electric_cars": {
+                    "base_year": base["electric_cars"],
+                    "last_twelve_months": now["electric_cars"],
+                    "change": parts["electric_cars"],
+                    "cars_millions": {
+                        "base_year": base["cars_millions"],
+                        "last_twelve_months": now["cars_millions"],
+                    },
+                    "mwh_per_car": cars["mwh_per_car"],
+                    "estimate": f"{cars['reference_twh']} TWh in {cars['reference_year']},"
+                    f" {cars['source']}",
+                },
+                "rest": energies("rest", parts["rest"]),
+                "years": [
+                    {
+                        "year": year["year"],
+                        "consumption": year["consumption"],
+                        "large_industry": year["industry"],
+                        "electric_cars": year["electric_cars"],
+                        "rest": year["rest"],
+                    }
+                    for year in content["years"]
+                ],
+            }
+        )
+
+    return [
+        forecast,
+        month_gap,
+        annual_energy,
+        thermosensitivity,
+        accuracy,
+        fact,
+        scenario,
+        peak,
+        drivers,
+    ]

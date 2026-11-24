@@ -26,6 +26,7 @@ accuracy = "Backtest errors by horizon and coverage of the P10-P90 band"
 scenario = "Energy of a year ahead under a BP2025 trajectory and a cold or mild winter"
 fact = "Dated and sourced facts on the data and the method"
 peak = "Monthly peak in GW, ahead with its band or measured with its day, and the last winter's peak"
+drivers = "Change of climate-corrected consumption since 2019 by part: large industry, electric cars, the rest"
 
 [[questions]]
 id = "forecast-january"
