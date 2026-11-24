@@ -9,6 +9,7 @@
   --font-text: "IBM Plex Sans Variable", system-ui, sans-serif;
   --vermilion: #d1401f;
   --gutter: clamp(1.25rem, 0.25rem + 4vw, 4rem);
+  --warm: #f5ede0;
   --max: 86rem;
   --column: 64rem;
   --text-column: 40rem;
@@ -24,7 +25,7 @@
 /* The page's own theme, a warm paper; the root carries it too, for what sits outside a chapter. */
 :root,
 [data-theme] {
-  --bg: #f5ede0;
+  --bg: var(--warm);
   --surface: #f7f7f4;
   --ink: #131518;
   --ink-2: #464b52;
@@ -39,27 +40,23 @@
   color: var(--ink);
 }
 
-[data-theme="model"] {
-  --bg: #dcdcd6;
-}
-
-[data-theme="sage"] {
-  --bg: #e1e6dd;
-  --surface: #ecefe8;
-  --rule: #c7cfc1;
-}
-
-[data-theme="ice"] {
-  --bg: #dce5ec;
-  --surface: #e9eff4;
-  --rule: #c1cdd7;
-  --muted: #5f6b76;
-}
-
-[data-theme="stone"] {
-  --bg: #e7e2d9;
-  --surface: #f0ece5;
-  --rule: #d2cabd;
+/*
+ * The chapters of figures and text keep the light blue-grey of the page before the story, with its
+ * chart colors, which pass the contrast checks on it; the story and the hour-by-hour map keep the
+ * paper.
+ */
+[data-theme="mist"] {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --ink: #15233b;
+  --ink-2: #45536b;
+  --muted: #5b687d;
+  --rule: #dce1e8;
+  --navy: #24305e;
+  --measured: #2f5f9e;
+  --forecast: #b4561f;
+  --third: #14917c;
+  --fourth: #b5841c;
 }
 
 [data-theme="night"] {
@@ -91,6 +88,18 @@ body {
 /* Before the scroll takes over, and with reduced motion, each chapter paints its own background. */
 html:not(.morph) [data-theme] {
   background: var(--bg);
+}
+
+/*
+ * Where the paper meets the blue-grey, the change is a short gradient rather than an edge; while
+ * the page scrolls with motion, the body fades from one to the other instead.
+ */
+html:not(.morph) :is(.story, [data-theme="paper"]) + [data-theme="mist"] {
+  background: linear-gradient(var(--warm), var(--bg) 6rem);
+}
+
+html:not(.morph) [data-theme="mist"]:has(+ [data-theme="paper"]) {
+  background: linear-gradient(var(--bg) calc(100% - 6rem), var(--warm));
 }
 
 ::selection {
