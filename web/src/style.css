@@ -10,6 +10,8 @@
   --vermilion: #d1401f;
   --gutter: clamp(1.25rem, 0.25rem + 4vw, 4rem);
   --max: 86rem;
+  --column: 64rem;
+  --text-column: 40rem;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   font-family: var(--font-text);
@@ -595,7 +597,11 @@ h1 {
   }
 }
 
-/* Chapters: a large title, its summary beside it, then the chart across the width. */
+/*
+ * Chapters: a large title, its summary beside it, then the chart across the width. Each chapter is
+ * one centred column: as wide as the page for the series by month and the map, narrower for the
+ * other charts, and narrower still for text alone, so that titles, text and charts share one axis.
+ */
 
 .chapter {
   position: relative;
@@ -606,6 +612,14 @@ h1 {
 .chapter-inner {
   max-width: var(--max);
   margin-inline: auto;
+}
+
+.chapter-column .chapter-inner {
+  max-width: var(--column);
+}
+
+.chapter-text .chapter-inner {
+  max-width: var(--text-column);
 }
 
 .chapter-head {
@@ -638,16 +652,21 @@ h2 {
 
 .chapter-body > p.prose,
 .chapter-body .prose p {
-  max-width: 44rem;
+  max-width: 68ch;
   margin: 0 0 1rem;
   color: var(--ink-2);
   font-size: 0.9375rem;
   line-height: 1.7;
 }
 
-.chapter-text .chapter-body {
-  max-width: 44rem;
-  margin-left: auto;
+.chapter-text .chapter-head {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 52.0625rem) {
+  .chapter-column .chapter-head {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 28rem);
+  }
 }
 
 @media (max-width: 52rem) {
@@ -668,16 +687,10 @@ h2 {
 
 .note-dates,
 .note-credit {
-  max-width: 44rem;
+  max-width: 68ch;
   margin: 0 0 1.25rem;
   color: var(--muted);
   font-size: 0.875rem;
-}
-
-#note .prose {
-  columns: 2 22rem;
-  column-gap: 3rem;
-  max-width: 60rem;
 }
 
 /* Charts. */
@@ -780,10 +793,6 @@ h2 {
   margin: 0 0 1rem;
 }
 
-.chart.narrow {
-  max-width: 56rem;
-}
-
 #forecast-plot {
   min-height: 300px;
 }
@@ -833,7 +842,7 @@ h2 {
 }
 
 .chart figcaption {
-  max-width: 44rem;
+  max-width: 68ch;
   margin-top: 0.75rem;
   color: var(--muted);
   font-size: 0.8125rem;
