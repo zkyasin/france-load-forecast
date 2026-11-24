@@ -12,7 +12,7 @@ from langchain_core.messages import AIMessage
 from france_load_forecast import model
 from france_load_forecast.agent import agent, tools
 from france_load_forecast.calendar import calendar_features
-from france_load_forecast.warehouse import SOURCES
+from france_load_forecast.warehouse import API_TABLES, SOURCES
 
 SYNTHETIC_SPEC = model.ModelSpec(
     model_id="synthetic",
@@ -37,8 +37,10 @@ def fixtures() -> Path:
 
 @pytest.fixture
 def export_files(fixtures: Path) -> dict[str, Path]:
-    """Real ODRÉ exports for 30 August to 2 September 2026, one per source table."""
-    return {source.table: fixtures / f"{source.dataset}.csv" for source in SOURCES}
+    """Real ODRÉ exports for 30 August to 2 September 2026, one per source table, and files
+    written by `flf ingest` from the real APIs of INSEE and Agence ORE."""
+    files = {source.table: fixtures / f"{source.dataset}.csv" for source in SOURCES}
+    return files | {table: fixtures / f"{table}.csv" for table in API_TABLES}
 
 
 @pytest.fixture(scope="session")

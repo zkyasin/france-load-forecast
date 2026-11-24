@@ -43,6 +43,23 @@ def test_an_answer_on_the_peak_quotes_its_tool(
     assert answer.tool_calls == [{"name": "peak", "args": {"month": "2027-01"}}]
 
 
+def test_an_answer_on_the_change_since_2019_quotes_its_tool(
+    script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
+) -> None:
+    model = script(
+        ("drivers", {}),
+        "Corrigée du climat, la consommation a baissé de 20,49 TWh depuis 2019 (-4,38 %) :"
+        " -5,44 TWh pour la grande industrie, +5,18 TWh pour les voitures électriques et"
+        " -20,23 TWh pour le reste.",
+    )
+
+    question = "Pourquoi la consommation a-t-elle baissé depuis 2019 ?"
+    answer = agent.ask(question, bundle, facts, model, agent_config)
+
+    assert answer.verified
+    assert "- drivers for what changed consumption since 2019" in agent.instructions(bundle, 120)
+
+
 def test_the_level_of_the_band_can_be_quoted(
     script: Script, bundle: tools.Bundle, facts: dict[str, Any], agent_config: agent.AgentConfig
 ) -> None:

@@ -2,8 +2,8 @@
 
 Monthly forecasts of French electricity consumption, rebuilt every Monday from RTE's open data:
 the energy and the peak of the next twelve months with a calibrated band, the reasons behind each
-monthly gap, the BP2025 scenarios, and an agent that answers questions from the published figures
-only.
+monthly gap, what changed consumption since 2019, the BP2025 scenarios, and an agent that answers
+questions from the published figures only.
 
 **The page, in French: <https://zkyasin.github.io/france-load-forecast/>**
 
@@ -20,6 +20,9 @@ only.
   too narrow, with 72 % of the peaks inside it, and the page says so.
 - **Gaps.** Each month is set against its forecast and against the year before, split into
   weather, calendar, structural and residual terms that add up to the gap.
+- **Since 2019.** Corrected for the weather, consumption is 20.5 TWh below 2019. Large industry
+  accounts for -5.4 TWh, four fifths of it from lower production, electric cars for +5.2 TWh, and
+  the rest, households, businesses and services, for -20.2 TWh.
 - **Agent.** Questions in French are answered with read-only tools over the published figures,
   and a verifier refuses any number that no tool returned. On 40 frozen questions, gpt-oss-120b
   passes 36, gpt-oss-20b 33 and Ministral 3 14B, run locally, 29: see the
@@ -36,9 +39,12 @@ only.
 ```mermaid
 flowchart LR
   odre[ODRÉ exports] --> warehouse[(DuckDB warehouse)]
+  apis[INSEE and Agence ORE] --> warehouse
   warehouse --> models[Daily models of the mean load and of the peak]
   models --> backtest[Backtests and calibrated bands]
   backtest --> bundle[JSON bundle on the data branch]
+  models --> drivers[What changed consumption since 2019]
+  drivers --> bundle
   bundle --> page[Page on GitHub Pages]
   bundle --> api[Question API on Cloud Run]
   api --> page
@@ -46,8 +52,8 @@ flowchart LR
 
 | Layer | Tools |
 |---|---|
-| Data | ODRÉ exports, DuckDB, data checks |
-| Models | statsmodels state-space model with a Kalman filter, patsy splines, split conformal bands |
+| Data | ODRÉ exports, INSEE's SDMX service, Agence ORE's API, DuckDB, data checks |
+| Models | statsmodels state-space model with a Kalman filter, patsy splines, split conformal bands, a logarithmic mean Divisia index |
 | Publication | JSON files checked with pydantic, a data branch, GitHub Actions |
 | Page | Vite, TypeScript, Observable Plot |
 | Agent and API | LangChain, gpt-oss on Groq, Ministral 3 14B on Ollama, FastAPI on Cloud Run |
@@ -59,8 +65,10 @@ to run each part.
 
 ## Data
 
-All inputs are public datasets published by RTE on [ODRÉ](https://odre.opendatasoft.com) under the
-[Licence Ouverte 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence/).
+All inputs are public datasets under the
+[Licence Ouverte 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence/): RTE's, published
+on [ODRÉ](https://odre.opendatasoft.com), and, to explain what changed consumption since 2019,
+series of [INSEE](https://www.insee.fr) and of [Agence ORE](https://opendata.agenceore.fr).
 
 | Dataset | Content |
 |---|---|
@@ -69,13 +77,18 @@ All inputs are public datasets published by RTE on [ODRÉ](https://odre.opendata
 | `consommation-quotidienne-brute` | Consolidated consumption every 30 minutes, a month ahead of éCO2mix, to measure the revision of real-time data |
 | `pic-journalier-consommation-brute` | National temperature and reference temperature of each day; its daily peak is not used |
 | `conso_brute_corrigee_client_direct` | Monthly gross and corrected consumption, used for validation |
+| `soutirages-quotidiens-consolides-rpt` | Energy drawn each day from RTE's grid by large industry, by voltage level, since 2018 |
+| `conso-finale-corrigee-par-secteur` | Monthly consumption of the industry on RTE's grid by sector, 2014 to 2024, to weight the production indices |
+| INSEE, `IPI-2021` and `IPC-2025` | Monthly production index of five branches of industry, consumer price indices of all items and of electricity |
+| Agence ORE, `voitures-par-commune-par-energie` | Stock of rechargeable cars by commune, every quarter since the end of 2020 |
 
 ```sh
 uv run flf ingest
 ```
 
-downloads the exports to `data/raw/<dataset>/<date>.csv`, loads them into `data/warehouse.duckdb`
-and runs the data checks. The command exits with status 1 if a check fails.
+downloads the exports to `data/raw/<dataset>/<date>.csv`, the INSEE series and the car stock to
+`data/raw/insee/` and `data/raw/agenceore/`, loads them all into `data/warehouse.duckdb` and runs
+the data checks. The command exits with status 1 if a check fails.
 
 ```sh
 uv run flf fit
@@ -100,6 +113,14 @@ on the daily peak. [docs/methodology.md](docs/methodology.md) describes the mode
 results.
 
 ```sh
+uv run flf drivers
+```
+
+splits the change of climate-corrected consumption between 2019 and the last twelve months into
+large industry, by its production and by its energy per unit produced, electric cars and the
+rest, as set in [`config/drivers.toml`](config/drivers.toml).
+
+```sh
 uv run flf publish
 ```
 
@@ -118,6 +139,7 @@ id (`model_id` in [`config/model.toml`](config/model.toml), or in
 | `model.json` | Estimation window and response to temperature of the forecasting model |
 | `scenarios.json` | Energy of each year from 2027 to 2031 by BP2025 trajectory and winter, month by month |
 | `peak.json` | Monthly peak P10, P50 and P90 from the current month, the peak of each whole month and its day, the winter gradient of the peak and its backtest scores |
+| `drivers.json` | Climate-corrected consumption of 2019, of the last twelve months and of each whole year, by part: large industry, electric cars and the rest; the change since 2019 by part |
 
 ## Publication
 
@@ -161,6 +183,8 @@ The page, in French, is at <https://zkyasin.github.io/france-load-forecast/>. It
 - an autumn Saturday and the longest day of 2026 hour by hour, on a map of the 400 kV grid where
   each plant grows with the output of its source;
 - the energy of each year since 2014, measured and corrected for the weather;
+- what changed consumption since 2019: large industry, by its production and its energy per unit
+  produced, electric cars and the rest;
 - the BP2025 scenarios to 2031, for a trajectory and a winter chosen by the reader;
 - the method and the sources.
 
@@ -185,7 +209,7 @@ npm run dev
 The agent answers questions in French and writes the monthly note from the bundle. Its tools are
 read-only and return the figures it may quote: the forecast, the monthly peak, the gaps of a
 month, annual energies, the response to temperature, the accuracy of past forecasts, the
-scenarios, and dated facts from [`config/facts.toml`](config/facts.toml). A verifier checks that every number of a text comes
+scenarios, what changed consumption since 2019, and dated facts from [`config/facts.toml`](config/facts.toml). A verifier checks that every number of a text comes
 from a tool result or is a year named in the question, and that the text holds no link. The model
 gets one more try, and a text that still fails, or stays empty, is not shown.
 
@@ -209,7 +233,7 @@ of the month. It also writes `notes/2026-09.json` for the page. Both commands ex
 if a number has no source. [`evals/`](evals) holds 40 frozen questions with their expected
 answers, and `flf eval` scores the answers of a model on them, without a judge: the
 [results](evals/results.md) compare the local model with the hosted ones. None of the frozen
-questions is about the peak yet.
+questions is about the peak or the change since 2019 yet.
 
 A note reaches the page through a pull request: its reading is reviewed, then the page shows the
 latest note from its next deployment. Before writing a note, `flf note` checks every figure of its

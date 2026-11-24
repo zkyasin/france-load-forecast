@@ -7,6 +7,7 @@ import * as chapters from "./chapters";
 import { byId } from "./chart";
 import * as chat from "./chat";
 import { latest, type Meta, publications } from "./data";
+import * as drivers from "./drivers";
 import * as forecast from "./forecast";
 import { dayName, daysSince, NBSP, signed } from "./format";
 import * as gaps from "./gaps";
@@ -65,6 +66,7 @@ async function main(): Promise<void> {
     ["Questions", () => chat.render(bundle)],
     ["Température", () => temperature.render(bundle.model)],
     ["Historique", () => annual.render(bundle.history.years)],
+    ["Évolution", () => drivers.render(bundle.drivers)],
     ["Scénarios", () => scenarios.render(bundle.scenarios)],
   ];
   for (const [name, render] of sections) {

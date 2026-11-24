@@ -22,7 +22,7 @@ export function step(index: number, count: number, key: string): number | null {
 }
 
 function menu(root: HTMLElement, toggle: HTMLButtonElement, list: HTMLElement): void {
-  // Pointe and Questions may be hidden: only the links shown take the focus.
+  // Pointe, Évolution and Questions may be hidden: only the links shown take the focus.
   const links = () => [...list.querySelectorAll<HTMLAnchorElement>("li:not([hidden]) > a")];
   const isOpen = () => toggle.getAttribute("aria-expanded") === "true";
   function show(open: boolean, focus?: "toggle" | number): void {

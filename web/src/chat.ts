@@ -326,7 +326,7 @@ export function render(bundle: Bundle): void {
 
   // No greeting: the suggested questions open the thread, and leave it the room.
   function greet(): void {
-    chips(suggestions(bundle.forecast, bundle.gaps), "Pour commencer");
+    chips(suggestions(bundle.forecast, bundle.gaps, bundle.drivers), "Pour commencer");
   }
 
   greet();

@@ -4,7 +4,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from france_load_forecast import cli, odre
+from france_load_forecast import agenceore, cli, insee, odre
 
 
 def test_ingest_builds_the_warehouse(
@@ -19,13 +19,26 @@ def test_ingest_builds_the_warehouse(
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(fixtures / f"{dataset}.csv", dest)
 
+    def copy_series(client: httpx.Client, series: object, dest: Path, start: str) -> None:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(fixtures / "insee_monthly.csv", dest)
+
+    def copy_cars(client: httpx.Client, dest: Path) -> None:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(fixtures / "car_stock.csv", dest)
+
     monkeypatch.setattr(odre, "download_export", copy_fixture)
+    monkeypatch.setattr(insee, "download_series", copy_series)
+    monkeypatch.setattr(agenceore, "download_car_stock", copy_cars)
 
     exit_code = cli.main(["ingest", "--data-dir", str(tmp_path)])
 
     assert exit_code == 0
     assert (tmp_path / "warehouse.duckdb").exists()
-    assert "load_realtime" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "load_realtime" in out
+    assert "insee_monthly" in out
+    assert "car_stock" in out
 
 
 def test_forecast_needs_the_backtest_of_its_model(

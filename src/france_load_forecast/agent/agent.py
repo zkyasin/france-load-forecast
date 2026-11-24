@@ -43,7 +43,9 @@ or mild winter;
   - fact for how the forecast is made, where the data come from, their perimeter, the revision \
 of real-time data and when temperatures are published;
   - peak for the highest half-hour of a month, ahead or measured, in GW, and the peak of the last \
-winter.
+winter;
+  - drivers for what changed consumption since {base_year}, before the crises, and for the \
+energy of electric cars and of large industry.
 - Get every figure from the tools, and quote it as the tools give it, rounded to one or two \
 decimals, with its unit. Do not compute new numbers such as sums, differences or shares.
 - Give each term of a gap in TWh: a positive term raised consumption, a negative one lowered it. \
@@ -188,6 +190,7 @@ def instructions(bundle: Bundle, words: int, cite: bool = True) -> str:
         words=words,
         cite=CITE if cite else "",
         current_month=bundle["forecast"]["current_month"],
+        base_year=bundle["drivers"]["base_year"],
         **bundle["meta"],
     )
 
