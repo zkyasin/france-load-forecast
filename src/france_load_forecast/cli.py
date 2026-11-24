@@ -15,12 +15,14 @@ import httpx
 import pandas as pd
 
 from france_load_forecast import (
+    agenceore,
     backtest,
     bundle,
     conformal,
     correction,
     decomposition,
     forecast,
+    insee,
     model,
     odre,
     outlook,
@@ -42,6 +44,12 @@ def ingest(data_dir: Path) -> int:
                 client, source.dataset, path, select=source.select, where=source.where
             )
             files[source.table] = path
+        files["insee_monthly"] = data_dir / "raw" / "insee" / f"{today}.csv"
+        insee.download_series(
+            client, warehouse.INSEE_SERIES, files["insee_monthly"], warehouse.INSEE_FIRST_MONTH
+        )
+        files["car_stock"] = data_dir / "raw" / "agenceore" / f"{today}.csv"
+        agenceore.download_car_stock(client, files["car_stock"])
 
     with duckdb.connect(data_dir / "warehouse.duckdb") as con:
         warehouse.build(con, files)
