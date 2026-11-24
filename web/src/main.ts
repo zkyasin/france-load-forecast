@@ -3,6 +3,7 @@ import "@fontsource-variable/ibm-plex-sans";
 import "./style.css";
 import * as accuracy from "./accuracy";
 import * as annual from "./annual";
+import * as chapters from "./chapters";
 import { byId } from "./chart";
 import * as chat from "./chat";
 import { latest, type Meta, publications } from "./data";
@@ -48,6 +49,7 @@ function method(meta: Meta): void {
 }
 
 async function main(): Promise<void> {
+  chapters.render();
   const bundle = await latest();
   // Without the list of publications, the page shows the latest forecast only.
   const days = await publications().catch(() => [bundle.meta.published]);

@@ -15,14 +15,29 @@
   </head>
   <body>
     <header class="masthead" id="masthead">
-      <a class="brand" href="#story">
-        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 21 12 3l8 18M7 14h10M9.5 9h5" />
-        </svg>
-        <span>Consommation d'électricité en France</span>
-      </a>
-      <nav aria-label="Chapitres de la page">
+      <div class="masthead-title">
+        <a class="brand" href="#story">
+          <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 21 12 3l8 18M7 14h10M9.5 9h5" />
+          </svg>
+          <span>Consommation d'électricité en France</span>
+        </a>
+        <p class="issue" id="issue"></p>
+      </div>
+      <nav class="masthead-nav" aria-label="Chapitres principaux">
         <ul>
+          <li><a href="#forecast">Prévision</a></li>
+          <li><a href="#accuracy">Fiabilité</a></li>
+          <li><a href="#journee">Journée</a></li>
+          <li><a href="#history">Historique</a></li>
+          <li><a href="#scenarios">Scénarios</a></li>
+        </ul>
+      </nav>
+      <nav class="chapters" aria-label="Chapitres de la page">
+        <button class="chapters-toggle" id="chapters-toggle" type="button" aria-expanded="false" aria-controls="chapters-menu">
+          Chapitres <span class="chapters-caret" aria-hidden="true">▾</span>
+        </button>
+        <ul class="chapters-menu" id="chapters-menu" hidden>
           <li><a href="#forecast">Prévision</a></li>
           <li><a href="#accuracy">Fiabilité</a></li>
           <li id="peak-nav" hidden><a href="#peak">Pointe</a></li>
@@ -37,7 +52,6 @@
           <li><a href="#sources">Sources</a></li>
         </ul>
       </nav>
-      <p class="issue" id="issue"></p>
       <div class="progress" aria-hidden="true"><span id="progress"></span></div>
     </header>
 
