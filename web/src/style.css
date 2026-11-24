@@ -7,7 +7,12 @@
   --font-display: "Big Shoulders Display Variable", "Arial Narrow", sans-serif;
   --font-text: "IBM Plex Sans Variable", system-ui, sans-serif;
   --vermilion: #d1401f;
-  --gutter: clamp(1.25rem, 0.25rem + 4vw, 4rem);
+  /* At least the safe area of a phone on its side, notch included. */
+  --gutter: max(
+    clamp(1.25rem, 0.25rem + 4vw, 4rem),
+    env(safe-area-inset-left, 0px),
+    env(safe-area-inset-right, 0px)
+  );
   --max: 86rem;
   --column: 64rem;
   --text-column: 40rem;
@@ -94,7 +99,7 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  padding: 0.625rem var(--gutter);
+  padding: calc(0.625rem + env(safe-area-inset-top, 0px)) var(--gutter) 0.625rem;
   color: var(--ink);
   transition:
     background-color 300ms ease,
@@ -546,7 +551,7 @@ h1 {
 
   .step-hero {
     justify-content: flex-start;
-    padding-top: 5.5rem;
+    padding-top: calc(5.5rem + env(safe-area-inset-top, 0px));
   }
 
   .step-card {

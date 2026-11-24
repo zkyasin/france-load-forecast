@@ -4,7 +4,7 @@
  */
 
 .v-day {
-  --v-masthead: 4rem;
+  --v-masthead: calc(4rem + env(safe-area-inset-top, 0px));
   --v-day-top: calc(var(--v-masthead) + 1rem);
   --v-day-h: min(calc(100svh - var(--v-masthead) - 2rem), 56rem);
 }
