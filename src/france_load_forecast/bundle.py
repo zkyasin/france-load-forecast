@@ -4,6 +4,7 @@ Beyond types, the checks catch values that no correct run produces: a band out o
 energy out of plausible bounds, terms that do not add up to their gap, a missing scenario.
 """
 
+from collections.abc import Iterable
 from datetime import date
 from typing import Annotated, Any
 
@@ -211,9 +212,10 @@ FILES: dict[str, type[File]] = {
 }
 
 
-def check(files: dict[str, dict[str, Any]]) -> list[str]:
-    """One message per file missing from `files`, unknown, or breaking its schema."""
-    problems = [f"{name}: missing" for name in FILES if name not in files]
+def check(files: dict[str, dict[str, Any]], required: Iterable[str] = tuple(FILES)) -> list[str]:
+    """One message per file of `required` missing from `files`, per file unknown, and per file
+    breaking its schema."""
+    problems = [f"{name}: missing" for name in required if name not in files]
     for name, content in files.items():
         if name not in FILES:
             problems.append(f"{name}: unknown file")

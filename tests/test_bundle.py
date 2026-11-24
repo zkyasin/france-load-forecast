@@ -66,3 +66,10 @@ def test_missing_scenario_and_missing_file_fail(files: dict[str, dict[str, Any]]
         "model",
         "scenarios",
     ]
+
+
+def test_only_the_files_required_must_be_there(files: dict[str, dict[str, Any]]) -> None:
+    agent_files = {name: files[name] for name in tools.FILES}
+
+    assert bundle.check(agent_files, required=tools.FILES) == []
+    assert set(tools.FILES) <= set(bundle.FILES)

@@ -72,10 +72,11 @@ def load_settings(path: Path) -> Settings:
 
 
 def fetch_bundle(url: str) -> tools.Bundle:
-    """The files of the bundle published at `url`."""
+    """The files of the bundle published at `url` that the agent reads: a file published for the
+    page alone does not hold the answers back."""
     with httpx.Client(timeout=10) as client:
         return {
-            name: client.get(f"{url}{name}.json").raise_for_status().json() for name in schema.FILES
+            name: client.get(f"{url}{name}.json").raise_for_status().json() for name in tools.FILES
         }
 
 
@@ -99,7 +100,7 @@ class BundleSource:
             if self.bundle is None or self.clock() - self.read_at > self.ttl:
                 try:
                     fresh = self.fetch()
-                    problems = schema.check(fresh)
+                    problems = schema.check(fresh, required=tools.FILES)
                     if problems:
                         raise ValueError("; ".join(problems))
                     self.bundle = fresh
