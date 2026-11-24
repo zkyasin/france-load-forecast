@@ -1286,8 +1286,8 @@ tbody th {
   #scenarios .controls {
     order: 1;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    gap: 0.1875rem;
+    margin-bottom: 0.125rem;
   }
 
   #scenarios .chart {
@@ -1307,22 +1307,35 @@ tbody th {
     margin: 0;
   }
 
+  /* The legend floats beside its buttons, as a short label on the same line. */
+  #scenarios .choice {
+    display: flex;
+    align-items: center;
+  }
+
   #scenarios .choice legend {
-    margin-bottom: 0.25rem;
+    float: left;
+    width: 4rem;
+    margin: 0;
+    font-size: 9px;
+    letter-spacing: 0.03em;
   }
 
   #scenarios .options {
     display: grid;
+    flex: 1;
     grid-auto-columns: 1fr;
     grid-auto-flow: column;
-    width: 100%;
-    padding: 0.1875rem;
+    gap: 0;
+    padding: 2px;
   }
 
   #scenarios .options label > span {
     justify-content: center;
-    min-height: 40px;
-    padding-inline: 0.5rem;
+    min-height: 22px;
+    padding: 0 6px;
+    font-size: 11px;
+    line-height: 1.1;
   }
 
   #scenarios .label-full {
