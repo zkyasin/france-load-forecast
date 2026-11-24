@@ -158,8 +158,8 @@ The page, in French, is at <https://zkyasin.github.io/france-load-forecast/>. It
   few are. It appears once the question API is deployed and its address is set as the
   repository variable `API_URL`;
 - the load added by one degree less, by temperature;
-- a weekday and a weekend day hour by hour, on a map of the 400 kV grid where each plant grows
-  with the output of its source;
+- an autumn Saturday and the longest day of 2026 hour by hour, on a map of the 400 kV grid where
+  each plant grows with the output of its source;
 - the energy of each year since 2014, measured and corrected for the weather;
 - the BP2025 scenarios to 2031, for a trajectory and a winter chosen by the reader;
 - the method and the sources.
