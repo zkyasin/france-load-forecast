@@ -249,16 +249,16 @@ def explain_change(data_dir: Path, config: Path, drivers_config: Path) -> int:
     return 0
 
 
-def run_publish(
-    data_dir: Path, config: Path, peak_config: Path, scenario_config: Path, out: Path
-) -> int:
-    """Write the weekly bundle of JSON files."""
-    spec, peak_spec = model.load_spec(config), model.load_spec(peak_config)
+def run_publish(data_dir: Path, config: Path, configs: dict[str, Path], out: Path) -> int:
+    """Write the weekly bundle of JSON files. `configs` gives the configuration of the peak
+    model, of the scenarios and of the drivers."""
+    spec, peak_spec = model.load_spec(config), model.load_spec(configs["peak"])
     past_forecasts, past_peaks = read_backtest(data_dir, spec), read_backtest(data_dir, peak_spec)
     if past_forecasts is None or past_peaks is None:
         return 1
 
-    scenario_spec = scenarios.load_spec(scenario_config)
+    scenario_spec = scenarios.load_spec(configs["scenarios"])
+    drivers_spec = drivers.load_spec(configs["drivers"])
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
         history = model.daily_frame(con, spec.smoothing)
         observed = model.load_after(con, history.index[-1], spec.target)
@@ -271,9 +271,19 @@ def run_publish(
         )
         rte = correction.rte_monthly(con)
         revision = warehouse.mean_revision(con)
+        changes = publish.DriversInputs(drivers.read(con), drivers_spec)
     published = datetime.now(UTC).date()
     files = publish.build(
-        history, observed, spec, past_forecasts, rte, revision, scenario_spec, published, peak
+        history,
+        observed,
+        spec,
+        past_forecasts,
+        rte,
+        revision,
+        scenario_spec,
+        published,
+        peak,
+        changes,
     )
     problems = bundle.check(files)
     for problem in problems:
@@ -456,6 +466,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     publish_parser.add_argument("--out", type=Path, default=Path("data/bundle"))
     publish_parser.add_argument("--peak-config", type=Path, default=Path("config/peak.toml"))
     publish_parser.add_argument("--scenarios", type=Path, default=Path("config/scenarios.toml"))
+    publish_parser.add_argument("--drivers-config", type=Path, default=Path("config/drivers.toml"))
     snapshot_parser = commands.add_parser(
         "snapshot", parents=[common], help="save the real-time load as a Parquet file"
     )
@@ -506,7 +517,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "drivers":
         return explain_change(args.data_dir, args.config, args.drivers_config)
     if args.command == "publish":
-        return run_publish(args.data_dir, args.config, args.peak_config, args.scenarios, args.out)
+        configs = {
+            "peak": args.peak_config,
+            "scenarios": args.scenarios,
+            "drivers": args.drivers_config,
+        }
+        return run_publish(args.data_dir, args.config, configs, args.out)
     if args.command == "snapshot":
         return snapshot(args.data_dir, args.out)
     if args.command == "ask":

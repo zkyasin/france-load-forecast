@@ -17,6 +17,7 @@ from france_load_forecast import (
     conformal,
     correction,
     decomposition,
+    drivers,
     model,
     outlook,
     scenarios,
@@ -261,6 +262,50 @@ def peak_file(peak: PeakInputs, current: pd.Timestamp, provisional: pd.Index) ->
     }
 
 
+def _driver_period(values: pd.Series) -> dict[str, float]:
+    return {
+        "consumption": _round(values["consumption"]),
+        "industry": _round(values["industry"]),
+        "electric_cars": _round(values["electric_cars"]),
+        "rest": _round(values["rest"]),
+        "cars_millions": _round(values["cars"]),
+        "activity_index": _round(values["activity"]),
+        "real_price_index": _round(values["real_price"]),
+    }
+
+
+def drivers_file(found: drivers.Drivers, spec: drivers.DriversSpec) -> dict[str, Any]:
+    """Climate-corrected consumption of the base year, of the last twelve months and of each whole
+    year, with its parts, and the change between the base year and the last twelve months by
+    part."""
+    return {
+        "base_year": found.base_year,
+        "first_month": _month(found.first_month),
+        "last_month": _month(found.last_month),
+        "base": _driver_period(found.base),
+        "now": _driver_period(found.now),
+        "contributions": _rounded(drivers.contributions(found.base, found.now)),
+        "cars": {
+            "mwh_per_car": _round(found.mwh_per_car),
+            "reference_year": spec.cars.year,
+            "reference_twh": spec.cars.twh,
+            "source": spec.cars.source,
+        },
+        "years": [
+            {"year": int(str(year)), **_driver_period(values)}
+            for year, values in drivers.years(found).iterrows()
+        ],
+    }
+
+
+@dataclass(frozen=True)
+class DriversInputs:
+    """What the drivers file is made from: the data of the warehouse and the spec."""
+
+    inputs: drivers.Inputs
+    spec: drivers.DriversSpec
+
+
 def build(
     history: pd.DataFrame,
     observed: pd.Series,
@@ -271,13 +316,14 @@ def build(
     scenario_spec: scenarios.ScenarioSpec,
     published: date,
     peak: PeakInputs,
+    changes: DriversInputs,
 ) -> dict[str, dict[str, Any]]:
     """Every file of the bundle, by name.
 
     `history` is the daily frame, `observed` the load measured after it, `past_forecasts` the
     backtest results, `rte` RTE's monthly series, `revision` the revision of real-time load,
-    `scenario_spec` the trajectories and winters of the scenarios and `peak` what the peak file
-    is made from.
+    `scenario_spec` the trajectories and winters of the scenarios, `peak` what the peak file is
+    made from and `changes` what the drivers file is made from.
     """
     latest = model.fit_recent(history, spec)
     current = outlook.current_month(history, observed)
@@ -305,6 +351,12 @@ def build(
         "accuracy": accuracy_file(past_forecasts),
         "model": model_file(latest, history),
         "scenarios": scenarios_file(*scenarios.grid(latest, history, scenario_spec), scenario_spec),
+        "drivers": drivers_file(
+            drivers.compute(
+                corrected[history["source"] == "consolidated"], changes.inputs, changes.spec
+            ),
+            changes.spec,
+        ),
     }
     header = {"published": published.isoformat(), "model_id": spec.model_id}
     bundle = {name: header | content for name, content in files.items()}

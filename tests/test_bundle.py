@@ -51,6 +51,16 @@ def test_implausible_peak_fails(files: dict[str, dict[str, Any]]) -> None:
     assert bundle.check(broken)[0].startswith("peak:")
 
 
+def test_drivers_that_do_not_add_up_fail(files: dict[str, dict[str, Any]]) -> None:
+    parts = copy.deepcopy(files)
+    parts["drivers"]["now"]["rest"] += 1.0
+    change = copy.deepcopy(files)
+    change["drivers"]["contributions"]["industry_activity"] += 1.0
+
+    assert "do not add up" in bundle.check(parts)[0]
+    assert "activity and intensity" in bundle.check(change)[0]
+
+
 def test_scenarios_without_a_winter_or_the_reference_fail(files: dict[str, dict[str, Any]]) -> None:
     without_mild = copy.deepcopy(files)
     scenarios = without_mild["scenarios"]
