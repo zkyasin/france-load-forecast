@@ -565,9 +565,9 @@ h1 {
 }
 
 /*
- * Chapters: a large title, its summary beside it, then the chart across the width. Each chapter is
- * one centred column: as wide as the page for the series by month and the map, narrower for the
- * other charts, and narrower still for text alone, so that titles, text and charts share one axis.
+ * Chapters: a large title, its summary beside it, then the chart across the width. The chapters
+ * share one centred column, so that titles, text and charts start on one axis: the map alone takes
+ * the width of the page, and a chapter of text alone keeps its lines short within the column.
  */
 
 main {
@@ -591,6 +591,10 @@ main {
 }
 
 .chapter-text .chapter-inner {
+  max-width: var(--column);
+}
+
+.chapter-text :is(.intro, .chapter-body) {
   max-width: var(--text-column);
 }
 
