@@ -1168,8 +1168,13 @@ tbody th {
 }
 
 @media (max-width: 44rem) {
+  /* Shorter steps than on a wide screen, for a thumb: the city plays in about seven screens. */
   .step {
     padding-bottom: var(--chat-lift);
+  }
+
+  .step:not(.step-hero) {
+    min-height: 120svh;
   }
 
   .step-card {
