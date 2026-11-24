@@ -101,8 +101,9 @@ a:hover {
     color 300ms ease;
 }
 
+/* Once the page scrolls, the masthead is solid: no line of text shows through it. */
 .masthead[data-scrolled] {
-  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  background: var(--bg);
 }
 
 .masthead-title {
