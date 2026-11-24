@@ -106,6 +106,11 @@ a:hover {
     color 300ms ease;
 }
 
+/* An open menu of chapters goes over the pylon of the question panel, which shares its corner. */
+.masthead:has(.chapters-toggle[aria-expanded="true"]) {
+  z-index: 45;
+}
+
 /* Once the page scrolls, the masthead is solid: no line of text shows through it. */
 .masthead[data-scrolled] {
   background: var(--bg);
