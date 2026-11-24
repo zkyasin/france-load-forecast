@@ -62,8 +62,12 @@ jobs:
           # The question box appears once the API is deployed and its address set on the
           # repository.
           VITE_API_URL: ${{ vars.API_URL }}
+      # An artifact per attempt: a job run again deploys its own instead of finding two.
       - uses: actions/upload-pages-artifact@v5
         with:
           path: web/dist
+          name: github-pages-${{ github.run_attempt }}
       - id: deployment
         uses: actions/deploy-pages@v5
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
