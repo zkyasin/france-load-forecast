@@ -948,7 +948,7 @@ select:hover {
   cursor: pointer;
 }
 
-.options span {
+.options label > span {
   display: block;
   padding: 0.3125rem 0.875rem;
   border-radius: 999px;
@@ -959,7 +959,7 @@ select:hover {
     background-color 160ms ease;
 }
 
-.options label:hover span {
+.options label:hover > span {
   color: var(--ink);
   background: color-mix(in srgb, var(--ink) 7%, transparent);
 }
@@ -975,7 +975,7 @@ select:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :is(select, summary, summary::before, .options span, a) {
+  :is(select, summary, summary::before, .options label > span, a) {
     transition: none;
   }
 }
@@ -1257,7 +1257,7 @@ tbody th {
     min-height: 44px;
   }
 
-  .options span {
+  .options label > span {
     display: flex;
     align-items: center;
     min-height: 44px;
@@ -1265,15 +1265,72 @@ tbody th {
   }
 }
 
-/* On a phone, a choice of three is a list across the width rather than a row that breaks. */
+.label-short {
+  display: none;
+}
+
+/*
+ * On a phone, the scenarios open on their two choices, each on one line with short labels, then
+ * the chart they draw, so that both hold on one screen; the text that reads the chart follows.
+ */
 @media (max-width: 34rem) {
-  .options:has(> :nth-child(3)) {
-    display: grid;
-    border-radius: 0.875rem;
+  #scenarios .chapter-body {
+    display: flex;
+    flex-direction: column;
   }
 
-  .options:has(> :nth-child(3)) span {
-    border-radius: 0.625rem;
+  #scenarios .chapter-body > * {
+    order: 5;
+  }
+
+  #scenarios .controls {
+    order: 1;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  #scenarios .chart {
+    order: 2;
+    margin-top: 0;
+  }
+
+  #scenarios-result {
+    order: 3;
+  }
+
+  #scenarios .legend {
+    order: 4;
+  }
+
+  #scenarios .choice {
+    margin: 0;
+  }
+
+  #scenarios .choice legend {
+    margin-bottom: 0.25rem;
+  }
+
+  #scenarios .options {
+    display: grid;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+    width: 100%;
+    padding: 0.1875rem;
+  }
+
+  #scenarios .options label > span {
+    justify-content: center;
+    min-height: 40px;
+    padding-inline: 0.5rem;
+  }
+
+  #scenarios .label-full {
+    display: none;
+  }
+
+  #scenarios .label-short {
+    display: inline;
   }
 }
 
