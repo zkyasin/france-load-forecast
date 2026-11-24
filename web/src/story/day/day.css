@@ -100,12 +100,12 @@ body:has(.chat-corner) .v-day .v-day-stage :is(.stage-credit, .v-legend) {
   }
 
   .v-day .v-day-steps .step {
-    padding: 0.75rem 0.25rem 3.25rem;
+    padding: 0.75rem 0.25rem var(--chat-lift);
   }
 
   .v-day .v-day-steps .step-card {
     top: auto;
-    bottom: 3.25rem;
+    bottom: var(--chat-lift);
     padding: 1rem 1.125rem 1.125rem;
   }
 
