@@ -140,6 +140,9 @@ GitHub Actions once, in the Pages settings of the repository.
 
 The page, in French, is at <https://zkyasin.github.io/france-load-forecast/>. It shows:
 
+- under the headline, a city of days: one building per day since 2012, as high and as warm in
+  colour as the day's mean load, in blocks of years, ending on the months of the forecast as
+  scaffolding;
 - the forecast of the next twelve months with its band, and the forecast of any past
   publication against the months measured since;
 - the accuracy of past forecasts;
@@ -155,13 +158,20 @@ The page, in French, is at <https://zkyasin.github.io/france-load-forecast/>. It
   few are. It appears once the question API is deployed and its address is set as the
   repository variable `API_URL`;
 - the load added by one degree less, by temperature;
+- a weekday and a weekend day hour by hour, on a map of the 400 kV grid where each plant grows
+  with the output of its source;
 - the energy of each year since 2014, measured and corrected for the weather;
 - the BP2025 scenarios to 2031, for a trajectory and a winter chosen by the reader;
 - the method and the sources.
 
 [`web/`](web) is a static site built with [Vite](https://vite.dev), TypeScript and
-[Observable Plot](https://observablehq.com/plot/). It reads the bundles of the `data` branch,
-which `npm run data` copies into `web/public/data/`. It requires Node.js 26:
+[Observable Plot](https://observablehq.com/plot/), with [three.js](https://threejs.org),
+[GSAP](https://gsap.com) and [Lenis](https://lenis.darkroom.engineering) for the scenes told on
+scroll. It reads the bundles of the `data` branch, which `npm run data` copies into
+`web/public/data/`. The scenes read files committed in `web/public/`, built from exports by the
+scripts of [`web/scripts/`](web/scripts): `relief.py` for the hourly load since 2012 (éCO2mix),
+`grid.py` for the map (Natural Earth, OpenStreetMap) and `mix.py` for the two days of mix
+(éCO2mix). With reduced motion, the scenes step between still frames. It requires Node.js 26:
 
 ```sh
 cd web
