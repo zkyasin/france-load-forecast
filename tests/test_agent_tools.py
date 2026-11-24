@@ -71,6 +71,43 @@ def test_unknown_months_and_years_get_an_error(by_name: dict[str, Any]) -> None:
     assert "2025-10 to 2026-09" in call(by_name, "month_gap", month="2020-01")["error"]
     assert "2014 to 2025" in call(by_name, "annual_energy", first=2010, last=2011)["error"]
     assert "after" in call(by_name, "annual_energy", first=2025, last=2019)["error"]
+    assert "2012-01 to 2027-10" in call(by_name, "peak", month="2030-01")["error"]
+
+
+def test_peak_gives_the_months_ahead_and_the_last_winter(by_name: dict[str, Any]) -> None:
+    content = call(by_name, "peak")
+
+    assert content["current_month"] == content["months"][0]["month"] == "2026-11"
+    assert content["months"][0]["measured"] == pytest.approx(68.0, abs=0.05)
+    assert content["last_winter_peak"] == {
+        "winter": "2025-2026",
+        "month": "2026-01",
+        "peak": pytest.approx(90.236),
+        "day": "2026-01-06",
+        "provisional": False,
+    }
+    assert content["coming_winter_peak"]["winter"] == "2026-2027"
+    assert content["coming_winter_peak"]["month"] == "2027-01"
+    assert (content["band_level_pct"], content["band_coverage_pct"]) == (80, pytest.approx(72.42))
+
+
+def test_peak_of_a_month_is_its_forecast_or_its_measured_day(by_name: dict[str, Any]) -> None:
+    ahead = call(by_name, "peak", month="2027-01")
+    measured = call(by_name, "peak", month="2026-01")
+
+    assert ahead["p10"] < ahead["p50"] < ahead["p90"]
+    assert (measured["peak"], measured["day"]) == (pytest.approx(90.236), "2026-01-06")
+
+
+def test_last_winter_skips_a_winter_still_under_way() -> None:
+    def month(name: str, peak: float) -> dict[str, Any]:
+        return {"month": name, "peak": peak, "day": f"{name}-10", "provisional": False}
+
+    peaks = [month("2025-12", 80.0), month("2026-01", 85.0), month("2026-02", 82.0)]
+    peaks += [month("2026-12", 95.0), month("2027-01", 99.0)]
+
+    assert tools.last_winter(peaks) == {"winter": "2025-2026"} | month("2026-01", 85.0)
+    assert tools.last_winter(peaks[3:]) is None
 
 
 def test_annual_energy_gives_the_change_from_the_year_before(by_name: dict[str, Any]) -> None:

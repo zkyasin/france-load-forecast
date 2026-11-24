@@ -17,7 +17,7 @@ FactTopic = Literal["method", "sources", "perimeter", "revision", "temperature"]
 TOTALS = ("actual", "reference", "gap")
 DATES = ("published", "consolidated_until", "temperature_until", "measured_until")
 # Files of the bundle that the tools read.
-FILES = ("meta", "forecast", "gaps", "history", "accuracy", "model", "scenarios")
+FILES = ("meta", "forecast", "gaps", "history", "accuracy", "model", "scenarios", "peak")
 # Percent of the time the P10-P90 band should hold the actual energy, as set by
 # conformal.QUANTILES. The question API runs without the forecasting stack, hence the copy.
 BAND_LEVEL_PCT = 80
@@ -42,6 +42,36 @@ def _json(content: dict[str, Any]) -> str:
 
 def _error(message: str) -> str:
     return _json({"error": message})
+
+
+def _by_winter(months: list[dict[str, Any]]) -> dict[int, list[dict[str, Any]]]:
+    """The months from December to February, by winter, named by the year of its December."""
+    by_winter: dict[int, list[dict[str, Any]]] = {}
+    for entry in months:
+        year, month = int(entry["month"][:4]), int(entry["month"][5:])
+        if month in (12, 1, 2):
+            by_winter.setdefault(year if month == 12 else year - 1, []).append(entry)
+    return by_winter
+
+
+def last_winter(peaks: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """The highest of the monthly peaks of the last winter measured in full, with the name of
+    that winter."""
+    by_winter = _by_winter(peaks)
+    whole = [winter for winter, months in by_winter.items() if len(months) == 3]
+    if not whole:
+        return None
+    winter = max(whole)
+    return {"winter": f"{winter}-{winter + 1}"} | max(by_winter[winter], key=lambda m: m["peak"])
+
+
+def coming_winter(forecast: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """The month of the first winter ahead with the highest P50, with the name of that winter."""
+    by_winter = _by_winter(forecast)
+    if not by_winter:
+        return None
+    winter = min(by_winter)
+    return {"winter": f"{winter}-{winter + 1}"} | max(by_winter[winter], key=lambda m: m["p50"])
 
 
 def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseTool]:
@@ -227,4 +257,42 @@ def make_tools(bundle: Bundle, facts: dict[str, dict[str, Any]]) -> list[BaseToo
             result["frequency"] = "about 1 year in 10"
         return _json(result)
 
-    return [forecast, month_gap, annual_energy, thermosensitivity, accuracy, fact, scenario]
+    @tool
+    def peak(month: str | None = None) -> str:
+        """Monthly peak in GW, the highest half-hour of a month: for a month ahead, P50, the P10-P90
+        band and the highest day measured so far; for a past month, its peak and the day of it.
+
+        P10 and P90 bound a band calibrated on the errors of past forecasts: they are not
+        scenarios. band_coverage_pct is the share of past monthly peaks that fell inside it.
+        With `month` (YYYY-MM), that month. Without it, the current month and the 11 after, the
+        highest month of the coming winter, the peak of the last winter, and how much one degree
+        less raises the peak in winter.
+        """
+        content = bundle["peak"]
+        band = {
+            "band_level_pct": BAND_LEVEL_PCT,
+            "band_coverage_pct": content["accuracy"]["coverage"]["all months"],
+        }
+        measured = {entry["month"]: entry for entry in content["history"]}
+        ahead = [m for m in content["months"] if m["month"] >= content["current_month"]]
+        if month is None:
+            return _json(
+                published
+                | band
+                | {
+                    "current_month": content["current_month"],
+                    "months": ahead,
+                    "coming_winter_peak": coming_winter(ahead),
+                    "last_winter_peak": last_winter(content["history"]),
+                    "winter_rise_per_degree_less_gw": content["winter_gw_per_c"],
+                }
+            )
+        if month in measured:
+            return _json(published | measured[month])
+        for entry in content["months"]:
+            if entry["month"] == month:
+                return _json(published | band | entry)
+        first, last_month = content["history"][0]["month"], content["months"][-1]["month"]
+        return _error(f"no peak for {month}: peaks cover {first} to {last_month}")
+
+    return [forecast, month_gap, annual_energy, thermosensitivity, accuracy, fact, scenario, peak]

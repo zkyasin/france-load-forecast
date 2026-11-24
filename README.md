@@ -120,9 +120,9 @@ npm run dev
 ## Agent
 
 The agent answers questions in French and writes the monthly note from the bundle. Its tools are
-read-only and return the figures it may quote: the forecast, the gaps of a month, annual energies,
-the response to temperature, the accuracy of past forecasts, the scenarios, and dated facts from
-[`config/facts.toml`](config/facts.toml). A verifier checks that every number of a text comes
+read-only and return the figures it may quote: the forecast, the monthly peak, the gaps of a
+month, annual energies, the response to temperature, the accuracy of past forecasts, the
+scenarios, and dated facts from [`config/facts.toml`](config/facts.toml). A verifier checks that every number of a text comes
 from a tool result or is a year named in the question, and that the text holds no link. The model
 gets one more try, and a text that still fails, or stays empty, is not shown.
 
@@ -145,7 +145,8 @@ month and its gaps term by term, then a reading written by the agent, which may 
 of the month. It also writes `notes/2026-09.json` for the page. Both commands exit with status 1
 if a number has no source. [`evals/`](evals) holds 40 frozen questions with their expected
 answers, and `flf eval` scores the answers of a model on them, without a judge: the
-[results](evals/results.md) compare the local model with the hosted ones.
+[results](evals/results.md) compare the local model with the hosted ones. None of the frozen
+questions is about the peak yet.
 
 A note reaches the page through a pull request: its reading is reviewed, then the page shows the
 latest note from its next deployment. Before writing a note, `flf note` checks every figure of its
