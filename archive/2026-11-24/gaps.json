@@ -48,7 +48,7 @@
         "climate": -0.759,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": -0.244,
+        "structural": -0.245,
         "residual": -0.613
       },
       "against_year_before": {
@@ -78,7 +78,7 @@
         "climate": 0.012,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": 0.496,
+        "structural": 0.497,
         "residual": 1.208
       },
       "against_year_before": {
@@ -116,7 +116,7 @@
         "reference": 42.286,
         "gap": -2.338,
         "climate": -3.439,
-        "calendar": -0.0,
+        "calendar": 0.0,
         "lockdown": 0.0,
         "structural": 0.05,
         "residual": 1.051
@@ -258,7 +258,7 @@
         "climate": 1.271,
         "calendar": 0.0,
         "lockdown": 0.0,
-        "structural": -0.132,
+        "structural": -0.133,
         "residual": 0.762
       },
       "against_year_before": {
