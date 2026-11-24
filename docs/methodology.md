@@ -78,8 +78,9 @@ beyond 12 months, the errors of the 7-12 month bucket apply.
 `flf backtest` forecasts from the first day of each month since January 2016, with only the data
 known then: the model is re-estimated on 1 January of each year on the three preceding years, then
 filtered day by day. The backtest uses consolidated days only.
-Weather paths come from complete years outside the forecast window. Each forecast is compared with
-two naive ones: the same month a year earlier, raw and climate-corrected.
+Weather paths come from complete years outside the forecast window, years after the origin
+included: see [Climate years since 1950, tried](#climate-years-since-1950-tried). Each forecast is
+compared with two naive ones: the same month a year earlier, raw and climate-corrected.
 
 Mean absolute percentage error of monthly energy, origins from January 2016 to September 2026:
 
@@ -150,6 +151,41 @@ Share of actual monthly peaks inside the P10-P90 band (target 80 %):
 
 The band is too narrow: about three monthly peaks in four fall inside it, and two in three from
 December to February since 2023. Calibrating it by season instead does not help: 71 % from 2018.
+
+## Climate years since 1950, tried
+
+The forecast replays the weather of the years since 2012, the first year of RTE's temperature.
+Replaying more years was tried on the branch
+[`feat/climate-years`](https://github.com/zkyasin/france-load-forecast/tree/feat/climate-years),
+and not kept.
+
+Before 2012, the national temperature was rebuilt from Météo-France's daily climatological data:
+the daily (TN + TX) / 2 of 23 stations that measured every day since 1950, weighted by
+non-negative least squares to reproduce RTE's temperature. Fitted on 2012-2019, the weights
+rebuild 2020-2024 with a root mean square error of 0.38 °C a day and a mean error of +0.02 °C.
+Each past year was then moved to today's climate, by the mean of RTE's reference temperature over
+the last year, 13.1 °C, less the trend of the annual mean temperature in that year, a locally
+weighted regression over about 40 years. The years 1950 to 1970 move up by 1.9 °C and 2003 by
+0.7 °C, while 2024 and 2025 move down by 0.3 °C: RTE's reference has kept the same annual mean
+since 2014. The trend rose by 0.53 °C over the last decade, against 0.35 °C a decade between the
++2.0 °C of 2030 and the +2.7 °C of 2050 in the TRACC. Each forecast replayed every complete year
+before its origin, and none after it.
+
+Mean absolute percentage error, origins from January 2016 to September 2026:
+
+| Weather replayed | Energy, 1 month | Energy, 7-12 months | Energy since 2023, 7-12 months | Peak, 1 month | Peak since 2023, 4-6 months |
+|---|---|---|---|---|---|
+| 2012-2025, years after the origin included | 2.96 % | 3.57 % | 2.39 % | 4.16 % | 4.99 % |
+| 2012 to the year before the origin | 3.22 % | 3.74 % | 2.41 % | 4.31 % | 4.98 % |
+| 1950 to the year before the origin, in today's climate | 2.92 % | 3.53 % | 2.59 % | 4.30 % | 5.53 % |
+
+The first row is the published method. Climate years help the early origins, which had few years
+since 2012 to replay. On origins since 2023, they forecast worse than the years since 2012 alone,
+energy beyond one month and the peak at every horizon, though neither sees the years after the
+origin. Moving a year by the mean warming leaves its cold waves as strong as they were, and the
+weather of the last decade is closer to today's than that of the 1950s moved by 1.9 °C. With
+climate years, the forecast of January 2027 would lose 1.1 TWh and the cold winter of the
+scenarios would add 5.9 TWh instead of 4.6, neither checked by a backtest.
 
 ## Monthly gap decomposition
 
