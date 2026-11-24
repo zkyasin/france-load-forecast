@@ -1,0 +1,119 @@
+{
+  "published": "2026-11-24",
+  "model_id": "baseline",
+  "base_year": 2019,
+  "first_month": "2025-09",
+  "last_month": "2026-08",
+  "base": {
+    "consumption": 467.464,
+    "industry": 39.383,
+    "electric_cars": 0.412,
+    "rest": 427.67,
+    "cars_millions": 0.179,
+    "activity_index": 100.0,
+    "real_price_index": 100.0
+  },
+  "now": {
+    "consumption": 446.975,
+    "industry": 33.941,
+    "electric_cars": 5.595,
+    "rest": 407.438,
+    "cars_millions": 2.428,
+    "activity_index": 88.851,
+    "real_price_index": 112.42
+  },
+  "contributions": {
+    "industry_activity": -4.326,
+    "industry_intensity": -1.115,
+    "electric_cars": 5.183,
+    "rest": -20.231
+  },
+  "cars": {
+    "mwh_per_car": 2.304,
+    "reference_year": 2025,
+    "reference_twh": 4.9,
+    "source": "RTE, Tableau de bord de suivi de l'électrification, 2026, p. 15"
+  },
+  "years": [
+    {
+      "year": 2018,
+      "consumption": 470.622,
+      "industry": 40.621,
+      "electric_cars": 0.236,
+      "rest": 429.765,
+      "cars_millions": 0.102,
+      "activity_index": 100.364,
+      "real_price_index": 97.334
+    },
+    {
+      "year": 2019,
+      "consumption": 467.464,
+      "industry": 39.383,
+      "electric_cars": 0.412,
+      "rest": 427.67,
+      "cars_millions": 0.179,
+      "activity_index": 100.0,
+      "real_price_index": 100.0
+    },
+    {
+      "year": 2020,
+      "consumption": 449.259,
+      "industry": 35.634,
+      "electric_cars": 0.719,
+      "rest": 412.906,
+      "cars_millions": 0.312,
+      "activity_index": 86.652,
+      "real_price_index": 105.453
+    },
+    {
+      "year": 2021,
+      "consumption": 459.985,
+      "industry": 37.734,
+      "electric_cars": 1.262,
+      "rest": 420.989,
+      "cars_millions": 0.547,
+      "activity_index": 92.232,
+      "real_price_index": 106.825
+    },
+    {
+      "year": 2022,
+      "consumption": 449.284,
+      "industry": 34.549,
+      "electric_cars": 1.991,
+      "rest": 412.744,
+      "cars_millions": 0.863,
+      "activity_index": 91.805,
+      "real_price_index": 108.997
+    },
+    {
+      "year": 2023,
+      "consumption": 436.643,
+      "industry": 33.819,
+      "electric_cars": 2.881,
+      "rest": 399.943,
+      "cars_millions": 1.25,
+      "activity_index": 90.445,
+      "real_price_index": 117.29
+    },
+    {
+      "year": 2024,
+      "consumption": 441.928,
+      "industry": 34.79,
+      "electric_cars": 3.962,
+      "rest": 403.176,
+      "cars_millions": 1.719,
+      "activity_index": 89.229,
+      "real_price_index": 133.12
+    },
+    {
+      "year": 2025,
+      "consumption": 442.763,
+      "industry": 34.282,
+      "electric_cars": 4.9,
+      "rest": 403.581,
+      "cars_millions": 2.126,
+      "activity_index": 88.549,
+      "real_price_index": 116.194
+    }
+  ]
+}
