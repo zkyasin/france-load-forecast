@@ -21,6 +21,7 @@ from france_load_forecast import (
     conformal,
     correction,
     decomposition,
+    drivers,
     forecast,
     insee,
     model,
@@ -213,6 +214,38 @@ def decompose(data_dir: Path, config: Path, months: int) -> int:
     temperatures.index = pd.DatetimeIndex(temperatures.index).strftime("%Y-%m")
     print("mean temperature in °C, of the month and of the weather the forecast assumed")
     print(temperatures.to_string(float_format=lambda value: f"{value:.1f}"))
+    return 0
+
+
+def consolidated_correction(history: pd.DataFrame, spec: model.ModelSpec) -> pd.Series:
+    """Climate-corrected daily load of the consolidated days, in GW."""
+    corrected = correction.corrected_load(model.fit(history, spec), history)
+    return corrected[history["source"] == "consolidated"]
+
+
+def explain_change(data_dir: Path, config: Path, drivers_config: Path) -> int:
+    """Explain the change of climate-corrected consumption since the base year."""
+    spec, drivers_spec = model.load_spec(config), drivers.load_spec(drivers_config)
+    with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
+        history = model.daily_frame(con, spec.smoothing)
+        inputs = drivers.read(con)
+    found = drivers.compute(consolidated_correction(history, spec), inputs, drivers_spec)
+
+    print("energy in TWh, 29 February left out; cars in millions; indices at 100 in the base year")
+    print(drivers.years(found).to_string(float_format=lambda value: f"{value:.2f}"))
+    base, now = found.base, found.now
+    change = now["consumption"] - base["consumption"]
+    print(
+        f"from {found.base_year} to {found.first_month:%Y-%m} - {found.last_month:%Y-%m}:"
+        f" {change:+.2f} TWh ({100 * change / base['consumption']:+.1f} %)"
+    )
+    for part, value in drivers.contributions(base, now).items():
+        print(f"  {part:<20} {value:+.2f}")
+    print(
+        f"production index {now['activity'] - 100:+.1f} %,"
+        f" {base['cars']:.2f} then {now['cars']:.2f} million rechargeable cars"
+        f" of {found.mwh_per_car:.2f} MWh a year ({drivers_spec.cars.source})"
+    )
     return 0
 
 
@@ -411,6 +444,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     decompose_parser.add_argument(
         "--months", type=int, default=12, help="number of recent complete months"
     )
+    drivers_parser = commands.add_parser(
+        "drivers",
+        parents=[model_options],
+        help="explain the change of climate-corrected consumption since the base year",
+    )
+    drivers_parser.add_argument("--drivers-config", type=Path, default=Path("config/drivers.toml"))
     publish_parser = commands.add_parser(
         "publish", parents=[model_options], help="write the weekly bundle of JSON files"
     )
@@ -464,6 +503,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_backtest(args.data_dir, args.config, args.first)
     if args.command == "decompose":
         return decompose(args.data_dir, args.config, args.months)
+    if args.command == "drivers":
+        return explain_change(args.data_dir, args.config, args.drivers_config)
     if args.command == "publish":
         return run_publish(args.data_dir, args.config, args.peak_config, args.scenarios, args.out)
     if args.command == "snapshot":
