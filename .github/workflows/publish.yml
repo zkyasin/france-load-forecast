@@ -44,7 +44,7 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.retry.outputs.page_url }}
     defaults:
       run:
         working-directory: web
@@ -67,7 +67,17 @@ jobs:
         with:
           path: web/dist
           name: github-pages-${{ github.run_attempt }}
+      # A deployment fails now and then on GitHub's side, for instance when the artifact uploaded a
+      # second earlier is not listed yet: it is tried once more, a minute later.
       - id: deployment
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
+      - if: steps.deployment.outcome == 'failure'
+        run: sleep 60
+      - id: retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v5
         with:
           artifact_name: github-pages-${{ github.run_attempt }}
