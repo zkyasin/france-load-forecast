@@ -1,0 +1,37 @@
+# Météo-France stations that rebuild the national temperature before RTE's series starts in 2012,
+# see src/france_load_forecast/stations.py. In each department of a large city, the station with
+# the most days of (TN + TX) / 2 since 1950, kept if it has every day from 1950 to 2024: Tours,
+# Monestier, Sommesous and Le Palais-sur-Vienne miss days and are left out.
+
+# Period of Météo-France's daily files, as their names give it.
+period = "1950-2024"
+first_day = 1950-01-01
+
+# Years RTE's temperature and the stations both cover: the weights are fitted on them.
+fit_from = 2012
+fit_until = 2024
+
+[stations]
+"06029001" = "Cannes"
+"13047001" = "Istres"
+"14137001" = "Caen-Carpiquet"
+"21154001" = "Châtillon-sur-Seine"
+"25021001" = "Arc-et-Senans"
+"29075001" = "Brest-Guipavas"
+"31069001" = "Toulouse-Blagnac"
+"33529001" = "Cazaux"
+"34154001" = "Montpellier-Aéroport"
+"35228001" = "Dinard"
+"44020001" = "Nantes-Bouguenais"
+"45055001" = "Orléans"
+"54526001" = "Nancy-Essey"
+"57039001" = "Metz-Frescaty"
+"59343001" = "Lille-Lesquin"
+"63113001" = "Clermont-Ferrand"
+"66136001" = "Perpignan"
+"67482001" = "Strasbourg-Botanique"
+"69029001" = "Lyon-Bron"
+"75114001" = "Paris-Montsouris"
+"76552001" = "Cap-de-la-Hève"
+"86027001" = "Poitiers-Biard"
+"95088001" = "Le Bourget"

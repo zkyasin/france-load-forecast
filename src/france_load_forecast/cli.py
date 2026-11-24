@@ -26,6 +26,7 @@ from france_load_forecast import (
     outlook,
     publish,
     scenarios,
+    stations,
     warehouse,
 )
 from france_load_forecast.agent import agent, evaluate, note, tools
@@ -244,6 +245,44 @@ def run_publish(
     return 0
 
 
+def rebuild_temperature(data_dir: Path, config: Path, out: Path) -> int:
+    """Rebuild the national temperature from Météo-France stations for the days before RTE's
+    series, and write it to `out`."""
+    spec = stations.load_spec(config)
+    with httpx.Client(timeout=300, follow_redirects=True) as client:
+        paths = stations.download(client, spec, data_dir / "raw" / "meteo-france")
+    daily = stations.read_daily(paths, spec.stations)
+    daily = daily[daily.index >= spec.first_day]
+    with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
+        rte = con.execute("SELECT date, temperature_c FROM temperature ORDER BY date").df()
+    national = pd.Series(rte["temperature_c"].to_numpy(), index=pd.DatetimeIndex(rte["date"]))
+    first, last = spec.fit_years
+    years = pd.DatetimeIndex(national.index).year
+    national = national[(years >= first) & (years <= last)]
+
+    weights = stations.fit(daily, national)
+    rebuilt = stations.rebuild(daily, weights)
+    before = rebuilt[rebuilt.index < national.index[0]]
+    days = pd.date_range(spec.first_day, national.index[0] - pd.Timedelta(days=1))
+    if not days.isin(before.index).all():
+        print(f"{(~days.isin(before.index)).sum()} days lack a station", file=sys.stderr)
+        return 1
+    out.parent.mkdir(parents=True, exist_ok=True)
+    before.round(2).rename("temperature_c").rename_axis("date").to_csv(out)
+
+    split = last - 4
+    error = stations.holdout_error(daily, national, split)
+    print(
+        f"weights fitted on {first}-{split - 1} rebuild {split}-{last} with an RMSE of "
+        f"{(error**2).mean() ** 0.5:.2f} °C and a mean error of {error.mean():+.2f} °C"
+    )
+    print(f"weights fitted on {first}-{last}:")
+    for station, weight in weights[weights > 0].sort_values(ascending=False).items():
+        print(f"  {spec.stations[str(station)]:<24} {weight:.3f}")
+    print(f"{days[0]:%Y-%m-%d} to {days[-1]:%Y-%m-%d} written to {out}")
+    return 0
+
+
 def snapshot(data_dir: Path, out: Path) -> int:
     """Save the real-time load of the warehouse, which RTE overwrites once consolidated."""
     with duckdb.connect(data_dir / "warehouse.duckdb", read_only=True) as con:
@@ -413,6 +452,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         "snapshot", parents=[common], help="save the real-time load as a Parquet file"
     )
     snapshot_parser.add_argument("out", type=Path)
+    rebuild_parser = commands.add_parser(
+        "rebuild-temperature",
+        parents=[common],
+        help="rebuild the national temperature before 2012 from Météo-France stations",
+    )
+    rebuild_parser.add_argument("--config", type=Path, default=Path("config/stations.toml"))
+    rebuild_parser.add_argument(
+        "--out", type=Path, default=Path("climate/national-temperature.csv")
+    )
     agent_options = argparse.ArgumentParser(add_help=False)
     agent_options.add_argument("--bundle", type=Path, default=Path("data/bundle"))
     agent_options.add_argument("--agent-config", type=Path, default=Path("config/agent.toml"))
@@ -460,6 +508,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_publish(args.data_dir, args.config, args.peak_config, args.scenarios, args.out)
     if args.command == "snapshot":
         return snapshot(args.data_dir, args.out)
+    if args.command == "rebuild-temperature":
+        return rebuild_temperature(args.data_dir, args.config, args.out)
     if args.command == "ask":
         return run_ask(args.question, args.bundle, args.agent_config, args.facts)
     if args.command == "note":

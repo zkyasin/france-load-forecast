@@ -70,6 +70,19 @@ All inputs are public datasets published by RTE on [ODRÉ](https://odre.opendata
 | `pic-journalier-consommation-brute` | National temperature and reference temperature of each day; its daily peak is not used |
 | `conso_brute_corrigee_client_direct` | Monthly gross and corrected consumption, used for validation |
 
+Before 2012, the national temperature is rebuilt from the daily temperatures of 23 Météo-France
+stations, from its [daily climatological data](https://www.data.gouv.fr/datasets/donnees-climatologiques-de-base-quotidiennes)
+under the same licence. The weights of the stations are those that best reproduce RTE's
+temperature over 2012-2024:
+
+```sh
+uv run flf rebuild-temperature
+```
+
+writes [`climate/national-temperature.csv`](climate/national-temperature.csv), from 1950 to 2011,
+from the stations of [`config/stations.toml`](config/stations.toml). Fitted on 2012-2019, the
+weights rebuild 2020-2024 within 0.38 °C a day (root mean square).
+
 ```sh
 uv run flf ingest
 ```
