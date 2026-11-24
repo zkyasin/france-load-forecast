@@ -99,7 +99,13 @@ body:has(.chat-corner) .v-day .v-day-stage :is(.stage-credit, .v-legend) {
     left: 0.75rem;
   }
 
+  .v-day .v-day-stage .v-panel strong {
+    font-size: 1.25rem;
+  }
+
+  /* Shorter steps than on a wide screen: the two days play in about five screens. */
   .v-day .v-day-steps .step {
+    min-height: 90svh;
     padding: 0.75rem 0.25rem var(--chat-lift);
   }
 

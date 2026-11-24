@@ -40,6 +40,9 @@ export function createMix(canvas: HTMLCanvasElement, grid: GridMap, o: MixOption
     layer: o.layer,
     keys,
     narrowFov: 58,
+    // On a phone, France sits whole between the panel of figures and the card at the bottom.
+    narrowDistance: 1.5,
+    narrowLift: 0.04,
     update: (t) => {
       const hour = o.hour(t);
       if (Math.abs(hour - last) < 0.01) return;
