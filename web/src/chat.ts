@@ -21,6 +21,7 @@ import {
   verdict,
 } from "./conversation";
 import type { Bundle } from "./data";
+import { frenchSpacing } from "./format";
 import { figure } from "./minichart";
 import { createPylon, type Mood, type Pylon } from "./pylon";
 
@@ -248,7 +249,7 @@ export function render(bundle: Bundle): void {
       const chip = element("button", "chat-chip");
       chip.type = "button";
       if (theme) chip.append(element("small", "", theme));
-      chip.append(element("span", "", question));
+      chip.append(element("span", "", frenchSpacing(question)));
       chip.addEventListener("click", () => void submit(question));
       box.append(chip);
     }

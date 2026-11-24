@@ -28,6 +28,7 @@ export function suggestions(forecast: Forecast, gaps: Gaps): Suggestion[] {
       question: `Quelle consommation prévoyez-vous pour ${monthName(peak.month)} ?`,
     });
   }
+  list.push({ theme: "Pointe", question: "Quelle pointe de consommation attendre cet hiver ?" });
   const gap = largest(gaps.months, (month) => Math.abs(month.against_forecast.gap));
   if (gap !== undefined) {
     const direction = gap.against_forecast.gap < 0 ? "basse" : "haute";
@@ -72,6 +73,10 @@ const NEXT: Record<string, string[]> = {
   fact: [
     "D'où viennent les données utilisées ?",
     "Pourquoi les données en temps réel sont-elles corrigées ?",
+  ],
+  peak: [
+    "De combien augmente la consommation quand il fait un degré de moins en hiver ?",
+    "Que se passerait-il lors d'un hiver froid comme il en arrive un sur dix ?",
   ],
 };
 
@@ -157,6 +162,10 @@ export function stepText({ tool, args }: Call): string {
       if (!Number.isInteger(first) || !Number.isInteger(last)) return "l'énergie des années";
       return first === last ? `l'énergie de ${first}` : `l'énergie de ${first} à ${last}`;
     }
+    case "peak":
+      return isMonth(args.month)
+        ? `la pointe ${of(monthName(args.month))}`
+        : "la pointe des mois à venir";
     case "thermosensitivity":
       return "la réponse à la température";
     case "accuracy":
@@ -210,6 +219,7 @@ const SECTIONS: Record<string, { anchor: string; label: string }> = {
   accuracy: { anchor: "accuracy-title", label: "Voir la fiabilité" },
   scenario: { anchor: "scenarios-title", label: "Voir les scénarios" },
   fact: { anchor: "method-title", label: "Voir la méthode" },
+  peak: { anchor: "peak-title", label: "Voir la pointe" },
 };
 
 /** The sections of the page where the data of an answer are drawn, once each. */
